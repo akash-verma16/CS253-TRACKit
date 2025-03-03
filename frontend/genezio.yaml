@@ -1,5 +1,5 @@
 # The name of the project.
-name: material-dashboard
+name: material-dashboard-react
 # The region where the project is deployed.
 region: us-east-1
 # The version of the Genezio YAML configuration to parse.
@@ -10,10 +10,9 @@ frontend:
   # The folder where the frontend scripts will run.
   path: ./
   # The directory that will be published to the CDN. It is relative to the path.
-  publish: ./
+  publish: ./build
   scripts:
     # List of scripts that build your frontend before deployment. It should populate the specified `publish` directory.
-    build: npm install
+    build: npm run build
     # List of scripts to run before deploying the frontend.
-    deploy:
-      - npm install
+    deploy: npm install
