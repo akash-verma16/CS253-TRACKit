@@ -14,6 +14,15 @@ export default function Dashboard() {
     { id: 'contact', label: 'Contact Us', icon: <RiCustomerService2Line /> },
   ];
 
+  const courses = [
+    {code: 'EE320', name: 'Digital Signal Processing', prof:"Abhishek Gupta"},
+    {code: 'CS330', name: 'Operating Systems', prof:"Mainak Chaudhuri"},
+    {code: 'CS340', name: 'Computer Networks', prof:"Manindra Agrawal"},
+    {code: 'CS345', name: 'Database Systems', prof:"Arnab Bhattacharya"},
+    {code: 'CS253', name: 'Software Development', prof:"Amey Karkare"},
+    {code: 'EE370', name: 'Digital Electronics', prof:"Shubham Sahay"},
+  ];
+
   return (
     <div className='h-screen w-full flex items-center bg-[#F5F5F5]'>
 
@@ -25,8 +34,8 @@ export default function Dashboard() {
               <p 
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex gap-2 items-center py-2 px-5 my-1 transition-all duration-200 rounded-lg cursor-pointer 
-                  hover:bg-black hover:text-white ${activeTab === tab.id ? 'bg-black text-white' : 'bg-transparent text-black'}`}
+                className={`flex gap-2 items-center py-2 px-5 my-1 rounded-lg cursor-pointer hover:scale-[97%] duration-200 transition-all
+                 ${activeTab === tab.id ? 'bg-black text-white' : 'bg-transparent text-black'}`}
               >
                 {tab.icon}
                 {tab.label}
@@ -35,9 +44,21 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div>
-        <p>Dashboard</p>
-        
+      <div className='w-full h-full flex flex-col items-center justify-evenly'>
+        <p className='text-[35px] font-semibold '>Dashboard</p>
+        <div className='flex gap-3 mt-4'>
+          {
+            courses.map(course=>(
+                <div key={course.code} className='cursor-pointer hover:scale-95 transition-all duration-200 h-[130px] w-[180px] border border-black rounded-md flex flex-col items-center justify-evenly p-2'>
+                    <p className='font-semibold bg-[#D9D9D9] px-5 py-1 rounded-md'>{course.code}</p>
+                    <p>{course.prof}</p>
+                    <p className='text-[14px]'>{course.name.substring(0,14)+"..."}</p>
+                </div>
+            ))
+          }
+        </div>
+
+        <iframe src="https://calendar.google.com/calendar/embed?height=550&wkst=1&ctz=Asia%2FKolkata&mode=WEEK&showTz=0&showTitle=0&showPrint=0&src=dmVkdmlzaHdha2FybWEyMjZAZ21haWwuY29t&src=ZW4uaW5kaWFuI2hvbGlkYXlAZ3JvdXAudi5jYWxlbmRhci5nb29nbGUuY29t&color=%23039BE5&color=%230B8043" className='w-[92%] m-auto h-[550px] border rounded-lg'></iframe>
       </div>
 
     </div>
