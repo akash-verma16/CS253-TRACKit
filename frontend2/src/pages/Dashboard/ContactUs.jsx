@@ -25,11 +25,11 @@ export default function ContactUs({name, email}) {
                 <form>
                     <div className='mt-6'>
                         <label className='font-semibold' for="subject">Subject <span className='text-red-500'>*</span></label> <br></br>
-                        <input type="text" placeholder='Subject' id='subject' className=' mt-1 w-full px-6 rounded-lg h-[40px]'/>
+                        <input type="text" placeholder='Subject' id='subject' className=' mt-1 w-full px-6 rounded-lg h-[40px]' required minLength={5}/>
                     </div>
                     <div className='mt-4'>
                         <label for="message" className='font-semibold' >Message  <span className='text-red-500'>*</span></label> <br></br>
-                        <textarea type="text" placeholder='Your Query' id='message' className=' mt-1 w-full px-6 py-2 rounded-lg h-[160px]'/>
+                        <textarea type="text" placeholder='Your Query' id='message' className=' mt-1 w-full px-6 py-2 rounded-lg h-[160px]' required minLength={15}/>
                     </div>
                     <button className='bg-blue-500 shadow-xl text-white py-2 px-4 mt-4 flex justify-center items-center gap-2 hover:bg-green-600 hover:scale-95 transition-all duration-200 rounded'><BsSend></BsSend><p>Send Message</p></button>
                 </form>

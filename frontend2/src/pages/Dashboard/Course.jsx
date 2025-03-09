@@ -33,7 +33,7 @@ export default function Course() {
         <div className='flex gap-3 w-[92%] justify-evenly items-center mb-6'>
             {
                 pastYears.map(year=>(
-                    <div className='bg-white border cursor-pointer py-3 px-6 rounded-lg shadow-lg hover:scale-95 transition-all duration-200'>{year}</div>
+                    <div className='bg-white border cursor-pointer py-3 px-6 rounded-lg shadow-lg hover:scale-95 transition-all duration-200 hover:bg-blue-500 hover:text-white'>{year}</div>
                 ))
             }
         </div>
