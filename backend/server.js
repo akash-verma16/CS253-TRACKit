@@ -40,8 +40,16 @@ db.sequelize.sync({ force: process.env.NODE_ENV === 'development' })
     console.error('Failed to sync database:', err);
   });
 
+// Add this to server.js before app.listen()
+console.log('Registered routes:');
+app._router.stack.forEach(function(r){
+  if (r.route && r.route.path){
+    console.log(r.route.stack[0].method.toUpperCase() + ' ' + r.route.path);
+  }
+});
 // Start server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+
