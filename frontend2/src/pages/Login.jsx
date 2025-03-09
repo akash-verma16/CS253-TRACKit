@@ -6,11 +6,11 @@ export default function Login() {
     <div className='w-full h-screen relative flex justify-around items-center'>
         <img src={loginImg} className='absolute h-full w-full z-[-100]' />
         <div className='h-full absolute w-[40%] left-[100px]'>
-            <h1 className='text-[60px] font-[800] top-[60px] absolute'>TRACKit</h1>
+            <h1 className='text-[62px] font-[800] top-[60px] absolute'>TRACKit</h1>
             <p className='absolute top-[140px] w-full font-semibold'>Testing Reporting Academic Comprehensive Kit</p>
         </div>
 
-        <div className='bg-white w-[30%] rounded-xl h-[97%] flex flex-col justify-center items-center absolute right-5'>
+        <div className='bg-white w-[30%] rounded-xl h-[97%] flex flex-col justify-center items-center absolute right-5 shadow-3xl'>
           <div className='w-[80%]'>
             <p className='font-semibold text-[28px]'>Welcome to TRACKit</p>
             <h1 className='text-[30px] mt-2'>Sign In</h1>
