@@ -27,7 +27,7 @@ export default function Dashboard() {
             <Route path="/courses" element={<Course></Course>}></Route>
             <Route path="/performance" element={<Performance/>}></Route>
             <Route path="/profile" element={<Profile/>}></Route>
-            <Route path="/contactus" element={<ContactUs/>}></Route>
+            <Route path="/contactus" element={<ContactUs name="Ved Prakash" email={`vedprakash22@iitk.ac.in`}/>}></Route>
         </Routes>
 
     </div>
