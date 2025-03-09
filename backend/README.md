@@ -36,6 +36,13 @@ DB_PATH=./database.sqlite
 
 Replace `your_secure_random_string_here` with a strong random string to secure your JWT tokens.
 
+## Database
+
+The application uses SQLite by default. The database file (database.sqlite) will be 
+automatically created in the backend directory when the server first runs. This file
+is excluded from version control.
+In the future, it will be upgraded to a more robust database like MySQL or PostgreSQL.
+
 > **Note**: The `.env` file contains sensitive information and should never be committed to version control.
 
 ## Default Admin Credentials
