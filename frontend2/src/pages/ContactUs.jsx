@@ -12,7 +12,7 @@ export default function ContactUs({name, email}) {
 
         <div className='w-[80%] h-[80%] border rounded-xl shadow-lg'>
             <div className='h-[14%] m-auto flex flex-col justify-center items-center text-white text-[18px] bg-blue-500 rounded-4xl'>
-                <p>Phone Numbers During Office Hours (10:00 Hrs.-18:00 Hrs) : 4002, 4015, 4023</p>
+                <p>Phone Numbers During Office Hours (10:00 Hrs.-18:00 Hrs) : 8xxxxxxxxx</p>
                 <p>Email : trackit@gmail.com</p>
             </div>
             <div className='p-8'>
@@ -24,14 +24,14 @@ export default function ContactUs({name, email}) {
 
                 <form>
                     <div className='mt-6'>
-                        <label className='font-semibold' >Subject <span className='text-red-500'>*</span></label> <br></br>
+                        <label className='font-semibold' for="subject">Subject <span className='text-red-500'>*</span></label> <br></br>
                         <input type="text" placeholder='Subject' id='subject' className=' mt-1 w-full px-6 rounded-lg h-[40px]'/>
                     </div>
                     <div className='mt-4'>
-                        <label className='font-semibold' >Message  <span className='text-red-500'>*</span></label> <br></br>
+                        <label for="message" className='font-semibold' >Message  <span className='text-red-500'>*</span></label> <br></br>
                         <textarea type="text" placeholder='Your Query' id='message' className=' mt-1 w-full px-6 py-2 rounded-lg h-[160px]'/>
                     </div>
-                    <button className='bg-blue-500 text-white py-2 px-4 mt-4 flex justify-center items-center gap-2 hover:bg-black hover:scale-95 transition-all duration-200 rounded'><BsSend></BsSend><p>Send Message</p></button>
+                    <button className='bg-blue-500 shadow-xl text-white py-2 px-4 mt-4 flex justify-center items-center gap-2 hover:bg-green-600 hover:scale-95 transition-all duration-200 rounded'><BsSend></BsSend><p>Send Message</p></button>
                 </form>
             </div>
         </div>
