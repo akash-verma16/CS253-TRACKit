@@ -1,9 +1,9 @@
 import React from 'react'
 
-export default function Profile() {
+export default function CourseHome() {
   return (
     <div>
-      Profile
+      CourseHome
     </div>
   )
 }

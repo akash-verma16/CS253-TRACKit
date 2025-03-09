@@ -20,7 +20,7 @@ export default function DashBoardMenu() {
   return (
     <div className='w-[22%] h-[98%] border-2 rounded-lg flex flex-col items-center justify-start
                 px-4 py-5 ml-2 bg-white shadow-lg'>
-        <p className='text-[28px] font-semibold'>TRACKit</p>
+        <NavLink to="/dashboard/courses" onClick={()=> setActiveTab("courses")}><p className='text-[28px] font-semibold'>TRACKit</p></NavLink>
         <div className='border-t w-11/12 mt-4 py-5'>
           {tabs.map(tab => (
               <NavLink to={tab.link} 

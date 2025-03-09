@@ -1,9 +1,9 @@
 import React from 'react'
 
-export default function ContactUs() {
+export default function Results() {
   return (
     <div>
-        Contact
+      Results
     </div>
   )
 }
