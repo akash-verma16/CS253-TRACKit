@@ -23,7 +23,7 @@ export default function Courses({role, course}) {
         <Route path='announcements' element={<Announcements/>} ></Route>
         <Route path='calendar' element={<Calendar/>} ></Route>
         <Route path='result' element={<Results/>} ></Route>
-        <Route path='forum' element={<Forum/>} ></Route>
+        <Route path='forum' element={<Forum role={role}/>} ></Route>
       </Routes>
     </div>
   )

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { FaUser } from 'react-icons/fa'; 
+import { FaUser } from 'react-icons/fa';
+import { AiOutlineDelete } from 'react-icons/ai';
 
-export default function Forum() {
+export default function Forum({ role }) {
   const [posts, setPosts] = useState([
     {
       id: 1,
@@ -89,18 +90,33 @@ export default function Forum() {
     }
   };
 
+  const handleDeletePost = (postId) => {
+    setPosts(posts.filter(post => post.id !== postId));
+  };
+
+  const handleDeleteReply = (postId, replyId) => {
+    const updatedPosts = posts.map(post => {
+      if (post.id === postId) {
+        return {
+          ...post,
+          replies: post.replies.filter(reply => reply.id !== replyId)
+        };
+      }
+      return post;
+    });
+    setPosts(updatedPosts);
+  };
+
   return (
     <div className="p-4 bg-gray-100 min-h-screen flex flex-col items-start">
       <div className="flex items-center justify-between w-full mb-6">
-        <div className="flex items-center">
-          <h1 className="text-3xl font-bold">FORUM</h1>
-          <button 
-            className="bg-black text-white px-4 py-2 rounded-md ml-4"
-            onClick={handleAddPost}
-          >
-            Add Post
-          </button>
-        </div>
+        <h1 className="text-3xl font-bold">FORUM</h1>
+        <button 
+          className="bg-black text-white px-4 py-2 rounded-md ml-4"
+          onClick={handleAddPost}
+        >
+          Add Post
+        </button>
       </div>
 
       {showNewPostForm && (
@@ -133,6 +149,14 @@ export default function Forum() {
                 <FaUser className="h-6 w-6" />
               </div>
               <span className="text-sm text-gray-600">{post.author}</span>
+              {role == 'faculty' && (
+                <button 
+                  className="ml-auto bg-red-500 text-white px-2 py-1 rounded-md"
+                  onClick={() => handleDeletePost(post.id)}
+                >
+                  <AiOutlineDelete />
+                </button>
+              )}
             </div>
             <h2 className="text-lg font-semibold mb-2">{post.title}</h2>
             {post.content && (
@@ -158,6 +182,14 @@ export default function Forum() {
                       <FaUser className="h-4 w-4" /> 
                     </div>
                     <span className="text-sm text-gray-600">{reply.author}</span>
+                    {role == 'faculty' && (
+                      <button 
+                        className="ml-auto bg-red-500 text-white px-2 py-1 rounded-md"
+                        onClick={() => handleDeleteReply(post.id, reply.id)}
+                      >
+                        <AiOutlineDelete />
+                      </button>
+                    )}
                   </div>
                   <p className="whitespace-pre-line">{reply.content}</p>
                 </div>
