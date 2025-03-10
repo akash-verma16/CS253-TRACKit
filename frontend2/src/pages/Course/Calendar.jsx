@@ -3,7 +3,7 @@ import { CgProfile } from "react-icons/cg";
 
 export default function Calendar() {
   return (
-    <div className='w-full h-full'>
+    <div className='w-full h-screen'>
         <div className='flex justify-between py-4 px-8 items-center relative'>
             <p className='text-[32px] uppercase font-semibold m-4'>Calender</p>
             <CgProfile className='text-[40px] cursor-pointer'></CgProfile>

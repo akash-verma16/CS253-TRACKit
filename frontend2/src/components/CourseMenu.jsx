@@ -20,8 +20,8 @@ export default function CourseMenu({course}) {
     ];
 
   return (
-    <div className='w-full h-[98%] border-2 rounded-lg flex flex-col items-center justify-start
-                px-4 py-5 ml-2 bg-white shadow-lg z-10'>
+    <div className='w-[20%] h-[98%] border-2 rounded-lg flex flex-col items-center justify-start
+                px-4 py-5 ml-2 bg-white shadow-lg z-10 fixed top-2 left-0'>
         <NavLink to="/dashboard/courses" onClick={()=> setActiveTab("courses")}><p className='text-[28px] font-semibold'>{course}</p></NavLink>
         <div className='border-t w-11/12 mt-4 py-5'>
           {tabs.map(tab => ( 

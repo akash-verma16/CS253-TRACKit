@@ -24,7 +24,7 @@ export default function CourseHome({ present, total, role }) {
 
   return (
     <div className='w-full h-full ml-4'>
-      <div className='flex justify-between p-3 px-8 items-center sticky top-0 bg-[#F5F5F5]'>
+      <div className='flex justify-between p-3 px-8 items-center sticky top-0 bg-[#F5F5F5] shadow-lg'>
           <p className='text-[32px] uppercase font-semibold m-4'>Course Home</p>
           <NavLink to="/dashboard/profile">
             <CgProfile className='text-[40px] cursor-pointer' />
@@ -33,7 +33,7 @@ export default function CourseHome({ present, total, role }) {
 
       <div className='flex justify-evenly items-center'>
         <div>
-          <p className='font-semibold text-[19px] mb-2'>New Events</p>
+          <p className='font-semibold text-[19px] mb-2 mt-4'>New Events</p>
           <iframe 
             src="https://calendar.google.com/calendar/embed?height=400&wkst=1&ctz=Asia%2FKolkata&showPrint=0&mode=AGENDA&showNav=0&showDate=0&showCalendars=0&showTz=0&showTitle=0&src=dmVkdmlzaHdha2FybWEyMjZAZ21haWwuY29t&src=OWYxMWIzMDdjZTFjZTU1OWY3NDUyZTQ3ZWJhNmNkN2JkYjY4ODk1ZjI4MmRkODY0MjIxZjQ4NWM4MzVlNGE4MEBncm91cC5jYWxlbmRhci5nb29nbGUuY29t&src=ZW4uaW5kaWFuI2hvbGlkYXlAZ3JvdXAudi5jYWxlbmRhci5nb29nbGUuY29t&color=%23039BE5&color=%23E67C73&color=%230B8043" 
             width={`${role=="student" ? 700 : 850}`} 
