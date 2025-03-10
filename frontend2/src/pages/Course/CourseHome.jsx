@@ -70,13 +70,13 @@ export default function CourseHome({ present, total, role }) {
                 {
                   role!="student" &&
                   <div className='flex gap-2 items-center'>
-                    <button onClick={editHandler}><FaRegEdit className='text-[22px]'></FaRegEdit></button>
-                    <button onClick={deleteHandler}><AiOutlineDelete className='text-[22px] text-red-600'></AiOutlineDelete></button>
+                    <button onClick={editHandler}><FaRegEdit className='text-[22px] hover:scale-105 transition-all duration-200 hover:shadow-lg'></FaRegEdit></button>
+                    <button onClick={deleteHandler}><AiOutlineDelete className='text-[22px] text-red-600 hover:scale-105 duration-200 transition-all hover:shadow-lg'></AiOutlineDelete></button>
                   </div>
                   
                 }
                 <IoIosArrowDropdown onClick={() => toggleExpand(index)}
-                  className={`text-[25px] transform transition-transform duration-500 ${expandedIndices[index] ? 'rotate-180' : ''}`}
+                  className={`text-[25px] transform transition-transform hover:scale-105 hover:shadow-xl duration-500 ${expandedIndices[index] ? 'rotate-180' : ''}`}
                 />
                 </div>
               </div>

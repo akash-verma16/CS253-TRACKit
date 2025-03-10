@@ -2,15 +2,14 @@ import React, { useState } from 'react';
 import { FaUser } from 'react-icons/fa'; 
 import { CgProfile } from 'react-icons/cg'
 import { NavLink } from 'react-router-dom';
+import { AiOutlineDelete } from 'react-icons/ai';
 
 export default function Forum({role}) {
   const [posts, setPosts] = useState([
     {
       id: 1,
-      title: 'Use of Laplace Equation',
       author: 'aiyush22',
-      content: 'In question 5 of assignment 5, can we use the Laplace equation instead of using the boundary value approach, I am having some doubts regarding this. If anybody has solved then please reply.\nI have put the equation in contention for all to see.',
-      equation: '\\frac{\\partial^2 h}{\\partial x^2} + \\frac{\\partial^2 h}{\\partial y^2} = \\frac{S_y}{KD} \\frac{\\partial h}{\\partial t}',
+      query: 'In question 5 of assignment 5, can we use the Laplace equation instead of using the boundary value approach, I am having some doubts regarding this. If anybody has solved then please reply.\nI have put the equation in contention for all to see.',
       replies: [
         {
           id: 1,
@@ -21,7 +20,7 @@ export default function Forum({role}) {
     },
     {
       id: 2,
-      title: 'Can we use calculator in mid-sem exams?',
+      query: 'Can we use calculator in mid-sem exams?',
       author: 'aiyush22',
       replies: [
         {
@@ -140,36 +139,41 @@ export default function Forum({role}) {
       {posts.map((post) => (
         <div key={post.id} className="bg-gray-200 rounded-md shadow-md mb-6 w-[95%]">
           <div className="p-4">
-            <div className="flex items-center mb-2">
-              <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center text-gray-500 mr-2">
-                <FaUser className="h-6 w-6" />
+            <div className="flex items-center justify-between mb-2">
+              <div className='flex items-center'>
+                <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center text-gray-500 mr-2">
+                  <FaUser className="h-6 w-6" />
+                </div>
+                <span className="text-sm text-gray-600">{post.author}</span>
               </div>
-              <span className="text-sm text-gray-600">{post.author}</span>
+              {
+                role !== 'student' && (
+                  <AiOutlineDelete className='text-red-600 text-[28px] mr-4 hover:scale-110 transition-all duration-200 '></AiOutlineDelete>
+                )
+              }
             </div>
             <h2 className="text-lg font-semibold mb-2">{post.title}</h2>
-            {post.content && (
+            {post.query && (
               <div className="bg-white p-4 rounded-md mb-4">
-                <p className="whitespace-pre-line">{post.content}</p>
-                {post.equation && (
-                  <div className="py-4 text-center">
-                    <img 
-                      src={`https://latex.codecogs.com/svg.latex?${encodeURIComponent(post.equation)}`} 
-                      alt="LaTeX equation" 
-                      className="inline-block"
-                    />
-                  </div>
-                )}
+                <p className="whitespace-pre-line">{post.query}</p>
               </div>
             )}
             <div className="mt-4">
               <h3 className="font-medium mb-2">Replies</h3>
               {post.replies.map((reply) => (
                 <div key={reply.id} className="bg-white p-4 rounded-md mb-2">
-                  <div className="flex items-center mb-2">
-                    <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-gray-500 mr-2">
-                      <FaUser className="h-4 w-4" /> 
+                  <div className="flex items-center justify-between mb-2">
+                    <div className='flex items-center'>
+                      <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-gray-500 mr-2">
+                        <FaUser className="h-4 w-4" /> 
+                      </div>
+                      <span className="text-sm text-gray-600">{reply.author}</span>
                     </div>
-                    <span className="text-sm text-gray-600">{reply.author}</span>
+                    {
+                      role !== 'student' && (
+                        <AiOutlineDelete className='text-red-600 text-[28px] hover:scale-110 transition-all duration-200 '></AiOutlineDelete>
+                      )
+                    }
                   </div>
                   <p className="whitespace-pre-line">{reply.content}</p>
                 </div>
@@ -202,7 +206,7 @@ export default function Forum({role}) {
               ) : (
                 <div className="flex justify-end mt-2">
                   <button 
-                    className="bg-black text-white px-4 py-2 rounded-md hover:scale-95 transition-all duration-200"
+                    className="bg-black text-white px-4 py-2 rounded-md hover:scale-95 transition-all duration-200 hover:bg-blue-500"
                     onClick={() => handleReplyClick(post.id)}
                   >
                     Reply
