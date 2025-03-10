@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { FaUser } from 'react-icons/fa'; 
+import { CgProfile } from 'react-icons/cg'
+import { NavLink } from 'react-router-dom';
 
-export default function Forum() {
+export default function Forum({role}) {
   const [posts, setPosts] = useState([
     {
       id: 1,
@@ -90,33 +92,43 @@ export default function Forum() {
   };
 
   return (
-    <div className="p-4 bg-gray-100 min-h-screen flex flex-col items-start">
-      <div className="flex items-center justify-between w-full mb-6">
-        <div className="flex items-center">
+    <div className=" bg-gray-100 min-h-screen flex flex-col items-center w-full h-full ml-9">
+      <div className="flex items-center justify-between w-full mb-6 sticky top-0 bg-[#F5F5F5] shadow-lg px-8">
+        <div className="flex items-center h-[100px]">
           <h1 className="text-3xl font-bold">FORUM</h1>
           <button 
-            className="bg-black text-white px-4 py-2 rounded-md ml-4"
+            className="bg-blue-500 shadow-lg hover:scale-95 transition-all duration-200 text-white px-4 py-2 rounded-md ml-4"
             onClick={handleAddPost}
           >
             Add Post
           </button>
         </div>
+        <NavLink to="/dashboard/profile">
+            <CgProfile className='text-[40px] cursor-pointer hover:scale-95 duration-200 transition-all hover:text-blue-500' />
+        </NavLink>
       </div>
 
       {showNewPostForm && (
-        <div className="bg-white p-4 rounded-md shadow-md mb-6 w-full">
+        <div className="bg-white p-4 rounded-md shadow-md mb-6 w-[95%]">
           <form onSubmit={handleSubmitPost}>
             <input
               type="text"
-              className="w-full p-2 border border-gray-300 rounded-md mb-2"
-              placeholder="Post title"
+              className="w-full p-2 border border-gray-300 rounded-md mb-2 px-6"
+              placeholder="Your Query"
               value={newPostTitle}
               onChange={(e) => setNewPostTitle(e.target.value)}
+              required
             />
             <div className="flex justify-end">
+
+              <button className='mr-4 bg-gray-300 shadow-lg rounded-md px-4 py-2
+                hover:scale-95 transition-all duration-200'
+                onClick={() => setShowNewPostForm(false)}
+                >Cancel</button>
+
               <button 
                 type="submit" 
-                className="bg-black text-white px-4 py-2 rounded-md"
+                className="bg-blue-500 shadow-lg text-white px-4 py-2 rounded-md duration-200 transition-all hover:scale-95"
               >
                 Submit
               </button>
@@ -126,7 +138,7 @@ export default function Forum() {
       )}
 
       {posts.map((post) => (
-        <div key={post.id} className="bg-gray-200 rounded-md shadow-md mb-6 w-full">
+        <div key={post.id} className="bg-gray-200 rounded-md shadow-md mb-6 w-[95%]">
           <div className="p-4">
             <div className="flex items-center mb-2">
               <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center text-gray-500 mr-2">
@@ -174,13 +186,13 @@ export default function Forum() {
                   ></textarea>
                   <div className="flex justify-end gap-2">
                     <button 
-                      className="bg-gray-300 text-black px-4 py-2 rounded-md"
+                      className="bg-gray-300 shadow-lg text-black px-4 py-2 rounded-md hover:scale-95 transition-all duration-200"
                       onClick={handleCancelReply}
                     >
                       Cancel
                     </button>
                     <button 
-                      className="bg-black text-white px-4 py-2 rounded-md"
+                      className="bg-blue-500 hover:scale-95 transition-all duration-200 shadow-lg text-white px-4 py-2 rounded-md"
                       onClick={() => handleSubmitReply(post.id)}
                     >
                       Submit
@@ -190,7 +202,7 @@ export default function Forum() {
               ) : (
                 <div className="flex justify-end mt-2">
                   <button 
-                    className="bg-black text-white px-4 py-2 rounded-md"
+                    className="bg-black text-white px-4 py-2 rounded-md hover:scale-95 transition-all duration-200"
                     onClick={() => handleReplyClick(post.id)}
                   >
                     Reply

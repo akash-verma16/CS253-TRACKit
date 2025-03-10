@@ -27,7 +27,7 @@ export default function CourseHome({ present, total, role }) {
       <div className='flex justify-between p-3 px-8 items-center sticky top-0 bg-[#F5F5F5] shadow-lg'>
           <p className='text-[32px] uppercase font-semibold m-4'>Course Home</p>
           <NavLink to="/dashboard/profile">
-            <CgProfile className='text-[40px] cursor-pointer' />
+            <CgProfile className='text-[40px] cursor-pointer hover:scale-95 duration-200 transition-all hover:text-blue-500' />
           </NavLink>
       </div>
 
