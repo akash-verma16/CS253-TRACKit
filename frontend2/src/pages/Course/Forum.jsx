@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { FaUser } from 'react-icons/fa'; 
-import { CgProfile } from 'react-icons/cg'
+import { CgProfile } from 'react-icons/cg';
 import { NavLink } from 'react-router-dom';
 import { AiOutlineDelete } from 'react-icons/ai';
 
-export default function Forum({role}) {
+export default function Forum({ role }) {
   const [posts, setPosts] = useState([
     {
       id: 1,
@@ -32,10 +32,27 @@ export default function Forum({role}) {
     }
   ]);
 
-  const [newPostTitle, setNewPostTitle] = useState('');
+  const [newQuery, setNewQuery] = useState('');
   const [showNewPostForm, setShowNewPostForm] = useState(false);
   const [replyingToPost, setReplyingToPost] = useState(null);
   const [replyContent, setReplyContent] = useState('');
+
+  // Delete a post by filtering it out of the posts state
+  const handleDeletePost = (postId) => {
+    setPosts(prevPosts => prevPosts.filter(post => post.id !== postId));
+  };
+
+  const handleDeleteReply = (postId, replyId) => {
+    setPosts(prevPosts => prevPosts.map(post => {
+      if (post.id === postId) {
+        return {
+          ...post,
+          replies: post.replies.filter(reply => reply.id !== replyId)
+        };
+      }
+      return post;
+    }));
+  };
 
   const handleAddPost = () => {
     setShowNewPostForm(true);
@@ -43,16 +60,15 @@ export default function Forum({role}) {
 
   const handleSubmitPost = (e) => {
     e.preventDefault();
-    if (newPostTitle.trim()) {
+    if (newQuery.trim()) {
       const newPost = {
         id: posts.length + 1,
-        title: newPostTitle,
         author: 'currentUser',
-        content: '',
+        query: newQuery,
         replies: []
       };
       setPosts([...posts, newPost]);
-      setNewPostTitle('');
+      setNewQuery('');
       setShowNewPostForm(false);
     }
   };
@@ -91,19 +107,18 @@ export default function Forum({role}) {
   };
 
   return (
-    <div className=" bg-gray-100 min-h-screen flex flex-col items-center w-full h-full ml-9">
+    <div className="bg-gray-100 min-h-screen flex flex-col items-center w-full h-full ml-9">
       <div className="flex items-center justify-between w-full mb-6 sticky top-0 bg-[#F5F5F5] shadow-lg px-8">
         <div className="flex items-center h-[100px]">
           <h1 className="text-3xl font-bold">FORUM</h1>
           <button 
             className="bg-blue-500 shadow-lg hover:scale-95 transition-all duration-200 text-white px-4 py-2 rounded-md ml-4"
-            onClick={handleAddPost}
-          >
+            onClick={handleAddPost}>
             Add Post
           </button>
         </div>
         <NavLink to="/dashboard/profile">
-            <CgProfile className='text-[40px] cursor-pointer hover:scale-95 duration-200 transition-all hover:text-blue-500' />
+          <CgProfile className='text-[40px] cursor-pointer hover:scale-95 transition-all duration-200 hover:text-blue-500' />
         </NavLink>
       </div>
 
@@ -114,21 +129,18 @@ export default function Forum({role}) {
               type="text"
               className="w-full p-2 border border-gray-300 rounded-md mb-2 px-6"
               placeholder="Your Query"
-              value={newPostTitle}
-              onChange={(e) => setNewPostTitle(e.target.value)}
-              required
-            />
+              value={newQuery}
+              onChange={(e) => setNewQuery(e.target.value)}
+              required />
             <div className="flex justify-end">
-
-              <button className='mr-4 bg-gray-300 shadow-lg rounded-md px-4 py-2
-                hover:scale-95 transition-all duration-200'
-                onClick={() => setShowNewPostForm(false)}
-                >Cancel</button>
-
+              <button 
+                className='mr-4 bg-gray-300 shadow-lg rounded-md px-4 py-2 hover:scale-95 transition-all duration-200'
+                onClick={() => setShowNewPostForm(false)}>
+                Cancel
+              </button>
               <button 
                 type="submit" 
-                className="bg-blue-500 shadow-lg text-white px-4 py-2 rounded-md duration-200 transition-all hover:scale-95"
-              >
+                className="bg-blue-500 shadow-lg text-white px-4 py-2 rounded-md duration-200 transition-all hover:scale-95">
                 Submit
               </button>
             </div>
@@ -146,13 +158,13 @@ export default function Forum({role}) {
                 </div>
                 <span className="text-sm text-gray-600">{post.author}</span>
               </div>
-              {
-                role !== 'student' && (
-                  <AiOutlineDelete className='text-red-600 text-[28px] mr-4 hover:scale-110 transition-all duration-200 '></AiOutlineDelete>
-                )
-              }
+              {role !== 'student' && (
+                <AiOutlineDelete 
+                  className='text-red-600 text-[28px] hover:scale-110 transition-all duration-200'
+                  onClick={() => handleDeletePost(post.id)}
+                />
+              )}
             </div>
-            <h2 className="text-lg font-semibold mb-2">{post.title}</h2>
             {post.query && (
               <div className="bg-white p-4 rounded-md mb-4">
                 <p className="whitespace-pre-line">{post.query}</p>
@@ -169,16 +181,16 @@ export default function Forum({role}) {
                       </div>
                       <span className="text-sm text-gray-600">{reply.author}</span>
                     </div>
-                    {
-                      role !== 'student' && (
-                        <AiOutlineDelete className='text-red-600 text-[28px] hover:scale-110 transition-all duration-200 '></AiOutlineDelete>
-                      )
-                    }
+                    {role !== 'student' && (
+                      <AiOutlineDelete 
+                        className='text-red-600 text-[28px] hover:scale-110 transition-all duration-200'
+                        onClick={() => handleDeleteReply(post.id, reply.id)}
+                      />
+                    )}
                   </div>
                   <p className="whitespace-pre-line">{reply.content}</p>
                 </div>
               ))}
-              
               {replyingToPost === post.id ? (
                 <div className="bg-white p-4 rounded-md mb-2">
                   <textarea
@@ -191,14 +203,12 @@ export default function Forum({role}) {
                   <div className="flex justify-end gap-2">
                     <button 
                       className="bg-gray-300 shadow-lg text-black px-4 py-2 rounded-md hover:scale-95 transition-all duration-200"
-                      onClick={handleCancelReply}
-                    >
+                      onClick={handleCancelReply}>
                       Cancel
                     </button>
                     <button 
                       className="bg-blue-500 hover:scale-95 transition-all duration-200 shadow-lg text-white px-4 py-2 rounded-md"
-                      onClick={() => handleSubmitReply(post.id)}
-                    >
+                      onClick={() => handleSubmitReply(post.id)}>
                       Submit
                     </button>
                   </div>
@@ -207,8 +217,7 @@ export default function Forum({role}) {
                 <div className="flex justify-end mt-2">
                   <button 
                     className="bg-black text-white px-4 py-2 rounded-md hover:scale-95 transition-all duration-200 hover:bg-blue-500"
-                    onClick={() => handleReplyClick(post.id)}
-                  >
+                    onClick={() => handleReplyClick(post.id)}>
                     Reply
                   </button>
                 </div>
