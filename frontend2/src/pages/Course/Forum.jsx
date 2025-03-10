@@ -160,7 +160,7 @@ export default function Forum({ role }) {
               </div>
               {role !== 'student' && (
                 <AiOutlineDelete 
-                  className='text-red-600 text-[28px] hover:scale-110 transition-all duration-200'
+                  className='text-red-600 mr-4 text-[28px] hover:scale-110 transition-all duration-200'
                   onClick={() => handleDeletePost(post.id)}
                 />
               )}
