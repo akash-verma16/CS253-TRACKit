@@ -20,7 +20,7 @@ export default function Courses({role, course}) {
         {/* In the coursehome based on the role of the user, some components are hidden. */}
         <Route path='coursehome' element={<CourseHome present={19} total={20} role={role}/>} ></Route>
         <Route path='lectures' element={<Lectures/>} ></Route>
-        <Route path='announcements' element={<Announcements/>} ></Route>
+        <Route path='announcements' element={<Announcements role={role}/>}></Route>
         <Route path='calendar' element={<Calendar/>} ></Route>
         <Route path='result' element={<Results/>} ></Route>
         <Route path='forum' element={<Forum role={role}/>} ></Route>
