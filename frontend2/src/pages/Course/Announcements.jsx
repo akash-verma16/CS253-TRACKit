@@ -65,7 +65,7 @@ export default function Announcements({ role }) {
                 </div>
               </div>
               <div 
-              className={`overflow-hidden transition-all duration-300 ${expandedIndices[index] ? 'max-h-40 opacity-100 py-3' : 'max-h-0 opacity-0'}`}
+              className={`overflow-hidden transition-all duration-300  ${expandedIndices[index] ? 'max-h-40 opacity-100 py-3' : 'max-h-0 opacity-0'}`}
             >
                 {item.description}
               </div>
