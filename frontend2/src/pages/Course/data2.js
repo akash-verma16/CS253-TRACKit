@@ -21,7 +21,7 @@ const   data = [
         "description": "JSON consists of key-value pairs, arrays, and nested objects, making it flexible for different data representations."
     },
     {
-        "title": "Assignment2 uploaded",
+        "title": "Assignment 2 uploaded",
         "description": "Assignment 2 has been uploaded on the website. Please download the assignment and submit it before the deadline."
     },
     {
