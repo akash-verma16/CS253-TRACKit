@@ -35,8 +35,9 @@ db.sequelize.sync({ force: process.env.NODE_ENV === 'development' })
     console.log('Database synced successfully');
     // Initialize database with sample data (in development)
     if (process.env.NODE_ENV === 'development') {
-      // Add a slight delay to ensure all tables are fully created
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Add a longer delay to ensure all tables are fully created and ready
+      console.log('Waiting for database tables to settle before initialization...');
+      await new Promise(resolve => setTimeout(resolve, 3000));
       try {
         await require('./utils/initState')();
       } catch (error) {

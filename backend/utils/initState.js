@@ -313,12 +313,14 @@ async function createAnnouncements(courses, facultyUsers) {
     
     try {
       // Verify the faculty record exists in the faculty table
-      const facultyProfile = await Faculty.findByPk(faculty.id);
+      const facultyProfile = await db.Faculty.findByPk(faculty.id);
       if (!facultyProfile) {
         console.log(`Faculty profile for ${faculty.username} not found, skipping announcements`);
         continue;
       }
-      
+      //console.log(typeof facultyProfile);
+      //console.log(`Facultyprofile for ${facultyProfile.firstName} found`);
+      //console.log(`Faculty profile for ${faculty.id} found`);
       // Create 4 announcements for this course
       for (let j = 1; j <= 4; j++) {
         await Announcement.create({

@@ -24,6 +24,10 @@ module.exports = (sequelize, Sequelize) => {
     semester: {
       type: Sequelize.STRING
     }
+  }, {
+    // Add these options to control table naming
+    freezeTableName: true, // Prevents pluralization
+    tableName: 'course'   // Explicitly sets the table name
   });
 
   return Course;
