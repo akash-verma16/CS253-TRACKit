@@ -22,7 +22,7 @@ The backend of TRACKit provides a secure API for course management, user authent
 After cloning the repository, you need to create a `.env` file in the backend directory with the following variables:
 
 ```
-PORT=3000
+PORT=3001
 JWT_SECRET=your_secure_random_string_here
 NODE_ENV=development
 DB_PATH=./database.sqlite
