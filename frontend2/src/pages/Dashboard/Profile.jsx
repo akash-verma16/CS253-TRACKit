@@ -18,9 +18,9 @@ export default function Profile() {
             <img src={imgMy} alt="img" className='w-[130px] aspect-square rounded-full absolute right-[42%] top-[29%]' />
 
             <div>
-                <p className='text-[50px] mt-[60px] text-center'> Ved Prakash Vishwakarma </p>
+                <p className='text-[50px] mt-[60px] text-center'> Ved Prakas Viswakarma </p>
                 <p className='text-center text-[18px] mt-6'>
-                    <span className='font-bold'>Roll No :</span> <span>221180</span>
+                    <span className='font-bold'>Roll No :</span> <span>220024</span>
                 </p>
                 <p className='text-center text-[18px] mt-2'>
                     <span className='font-bold'>Department :</span> <span>EE</span>
