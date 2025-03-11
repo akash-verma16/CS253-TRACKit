@@ -31,12 +31,17 @@ app.use('/api/course-descriptions', require('./routes/courseDescriptionEntry.rou
 
 // Initialize database and sync models
 db.sequelize.sync({ force: process.env.NODE_ENV === 'development' })
-  .then(() => {
+  .then(async () => {
     console.log('Database synced successfully');
     // Initialize database with sample data (in development)
     if (process.env.NODE_ENV === 'development') {
-      require('./utils/initAdmin')();
-      //require('./utils/initState')();
+      // Add a slight delay to ensure all tables are fully created
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      try {
+        await require('./utils/initState')();
+      } catch (error) {
+        console.error('Error during state initialization:', error);
+      }
     }
   })
   .catch(err => {

@@ -8,9 +8,38 @@ const Course = db.Course;
 const Announcement = db.Announcement;
 const CourseDescriptionEntry = db.CourseDescriptionEntry;
 
+// Helper function to ensure tables exist
+async function ensureTablesExist() {
+  try {
+    // Check if tables exist by querying them
+    await User.findOne();
+    await Admin.findOne();
+    await Faculty.findOne();
+    await Student.findOne();
+    await Course.findOne();
+    await Announcement.findOne();
+    await CourseDescriptionEntry.findOne();
+    console.log('All database tables verified.');
+    return true;
+  } catch (error) {
+    console.error('Error checking tables:', error.message);
+    return false;
+  }
+}
+
 module.exports = async function initState() {
   try {
     console.log('Initializing database with demo data...');
+    
+    // First ensure all tables are created
+    console.log('Verifying database tables...');
+    const tablesExist = await ensureTablesExist();
+    
+    if (!tablesExist) {
+      console.log('Waiting for tables to be fully created...');
+      // Add a small delay to ensure tables are created
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
     
     // 1. Create admin user
     const adminUser = await createAdmin();
@@ -78,8 +107,8 @@ async function createCourses() {
   const courses = [
     {
       code: 'EE321',
-      name: 'Digital Signal Processing',
-      description: 'Introduction to signals and systems, discrete-time signals, linear time-invariant systems, z-transforms, Fourier analysis.',
+      name: 'Communication Systems',
+      description: 'Introduction to signals and systems, discrete-time signals, linear time-invariant systems, z-transforms, Fourier analysis, and other aspects of communication systems.',
       credits: 4,
       semester: 'Fall 2023'
     },
@@ -152,9 +181,12 @@ async function createFaculty(courses) {
         lastName: data.lastName,
         userType: 'faculty'
       });
-      
-      // Create faculty profile
-      await Faculty.create({
+    }
+    
+    // Create faculty profile or get existing one
+    let facultyProfile = await Faculty.findByPk(faculty.id);
+    if (!facultyProfile) {
+      facultyProfile = await Faculty.create({
         userId: faculty.id,
         department: data.department,
         position: data.position
@@ -163,8 +195,7 @@ async function createFaculty(courses) {
     
     // Assign faculty to course
     const course = courses[data.courseIndex];
-    // FIX: Pass the faculty object instead of just the ID
-    await course.addFaculty(faculty);
+    await course.addFaculty(facultyProfile.userId); // Pass the userId, not the User object or Faculty object
     
     createdFaculty.push(faculty);
   }
@@ -250,9 +281,12 @@ async function createStudents(courses) {
         lastName: data.lastName,
         userType: 'student'
       });
-      
-      // Create student profile
-      await Student.create({
+    }
+    
+    // Create student profile or get existing one
+    let studentProfile = await Student.findByPk(student.id);
+    if (!studentProfile) {
+      studentProfile = await Student.create({
         userId: student.id,
         rollNumber: data.rollNumber,
         enrollmentYear: data.enrollmentYear,
@@ -262,8 +296,7 @@ async function createStudents(courses) {
     
     // Assign student to courses
     for (const index of data.courseIndices) {
-      // FIX: Pass the student object instead of just the ID
-      await courses[index].addStudent(student);
+      await courses[index].addStudent(studentProfile.userId); // Pass the userId, not the User object or Student object
     }
     
     createdStudents.push(student);
@@ -278,14 +311,26 @@ async function createAnnouncements(courses, facultyUsers) {
     const course = courses[i];
     const faculty = facultyUsers[i];
     
-    // Create 4 announcements for this course
-    for (let j = 1; j <= 4; j++) {
-      await Announcement.create({
-        courseId: course.id,
-        facultyId: faculty.id,
-        announcementHeading: `Announcement ${j} for ${course.code}`,
-        announcementBody: `This is the ${j}${getSuffix(j)} announcement for the course ${course.code}. ${getRandomAnnouncementContent()}`
-      });
+    try {
+      // Verify the faculty record exists in the faculty table
+      const facultyProfile = await Faculty.findByPk(faculty.id);
+      if (!facultyProfile) {
+        console.log(`Faculty profile for ${faculty.username} not found, skipping announcements`);
+        continue;
+      }
+      
+      // Create 4 announcements for this course
+      for (let j = 1; j <= 4; j++) {
+        await Announcement.create({
+          courseId: course.id,
+          facultyId: facultyProfile.userId, // Use the verified facultyId
+          announcementHeading: `Announcement ${j} for ${course.code}`,
+          announcementBody: `This is the ${j}${getSuffix(j)} announcement for the course ${course.code}. ${getRandomAnnouncementContent()}`
+        });
+      }
+      console.log(`Created announcements for ${course.code}`);
+    } catch (error) {
+      console.error(`Error creating announcements for course ${course.code}:`, error.message);
     }
   }
 }
@@ -296,14 +341,26 @@ async function createCourseDescriptionEntries(courses, facultyUsers) {
     const course = courses[i];
     const faculty = facultyUsers[i];
     
-    // Create 4 description entries for this course
-    for (let j = 1; j <= 4; j++) {
-      await CourseDescriptionEntry.create({
-        courseId: course.id,
-        facultyId: faculty.id,
-        courseDescriptionEntryHeading: `Topic ${j} for ${course.code}`,
-        courseDescriptionEntryBody: `This is the ${j}${getSuffix(j)} topic description for the course ${course.code}. ${getRandomDescriptionContent()}`
-      });
+    try {
+      // Verify the faculty record exists
+      const facultyProfile = await Faculty.findByPk(faculty.id);
+      if (!facultyProfile) {
+        console.log(`Faculty profile for ${faculty.username} not found, skipping course descriptions`);
+        continue;
+      }
+      
+      // Create 4 description entries for this course
+      for (let j = 1; j <= 4; j++) {
+        await CourseDescriptionEntry.create({
+          courseId: course.id,
+          facultyId: facultyProfile.userId, // Use the verified facultyId
+          courseDescriptionEntryHeading: `Topic ${j} for ${course.code}`,
+          courseDescriptionEntryBody: `This is the ${j}${getSuffix(j)} topic description for the course ${course.code}. ${getRandomDescriptionContent()}`
+        });
+      }
+      console.log(`Created course descriptions for ${course.code}`);
+    } catch (error) {
+      console.error(`Error creating course descriptions for course ${course.code}:`, error.message);
     }
   }
 }
