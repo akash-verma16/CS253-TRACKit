@@ -33,9 +33,9 @@ app.use('/api/course-descriptions', require('./routes/courseDescriptionEntry.rou
 db.sequelize.sync({ force: process.env.NODE_ENV === 'development' })
   .then(() => {
     console.log('Database synced successfully');
-    // Create admin user if not exists (in development)
+    // Initialize database with sample data (in development)
     if (process.env.NODE_ENV === 'development') {
-      require('./utils/initAdmin')();
+      require('./utils/initState')();
     }
   })
   .catch(err => {
