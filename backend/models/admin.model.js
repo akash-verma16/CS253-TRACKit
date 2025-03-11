@@ -7,11 +7,6 @@ module.exports = (sequelize, Sequelize) => {
         model: 'users',
         key: 'id'
       }
-    },
-    adminLevel: {
-      type: Sequelize.INTEGER,
-      defaultValue: 1,
-      comment: '1: regular, 2: super admin'
     }
   });
 

@@ -8,6 +8,11 @@ module.exports = (sequelize, Sequelize) => {
         key: 'id'
       }
     },
+    rollNumber: {
+      type: Sequelize.STRING,
+      unique: true,
+      allowNull: false
+    },
     enrollmentYear: {
       type: Sequelize.INTEGER,
       allowNull: false

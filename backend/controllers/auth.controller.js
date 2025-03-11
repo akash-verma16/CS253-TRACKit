@@ -26,7 +26,7 @@ exports.signup = async (req, res) => {
     if (req.body.userType === 'admin') {
       await Admin.create({
         userId: user.id,
-        adminLevel: req.body.adminLevel || 1
+        //adminLevel: req.body.adminLevel || 1
       });
     } else if (req.body.userType === 'faculty') {
       await Faculty.create({
@@ -37,6 +37,7 @@ exports.signup = async (req, res) => {
     } else if (req.body.userType === 'student') {
       await Student.create({
         userId: user.id,
+        rollNumber: req.body.rollNumber,
         enrollmentYear: req.body.enrollmentYear,
         major: req.body.major
       });

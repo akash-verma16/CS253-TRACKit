@@ -48,8 +48,24 @@ exports.getCourseById = async (req, res) => {
   try {
     const course = await Course.findByPk(req.params.id, {
       include: [
-        { model: Faculty, as: 'faculty', through: { attributes: [] } },
-        { model: Student, as: 'students', through: { attributes: [] } }
+        { 
+          model: Faculty, 
+          as: 'faculty', 
+          through: { attributes: [] },
+          include: {
+            model: db.User,
+            attributes: ['id', 'username', 'email', 'firstName', 'lastName'] // Exclude password for security
+          }
+        },
+        { 
+          model: Student, 
+          as: 'students', 
+          through: { attributes: [] },
+          include: {
+            model: db.User,
+            attributes: ['id', 'username', 'email', 'firstName', 'lastName'] // Exclude password for security
+          }
+        }
       ]
     });
     

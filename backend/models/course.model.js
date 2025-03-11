@@ -19,7 +19,7 @@ module.exports = (sequelize, Sequelize) => {
     },
     credits: {
       type: Sequelize.INTEGER,
-      defaultValue: 3
+      defaultValue: 9
     },
     semester: {
       type: Sequelize.STRING

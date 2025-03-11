@@ -28,8 +28,7 @@ module.exports = async function initAdmin() {
     });
 
     await Admin.create({
-      userId: admin.id,
-      adminLevel: 2 // Super admin
+      userId: admin.id
     });
 
     console.log('Admin user created successfully');

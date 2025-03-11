@@ -26,6 +26,14 @@ db.Student = require('./student.model')(sequelize, Sequelize);
 db.Course = require('./course.model')(sequelize, Sequelize);
 
 // Setup relationships
+// User relationships with specialized models
+db.User.hasOne(db.Faculty, { foreignKey: 'userId' });
+db.Faculty.belongsTo(db.User, { foreignKey: 'userId' });
+
+db.User.hasOne(db.Student, { foreignKey: 'userId' });
+db.Student.belongsTo(db.User, { foreignKey: 'userId' });
+
+// Course relationships
 db.Course.belongsToMany(db.Faculty, { 
   through: 'course_faculty',
   as: 'faculty',
