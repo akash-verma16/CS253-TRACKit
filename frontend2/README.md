@@ -1,20 +1,22 @@
 ## Setup & Usage
 
 1. Clone the repository to your local machine:
-    ```sh
-    git clone https://github.com/TRACKit-CS253/TRACKit.git
-    ```
+
+   ```sh
+   git clone https://github.com/TRACKit-CS253/TRACKit.git
+   ```
 
 2. Navigate to the frontend folder and install the required packages:
-    ```sh
-    cd TRACKit/frontend2
-    npm install
-    ```
+
+   ```sh
+   cd TRACKit/frontend
+   npm install
+   ```
 
 3. Start the development server:
-    ```sh
-    npm start
-    ```
+   ```sh
+   npm start
+   ```
    The project will be available at [http://localhost:3000](http://localhost:3000).
 
 ## Available Routes
