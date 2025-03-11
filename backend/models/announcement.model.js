@@ -19,9 +19,13 @@ module.exports = (sequelize, Sequelize) => {
           key: 'userId'
         }
       },
-      message: {
+      announcementHeading: {
         type: Sequelize.TEXT,
         allowNull: false
+      },
+      announcementBody: {
+        type: Sequelize.TEXT,
+        allowNull: true
       },
       // seenBy: {
       //   type: Sequelize.JSON,

@@ -24,6 +24,7 @@ db.Admin = require('./admin.model')(sequelize, Sequelize);
 db.Faculty = require('./faculty.model')(sequelize, Sequelize);
 db.Student = require('./student.model')(sequelize, Sequelize);
 db.Course = require('./course.model')(sequelize, Sequelize);
+db.Announcement = require('./announcement.model')(sequelize, Sequelize);
 
 // Setup relationships
 // User relationships with specialized models
@@ -57,5 +58,12 @@ db.Student.belongsToMany(db.Course, {
   as: 'courses',
   foreignKey: 'userId'
 });
+
+// Announcement relationships
+db.Course.hasMany(db.Announcement, { foreignKey: 'courseId', as: 'announcements' });
+db.Announcement.belongsTo(db.Course, { foreignKey: 'courseId' });
+
+db.Faculty.hasMany(db.Announcement, { foreignKey: 'facultyId', as: 'announcements' });
+db.Announcement.belongsTo(db.Faculty, { foreignKey: 'facultyId' });
 
 module.exports = db;

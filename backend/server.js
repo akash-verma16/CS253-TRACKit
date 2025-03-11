@@ -26,6 +26,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/users', require('./routes/user.routes'));
 app.use('/api/courses', require('./routes/course.routes'));
+app.use('/api/announcements', require('./routes/announcement.routes'));
 
 // Initialize database and sync models
 db.sequelize.sync({ force: process.env.NODE_ENV === 'development' })

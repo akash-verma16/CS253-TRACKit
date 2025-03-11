@@ -184,3 +184,52 @@ exports.deleteUser = async (req, res) => {
     });
   }
 };
+
+// In user.controller.js
+exports.getUserCourses = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const user = await User.findByPk(userId, {
+      attributes: ['id', 'userType']
+    });
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+    
+    let courses = [];
+    
+    if (user.userType === 'student') {
+      const student = await Student.findByPk(userId, {
+        include: [{
+          model: db.Course,
+          as: 'courses',
+          through: { attributes: [] }
+        }]
+      });
+      courses = student ? student.courses : [];
+    } else if (user.userType === 'faculty') {
+      const faculty = await Faculty.findByPk(userId, {
+        include: [{
+          model: db.Course,
+          as: 'courses',
+          through: { attributes: [] }
+        }]
+      });
+      courses = faculty ? faculty.courses : [];
+    }
+    
+    res.status(200).json({
+      success: true,
+      data: courses
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Error retrieving courses'
+    });
+  }
+};

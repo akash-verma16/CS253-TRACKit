@@ -20,6 +20,17 @@ router.get('/:id', verifyToken, async (req, res, next) => {
   }
 }, userController.getUserById);
 
+// Get user courses - Accessible by the user themselves or admin
+router.get('/:id/courses', verifyToken, async (req, res, next) => {
+  if (req.userId == req.params.id) {
+    // User is requesting their own courses
+    return next();
+  } else {
+    // Check if user is an admin
+    return isAdmin(req, res, next);
+  }
+}, userController.getUserCourses);
+
 // Admin only routes
 router.get('/', [verifyToken, isAdmin], userController.getAllUsers);
 router.post('/', [verifyToken, isAdmin], userController.createUser);
