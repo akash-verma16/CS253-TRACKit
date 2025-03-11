@@ -35,7 +35,8 @@ db.sequelize.sync({ force: process.env.NODE_ENV === 'development' })
     console.log('Database synced successfully');
     // Initialize database with sample data (in development)
     if (process.env.NODE_ENV === 'development') {
-      require('./utils/initState')();
+      require('./utils/initAdmin')();
+      //require('./utils/initState')();
     }
   })
   .catch(err => {
