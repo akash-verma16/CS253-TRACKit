@@ -12,7 +12,7 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('http://localhost:3000/api/auth/login', { username, password });//API USED FROM BACKEND
+      const response = await axios.post('http://localhost:3001/api/auth/login', { username, password });//API USED FROM BACKEND
       const token = response.data.token;
       localStorage.setItem('token', token);
       navigate(`/dashboard?token=${token}`); // Replace history.push with navigate
