@@ -77,7 +77,7 @@ Body:
 }
 ```
 
-### Get Course Descriptions
+### Get Announcements
 
 (Need to first login into an account associated with course, and copy the token received from the server)
 
