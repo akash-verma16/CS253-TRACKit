@@ -163,7 +163,8 @@ async function createFaculty(courses) {
     
     // Assign faculty to course
     const course = courses[data.courseIndex];
-    await course.addFaculty(faculty.id);
+    // FIX: Pass the faculty object instead of just the ID
+    await course.addFaculty(faculty);
     
     createdFaculty.push(faculty);
   }
@@ -261,7 +262,8 @@ async function createStudents(courses) {
     
     // Assign student to courses
     for (const index of data.courseIndices) {
-      await courses[index].addStudent(student.id);
+      // FIX: Pass the student object instead of just the ID
+      await courses[index].addStudent(student);
     }
     
     createdStudents.push(student);
@@ -349,7 +351,10 @@ async function printCourseEnrollments(courses) {
     console.log('\nFaculty:');
     if (courseWithEnrollments.faculty && courseWithEnrollments.faculty.length > 0) {
       courseWithEnrollments.faculty.forEach(faculty => {
-        console.log(`- ${faculty.user.firstName} ${faculty.user.lastName} (${faculty.user.username})`);
+        // FIX: Add null check before accessing user properties
+        if (faculty.user) {
+          console.log(`- ${faculty.user.firstName} ${faculty.user.lastName} (${faculty.user.username})`);
+        }
       });
     } else {
       console.log('No faculty assigned');
@@ -359,7 +364,10 @@ async function printCourseEnrollments(courses) {
     console.log('\nStudents:');
     if (courseWithEnrollments.students && courseWithEnrollments.students.length > 0) {
       courseWithEnrollments.students.forEach(student => {
-        console.log(`- ${student.user.firstName} ${student.user.lastName} (${student.user.username})`);
+        // FIX: Add null check before accessing user properties
+        if (student.user) {
+          console.log(`- ${student.user.firstName} ${student.user.lastName} (${student.user.username})`);
+        }
       });
     } else {
       console.log('No students enrolled');
