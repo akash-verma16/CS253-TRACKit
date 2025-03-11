@@ -43,13 +43,11 @@ In the future, it will be upgraded to a more robust database like MySQL or Postg
 
 > **Note**: The `.env` file contains sensitive information and should never be committed to version control.
 
-## Default Admin Credentials
+## Default State
 
-The system automatically creates an admin user on first run:
+The system automatically creates a default state with 1 Admin, 2 Courses, 2 Faculty and 5 Students. Their login credentials will be printed in your console/terminal. A database called `database.sqlite` should get created in this backend folder on your local machine. 
+This default state is being created by `backend/utils/initState.js`
 
-Username: admin
-
-Password: admin123
 
 ## How to send requests?
 
