@@ -107,23 +107,6 @@ export default function Forum({ role }) {
     }
   };
 
-  const handleDeletePost = (postId) => {
-    setPosts(posts.filter(post => post.id !== postId));
-  };
-
-  const handleDeleteReply = (postId, replyId) => {
-    const updatedPosts = posts.map(post => {
-      if (post.id === postId) {
-        return {
-          ...post,
-          replies: post.replies.filter(reply => reply.id !== replyId)
-        };
-      }
-      return post;
-    });
-    setPosts(updatedPosts);
-  };
-
   return (
     <div className="bg-gray-100 min-h-screen flex flex-col items-center w-full h-full ml-9">
       <div className="flex items-center justify-between w-full mb-6 sticky top-0 bg-[#F5F5F5] shadow-lg px-8">
