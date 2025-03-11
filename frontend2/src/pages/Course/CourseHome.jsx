@@ -24,16 +24,16 @@ export default function CourseHome({ present, total, role }) {
 
   return (
     <div className='w-full h-full ml-4'>
-      <div className='flex justify-between p-3 px-8 items-center sticky top-0 bg-[#F5F5F5]'>
+      <div className='flex justify-between p-3 px-8 items-center sticky top-0 bg-[#F5F5F5] shadow-lg'>
           <p className='text-[32px] uppercase font-semibold m-4'>Course Home</p>
           <NavLink to="/dashboard/profile">
-            <CgProfile className='text-[40px] cursor-pointer' />
+            <CgProfile className='text-[40px] cursor-pointer hover:scale-95 duration-200 transition-all hover:text-blue-500' />
           </NavLink>
       </div>
 
       <div className='flex justify-evenly items-center'>
         <div>
-          <p className='font-semibold text-[19px] mb-2'>New Events</p>
+          <p className='font-semibold text-[19px] mb-2 mt-4'>New Events</p>
           <iframe 
             src="https://calendar.google.com/calendar/embed?height=400&wkst=1&ctz=Asia%2FKolkata&showPrint=0&mode=AGENDA&showNav=0&showDate=0&showCalendars=0&showTz=0&showTitle=0&src=dmVkdmlzaHdha2FybWEyMjZAZ21haWwuY29t&src=OWYxMWIzMDdjZTFjZTU1OWY3NDUyZTQ3ZWJhNmNkN2JkYjY4ODk1ZjI4MmRkODY0MjIxZjQ4NWM4MzVlNGE4MEBncm91cC5jYWxlbmRhci5nb29nbGUuY29t&src=ZW4uaW5kaWFuI2hvbGlkYXlAZ3JvdXAudi5jYWxlbmRhci5nb29nbGUuY29t&color=%23039BE5&color=%23E67C73&color=%230B8043" 
             width={`${role=="student" ? 700 : 850}`} 
@@ -70,13 +70,13 @@ export default function CourseHome({ present, total, role }) {
                 {
                   role!="student" &&
                   <div className='flex gap-2 items-center'>
-                    <button onClick={editHandler}><FaRegEdit className='text-[22px]'></FaRegEdit></button>
-                    <button onClick={deleteHandler}><AiOutlineDelete className='text-[22px] text-red-600'></AiOutlineDelete></button>
+                    <button onClick={editHandler}><FaRegEdit className='text-[22px] hover:scale-105 transition-all duration-200 hover:shadow-lg'></FaRegEdit></button>
+                    <button onClick={deleteHandler}><AiOutlineDelete className='text-[22px] text-red-600 hover:scale-105 duration-200 transition-all hover:shadow-lg'></AiOutlineDelete></button>
                   </div>
                   
                 }
                 <IoIosArrowDropdown onClick={() => toggleExpand(index)}
-                  className={`text-[25px] transform transition-transform duration-500 ${expandedIndices[index] ? 'rotate-180' : ''}`}
+                  className={`text-[25px] transform transition-transform hover:scale-105 hover:shadow-xl duration-500 ${expandedIndices[index] ? 'rotate-180' : ''}`}
                 />
                 </div>
               </div>
