@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { FaUser } from 'react-icons/fa'; 
+import { FaUser } from 'react-icons/fa';      //resolved
 import { CgProfile } from 'react-icons/cg';
 import { NavLink } from 'react-router-dom';
+
 import { AiOutlineDelete } from 'react-icons/ai';
 
 export default function Forum({ role }) {
@@ -106,6 +107,23 @@ export default function Forum({ role }) {
     }
   };
 
+  const handleDeletePost = (postId) => {
+    setPosts(posts.filter(post => post.id !== postId));
+  };
+
+  const handleDeleteReply = (postId, replyId) => {
+    const updatedPosts = posts.map(post => {
+      if (post.id === postId) {
+        return {
+          ...post,
+          replies: post.replies.filter(reply => reply.id !== replyId)
+        };
+      }
+      return post;
+    });
+    setPosts(updatedPosts);
+  };
+
   return (
     <div className="bg-gray-100 min-h-screen flex flex-col items-center w-full h-full ml-9">
       <div className="flex items-center justify-between w-full mb-6 sticky top-0 bg-[#F5F5F5] shadow-lg px-8">
@@ -181,11 +199,13 @@ export default function Forum({ role }) {
                       </div>
                       <span className="text-sm text-gray-600">{reply.author}</span>
                     </div>
-                    {role !== 'student' && (
+
+                    {role !== 'student' && (    //issue resolved
                       <AiOutlineDelete 
                         className='text-red-600 text-[28px] hover:scale-110 transition-all duration-200'
                         onClick={() => handleDeleteReply(post.id, reply.id)}
                       />
+
                     )}
                   </div>
                   <p className="whitespace-pre-line">{reply.content}</p>
