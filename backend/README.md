@@ -18,28 +18,25 @@ The backend of TRACKit provides a secure API for course management, user authent
 ## How to run the server
 
 1. Clone the repo.
-   
-  After cloning the repository, you need to create a `.env` file in the backend directory with the following variables:
-  
-  ```
-  PORT=3000
-  JWT_SECRET=your_secure_random_string_here
-  NODE_ENV=development
-  DB_PATH=./database.sqlite
-  ```
-  
-  Replace `your_secure_random_string_here` with a strong random string to secure your JWT tokens.
+
+After cloning the repository, you need to create a `.env` file in the backend directory with the following variables:
+
+```
+PORT=3000
+JWT_SECRET=your_secure_random_string_here
+NODE_ENV=development
+DB_PATH=./database.sqlite
+```
+
+Replace `your_secure_random_string_here` with a strong random string to secure your JWT tokens.
 
 2. run `npm install` in terminal.
 
 3. run `npm start` in terminal.
 
-
-
-
 ## Database
 
-The application uses SQLite by default. The database file (database.sqlite) will be 
+The application uses SQLite by default. The database file (database.sqlite) will be
 automatically created in the backend directory when the server first runs. This file
 is excluded from version control.
 In the future, it will be upgraded to a more robust database like MySQL or PostgreSQL.
@@ -53,3 +50,44 @@ The system automatically creates an admin user on first run:
 Username: admin
 
 Password: admin123
+
+## How to send requests?
+
+In general, to find how to get/do something, first start tracing the url from server.js, then look to the correct routes.js file according to your requirement.
+
+For example,
+
+### Login
+
+Method: `POST`
+
+URL: `http://localhost:3000/api/auth/login`
+
+Headers:
+
+Key: `Content-Type`
+Value: `application/json`
+
+Body:
+
+```json
+{
+  "username": "faculty1",
+  "password": "faculty123"
+}
+```
+
+### Get Course Descriptions
+
+(Need to first login into an account associated with course, and copy the token received from the server)
+
+Method: `GET`
+
+URL: `http://localhost:3000/api/announcements/course/1`
+
+Headers:
+
+Key: `Authorization`
+Value: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwidXNlclR5cGUiOiJmYWN1bHR5IiwiaWF0IjoxNzQxNjgyNTgzLCJleHAiOjE3NDE3Njg5ODN9.fQjsAcAfZWRVFLLNC_L8Az9ysQQB6PNhTc8FdpsK1dc`
+
+(Replace the token with your actual token)
