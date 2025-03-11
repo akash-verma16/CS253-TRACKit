@@ -59,16 +59,20 @@ For example,
 
 ### Login
 
-Method: `POST`
+#### Method:
 
-URL: `http://localhost:3000/api/auth/login`
+`POST`
 
-Headers:
+#### URL:
+
+`http://localhost:3000/api/auth/login`
+
+#### Headers:
 
 Key: `Content-Type`
 Value: `application/json`
 
-Body:
+#### Body:
 
 ```json
 {
@@ -81,13 +85,49 @@ Body:
 
 (Need to first login into an account associated with course, and copy the token received from the server)
 
-Method: `GET`
+#### Method:
 
-URL: `http://localhost:3000/api/announcements/course/1`
+`GET`
 
-Headers:
+#### URL:
+
+`http://localhost:3000/api/announcements/course/1`
+
+#### Headers:
 
 Key: `Authorization`
 Value: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwidXNlclR5cGUiOiJmYWN1bHR5IiwiaWF0IjoxNzQxNjgyNTgzLCJleHAiOjE3NDE3Njg5ODN9.fQjsAcAfZWRVFLLNC_L8Az9ysQQB6PNhTc8FdpsK1dc`
 
 (Replace the token with your actual token)
+
+### Create Announcements as a Faculty
+
+(Need to first login into an account associated with course, and copy the token received from the server)
+
+#### Method:
+
+`POST`
+
+#### URL:
+
+`http://localhost:3000/api/announcements`
+
+#### Headers (2 Headers):
+
+Key: `Content-Type`
+Value: `application/json`
+
+Key: `Authorization`
+Value: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwidXNlclR5cGUiOiJmYWN1bHR5IiwiaWF0IjoxNzQxNjgyNTgzLCJleHAiOjE3NDE3Njg5ODN9.fQjsAcAfZWRVFLLNC_L8Az9ysQQB6PNhTc8FdpsK1dc`
+
+(Replace the token with your actual token)
+
+#### Body:
+
+```json
+{
+  "courseId": 1,
+  "announcementHeading": "Announcement: This Works!",
+  "announcementBody": "As you can see, this works!"
+}
+```
