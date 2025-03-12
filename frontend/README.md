@@ -52,37 +52,7 @@ npm start
 
 The frontend will be available at: [http://localhost:3000](http://localhost:3000)
 
-### 3. Setup the Backend
 
-_Note: The backend location and technology stack may vary. The instructions below assume a Node.js/Express backend._
-
-Navigate to the `backend` folder and install the necessary packages:
-
-```sh
-cd ../backend
-npm install
-```
-
-#### Configure the Backend Environment
-
-Create a `.env` file in the `backend/` directory and set the required environment variables. For example:
-
-```env
-PORT=5000
-DATABASE_URL=your_database_connection_string
-```
-
-#### Start the Backend Server
-
-Start the backend server by running:
-
-```sh
-npm start
-```
-
-The API endpoints will typically be available at: [http://localhost:5000](http://localhost:5000)
-
----
 
 ## Available Routes
 
