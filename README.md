@@ -4,4 +4,4 @@ Login is working
 
 1. npm start the backend on port 3001 (complete instructions in README in backend)
 2. npm run build frontend2, then npm start it.(suppose port 3000)
-4. localhost:3001/login
+4. localhost:3000/login
