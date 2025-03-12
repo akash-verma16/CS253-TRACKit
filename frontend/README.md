@@ -138,9 +138,3 @@ Your backend API endpoints may include (refer to specific backend documentation)
   Both the frontend and backend use environment variables to determine API URLs and configuration parameters.
 
 ---
-
-## Contributing
-
-Contributions are welcome! If you find a bug or have an improvement suggestion, please open an issue or submit a pull request.
-
-Happy coding!
