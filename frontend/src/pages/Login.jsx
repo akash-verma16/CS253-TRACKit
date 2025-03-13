@@ -12,15 +12,10 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('http://localhost:3000/api/auth/login', { username, password });//API USED FROM BACKEND
-      const { token, user } = response.data;
+      const response = await axios.post('http://localhost:3001/api/auth/login', { username, password });//API USED FROM BACKEND
+      const token = response.data.token;
       localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user)); // Store user information
-      if (user.userType === 'admin') {
-        navigate(`/admin`); // Navigate to admin page if userType is admin
-      } else {
-        navigate(`/dashboard`); // Navigate to dashboard otherwise
-      }
+      navigate(`/dashboard?token=${token}`); // Replace history.push with navigate
     } catch (err) {
       setError('Invalid credentials');
     }
