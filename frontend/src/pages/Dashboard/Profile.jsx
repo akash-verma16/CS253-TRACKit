@@ -3,17 +3,10 @@ import imgMy from '../../assets/ved.png';
 import texture from '../../assets/textures.jpg';
 
 export default function Profile() {
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    const storedUser = JSON.parse(localStorage.getItem('user'));
-    setUser(storedUser);
-  }, []);
-
-  if (!user) {
-    return <div>Loading...</div>;
-  }
-
+  
+   const user=JSON.parse(localStorage.getItem('user'));
+    
+ 
   return (
     <div className='w-full h-full flex items-center justify-center'>
         <div className='relative w-[80%] h-[80%] border shadow-2xl rounded-xl'>

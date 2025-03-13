@@ -21,6 +21,7 @@ const Login = () => {
       } else { 
         navigate(`/dashboard`); // Navigate to dashboard otherwise
       }
+      window.location.reload();//as the entire react app needs  to be refreshed
     } catch (err) {
       setError('Invalid credentials');
     }

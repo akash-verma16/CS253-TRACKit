@@ -1,4 +1,5 @@
 import "./App.css";
+import React, { useState, useEffect } from 'react';
 import Admin from "./pages/Admin";
 import Login from "./pages/Login";
 import { Route, Routes } from "react-router-dom";
@@ -6,6 +7,7 @@ import Dashboard from "./pages/Dashboard/Dashboard";
 import Courses from "./pages/Course/Courses";
 
 function App() {
+  
   const user = JSON.parse(localStorage.getItem('user'));
   const role = user.userType;
   
