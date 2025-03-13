@@ -2,6 +2,8 @@ import React from 'react'
 import imgMy from '../../assets/ved.png'
 import texture from '../../assets/textures.jpg'
 
+const user = JSON.parse(localStorage.getItem('user'));
+
 export default function Profile() {
   return (
     <div className='w-full h-full flex items-center justify-center'>
@@ -18,7 +20,7 @@ export default function Profile() {
             <img src={imgMy} alt="img" className='w-[130px] aspect-square rounded-full absolute right-[42%] top-[29%]' />
 
             <div>
-                <p className='text-[50px] mt-[60px] text-center'> Ved Prakas Viswakarma </p>
+                <p className='text-[50px] mt-[60px] text-center'> {user.firstName} {user.lastName}</p>
                 <p className='text-center text-[18px] mt-6'>
                     <span className='font-bold'>Roll No :</span> <span>220024</span>
                 </p>

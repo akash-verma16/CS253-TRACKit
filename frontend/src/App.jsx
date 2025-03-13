@@ -6,9 +6,10 @@ import Dashboard from "./pages/Dashboard/Dashboard";
 import Courses from "./pages/Course/Courses";
 
 function App() {
-
-  const role = "student";
-
+  const user = JSON.parse(localStorage.getItem('user'));
+  const role = user.userType;
+  
+  
   const courses = [
     {code: 'EE320', name: 'Digital Signal Processing', prof:"Abhishek Gupta"},
     {code: 'CS330', name: 'Operating Systems', prof:"Mainak Chaudhuri"},

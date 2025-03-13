@@ -18,7 +18,7 @@ const Login = () => {
       localStorage.setItem('user', JSON.stringify(user)); // Store user information
       if (user.userType === 'admin') {
         navigate(`/admin`); // Navigate to admin page if userType is admin
-      } else {
+      } else { 
         navigate(`/dashboard`); // Navigate to dashboard otherwise
       }
     } catch (err) {
