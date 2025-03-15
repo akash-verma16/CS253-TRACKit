@@ -19,7 +19,7 @@ const Login = () => {
       if (user.userType === 'admin') {
         navigate(`/admin`); // Navigate to admin page if userType is admin
       } else { 
-        navigate(`/dashboard`); // Navigate to dashboard otherwise
+        navigate(`/dashboard/courses`); // Navigate to dashboard otherwise
       }
       window.location.reload();//as the entire react app needs  to be refreshed
     } catch (err) {
