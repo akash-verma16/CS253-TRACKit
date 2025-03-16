@@ -4,11 +4,14 @@ import { FaRegUser } from "react-icons/fa";
 import { PiGraduationCap } from "react-icons/pi";
 import { GrDocumentPerformance } from "react-icons/gr";
 import { RiCustomerService2Line } from "react-icons/ri";
-import { NavLink } from 'react-router-dom';
+import { FiLogOut } from "react-icons/fi"; // Import logout icon
+import { NavLink, useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext'; // Import useAuth hook
 
 export default function DashBoardMenu() {
-
     const [activeTab, setActiveTab] = useState('courses');
+    const { logout } = useAuth(); // Get logout function from auth context
+    const navigate = useNavigate();
     
     const tabs = [
       { id: 'courses', label: 'My Courses', icon: <PiGraduationCap /> , link:"/dashboard/courses"},
@@ -16,6 +19,11 @@ export default function DashBoardMenu() {
       { id: 'profile', label: 'Profile', icon: <FaRegUser />, link:"/dashboard/profile" },
       { id: 'contact', label: 'Contact Us', icon: <RiCustomerService2Line />, link:"/dashboard/contactus" },
     ];
+
+    const handleLogout = () => {
+      logout();
+      navigate('/login');
+    };
 
   return (
     <div className='w-[22%] h-[98%] border-2 rounded-lg flex flex-col items-center justify-start
@@ -34,6 +42,20 @@ export default function DashBoardMenu() {
               </NavLink>
           ))}
         </div>
-      </div>
+        
+        {/* Spacer to push logout button to bottom */}
+        <div className="flex-grow"></div>
+        
+        {/* Logout button */}
+        <div className='w-11/12 mb-5 border-t pt-4'>
+          <button 
+            onClick={handleLogout}
+            className="flex gap-2 items-center py-2 px-5 my-1 rounded-lg cursor-pointer hover:scale-[97%] duration-200 transition-all w-full text-red-600 hover:bg-red-50"
+          >
+            <FiLogOut />
+            Logout
+          </button>
+        </div>
+    </div>
   )
 }
