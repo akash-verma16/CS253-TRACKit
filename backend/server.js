@@ -28,7 +28,7 @@ app.use('/api/users', require('./routes/user.routes'));
 app.use('/api/courses', require('./routes/course.routes'));
 app.use('/api/announcements', require('./routes/announcement.routes'));
 app.use('/api/course-descriptions', require('./routes/courseDescriptionEntry.routes'));
-app.use('/api/students', require('./routes/student.routes'));
+app.use('/api/student', require('./routes/student.routes'));
 app.use('/api/faculty', require('./routes/faculty.routes'));
 
 // Initialize database and sync models
