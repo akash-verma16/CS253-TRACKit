@@ -1,14 +1,16 @@
 import "./App.css";
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import Admin from "./pages/Admin";
+import Admin from "./pages/Admin/Admin";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard/Dashboard";
 import Courses from "./pages/Course/Courses";
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import { useAuth } from './contexts/AuthContext';
-
+import AddStudent from "./pages/Admin/AddStudent"; // Import AddStudent component
+import AddFaculty from "./pages/Admin/AddFaculty"; // Import AddFaculty component
+import CreateCourse from "./pages/Admin/createCourse"; // Import CreateCourse component
 // Wrapper component that checks auth status and redirects accordingly
 const AppRoutes = () => {
   const { currentUser, loading } = useAuth();
@@ -56,7 +58,9 @@ const AppRoutes = () => {
       <Route element={<ProtectedRoute requiredRole="admin" />}>
         <Route path="/admin" element={<Admin />} />
       </Route>
-      
+      <Route path="/admin/add-student" element={<AddStudent />} /> {/* Add route for AddStudent */}
+      <Route path="/admin/add-faculty" element={<AddFaculty />} />
+      <Route path="/admin/create-course" element={<CreateCourse />} />
       {/* Dashboard routes - protected for any authenticated user */}
       <Route element={<ProtectedRoute />}>
         <Route path="/dashboard/*" element={<Dashboard course={courses} />} />
