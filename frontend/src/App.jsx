@@ -1,17 +1,19 @@
 import "./App.css";
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Admin from "./pages/Admin";
 import Login from "./pages/Login";
-import { Route, Routes } from "react-router-dom";
 import Dashboard from "./pages/Dashboard/Dashboard";
 import Courses from "./pages/Course/Courses";
+import { AuthProvider } from './contexts/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
+import { useAuth } from './contexts/AuthContext';
 
-function App() {
+// Wrapper component that checks auth status and redirects accordingly
+const AppRoutes = () => {
+  const { currentUser, loading } = useAuth();
   
-  const user = JSON.parse(localStorage.getItem('user'));
-  const role = user.userType;
-  
-  
+  // Sample course data
   const courses = [
     {code: 'EE320', name: 'Digital Signal Processing', prof:"Abhishek Gupta"},
     {code: 'CS330', name: 'Operating Systems', prof:"Mainak Chaudhuri"},
@@ -20,21 +22,68 @@ function App() {
     {code: 'CS253', name: 'Software Development', prof:"Amey Karkare"},
     {code: 'EE370', name: 'Digital Electronics', prof:"Shubham Sahay"},
   ];
-
+  
+  // Show loading state while checking authentication
+  if (loading) {
+    return <div className="w-full h-screen flex items-center justify-center">Loading...</div>;
+  }
+  
+  // Default route handler - redirects based on auth status and user role
+  const handleDefaultRoute = () => {
+    if (!currentUser) {
+      return <Navigate to="/login" replace />;
+    }
+    
+    if (currentUser.userType === 'admin') {
+      return <Navigate to="/admin" replace />;
+    } else {
+      return <Navigate to="/dashboard/courses" replace />;
+    }
+  };
+  
   return (
-    <div >
-      <Routes>
-        <Route path="/login" element={<Login></Login>}></Route>
-        <Route path="/admin" element={<Admin></Admin>}></Route>
-        <Route path="/dashboard/*" element={<Dashboard course={courses}></Dashboard>}></Route>
-        {
-          courses.map(course=>(
-            <Route path={`/${course.code}/*`} element={<Courses role={role} course={course.code}></Courses>}></Route>
-          ))
-        }
-        {/* <Route path="/courses/*" element={<Courses role={role} course={courses}></Courses>}></Route> */}
-      </Routes>
-    </div>
+    <Routes>
+      {/* Default route - redirects based on auth status */}
+      <Route path="/" element={handleDefaultRoute()} />
+      
+      {/* Login route - accessible only when not logged in */}
+      <Route 
+        path="/login" 
+        element={currentUser ? handleDefaultRoute() : <Login />} 
+      />
+      
+      {/* Admin routes - protected for admin users only */}
+      <Route element={<ProtectedRoute requiredRole="admin" />}>
+        <Route path="/admin" element={<Admin />} />
+      </Route>
+      
+      {/* Dashboard routes - protected for any authenticated user */}
+      <Route element={<ProtectedRoute />}>
+        <Route path="/dashboard/*" element={<Dashboard course={courses} />} />
+        
+        {/* Course routes */}
+        {courses.map(course => (
+          <Route 
+            key={course.code}
+            path={`/${course.code}/*`}
+            element={<Courses role={currentUser?.userType} course={course.code} />}
+          />
+        ))}
+      </Route>
+      
+      {/* Catch-all route */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+};
+
+function App() {
+  return (
+    <AuthProvider>
+      <Router>
+        <AppRoutes />
+      </Router>
+    </AuthProvider>
   );
 }
 

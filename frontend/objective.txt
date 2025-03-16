@@ -1,6 +1,6 @@
 I want to connect this partially completed frontend to my app's backend.
 
-First I have to implement the correct login and authentication, and storage of the login credentials in the frontend at a standard place, so that they are available all throughout the frontend.
+First I have to implement the correct login and authentication, and storage of the login credentials in the frontend at a standard place, so that they are available all throughout the frontend. Update the existing files like App.jsx, src/pages/Login.jsx. I have created a basic unfinished gui template for the frontend already.
 
 Now my app has three user types. 
 'admin', 'faculty', and 'student'
