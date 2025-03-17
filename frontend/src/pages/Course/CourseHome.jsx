@@ -140,7 +140,7 @@ export default function CourseHome({ present, total, role }) {
   
   return (
     <div className='w-full h-full'>
-      <div className='flex justify-between p-3 px-8 items-center sticky top-0 bg-[#F5F5F5] shadow-lg'>
+      <div className='flex justify-between py-2 px-8 items-center sticky top-0 bg-[#F5F5F5] shadow-lg'>
         <div>
           <p className='text-[32px] uppercase font-semibold m-4'>{courseDetails.name}</p>
           <p className='text-gray-600 ml-4 -mt-3'>{courseDetails.code} • {courseDetails.credits} Credits • {courseDetails.semester}</p>
@@ -184,7 +184,7 @@ export default function CourseHome({ present, total, role }) {
       </div>
 
       <div className='p-4 mb-10'>
-        <h2 className="text-xl font-bold ml-2 mb-2">Course Materials</h2>
+        <h2 className="text-xl font-bold ml-2 mb-2">Course Details</h2>
         
         {courseSections.map((item, index) => (
           <div key={index} className='mb-2'>

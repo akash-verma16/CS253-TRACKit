@@ -6,9 +6,11 @@ import { FaPlus } from "react-icons/fa";
 import { FaRegEdit } from "react-icons/fa";
 import { AiOutlineDelete } from "react-icons/ai";
 import { NavLink } from 'react-router-dom';
+import { useCourse } from '../../contexts/CourseContext';
 
 export default function Announcements({ role }) {
   const [expandedIndices, setExpandedIndices] = useState({});
+  const { courseDetails, loading, error } = useCourse();
   
   const toggleExpand = (index) => {
     setExpandedIndices(prev => ({ ...prev, [index]: !prev[index] }));
@@ -24,8 +26,11 @@ export default function Announcements({ role }) {
 
   return (
     <div className='w-full h-screen overflow-y-auto'>
-      <div className='flex justify-between shadow-md p-3 px-8 items-center sticky top-0 bg-[#F5F5F5]'>
-        <p className='text-[32px] uppercase font-semibold m-4'>Announcements</p>
+      <div className='flex justify-between shadow-md py-2 px-8 items-center sticky top-0 bg-[#F5F5F5]'>
+        <div>
+          <p className='text-[32px] uppercase font-semibold m-4'>Announcements</p>
+          <p className='text-gray-600 ml-4 -mt-3'>{courseDetails.code} • {courseDetails.credits} Credits • {courseDetails.semester}</p>
+        </div>
         <div className='flex items-center gap-4'>
           {role !== "student" && (
             <button className='bg-blue-500 shadow-xl text-white py-2 px-4 flex justify-center items-center gap-2 hover:bg-green-600 hover:scale-95 transition-all duration-200 rounded'>

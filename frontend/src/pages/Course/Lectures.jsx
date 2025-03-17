@@ -8,9 +8,11 @@ import { AiOutlineDelete } from "react-icons/ai";
 import { FaFilePdf } from "react-icons/fa";
 import { FaDownload } from "react-icons/fa";
 import { NavLink } from 'react-router-dom';
+import { useCourse } from '../../contexts/CourseContext';
 
 export default function Lectures({ role }) {
   const [expandedWeeks, setExpandedWeeks] = useState({});
+  const { courseDetails, loading, error } = useCourse();
   
   const toggleWeek = (weekId) => {
     setExpandedWeeks(prev => ({ ...prev, [weekId]: !prev[weekId] }));
@@ -39,8 +41,11 @@ export default function Lectures({ role }) {
 
   return (
     <div className='w-full h-screen overflow-y-auto'>
-      <div className='flex justify-between p-3 px-8 items-center sticky top-0 bg-[#F5F5F5] shadow-md'>
-        <p className='text-[32px] uppercase font-semibold m-4'>Lectures</p>
+      <div className='flex justify-between py-2 px-8 items-center sticky top-0 bg-[#F5F5F5] shadow-md'>
+      <div>
+          <p className='text-[32px] uppercase font-semibold m-4'>Lectures</p>
+          <p className='text-gray-600 ml-4 -mt-3'>{courseDetails.code} • {courseDetails.credits} Credits • {courseDetails.semester}</p>
+      </div>
         <div className='flex items-center gap-4'>
           {role !== "student" && (
             <button className='bg-blue-500 shadow-xl text-white py-2 px-4 flex justify-center items-center gap-2 hover:bg-green-600 hover:scale-95 transition-all duration-200 rounded'>
