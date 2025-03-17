@@ -11,18 +11,21 @@ import { useAuth } from './contexts/AuthContext';
 import AddStudent from "./pages/Admin/AddStudent"; // Import AddStudent component
 import AddFaculty from "./pages/Admin/AddFaculty"; // Import AddFaculty component
 import CreateCourse from "./pages/Admin/createCourse"; // Import CreateCourse component
-// Wrapper component that checks auth status and redirects accordingly
+import ManageUsers from "./pages/Admin/ManageUsers"; // Import ManageUsers component 
+import ManageCourses from "./pages/Admin/ManageCourses"; // Import ManageCourses component
+import ContactDevelopers from "./pages/Admin/ContactDevelopers"; // Import ContactDevelopers component
+
 const AppRoutes = () => {
   const { currentUser, loading } = useAuth();
   
   // Sample course data
   const courses = [
-    {code: 'EE320', name: 'Digital Signal Processing', prof:"Abhishek Gupta"},
-    {code: 'CS330', name: 'Operating Systems', prof:"Mainak Chaudhuri"},
-    {code: 'CS340', name: 'Computer Networks', prof:"Manindra Agrawal"},
-    {code: 'CS345', name: 'Database Systems', prof:"Arnab Bhattacharya"},
-    {code: 'CS253', name: 'Software Development', prof:"Amey Karkare"},
-    {code: 'EE370', name: 'Digital Electronics', prof:"Shubham Sahay"},
+    { code: 'EE320', name: 'Digital Signal Processing', prof: "Abhishek Gupta" },
+    { code: 'CS330', name: 'Operating Systems', prof: "Mainak Chaudhuri" },
+    { code: 'CS340', name: 'Computer Networks', prof: "Manindra Agrawal" },
+    { code: 'CS345', name: 'Database Systems', prof: "Arnab Bhattacharya" },
+    { code: 'CS253', name: 'Software Development', prof: "Amey Karkare" },
+    { code: 'EE370', name: 'Digital Electronics', prof: "Shubham Sahay" },
   ];
   
   // Show loading state while checking authentication
@@ -57,10 +60,14 @@ const AppRoutes = () => {
       {/* Admin routes - protected for admin users only */}
       <Route element={<ProtectedRoute requiredRole="admin" />}>
         <Route path="/admin" element={<Admin />} />
+        <Route path="/admin/add-student" element={<AddStudent />} />
+        <Route path="/admin/add-faculty" element={<AddFaculty />} />
+        <Route path="/admin/create-course" element={<CreateCourse />} />
+        <Route path="/admin/manage-users" element={<ManageUsers />} /> {/* ManageUsers route */}
+        <Route path="/admin/manage-courses" element={<ManageCourses />} /> {/* ManageCourses route */}
+        <Route path="/admin/contact-developers" element={<ContactDevelopers />} /> {/* ContactDevelopers route */}
       </Route>
-      <Route path="/admin/add-student" element={<AddStudent />} /> {/* Add route for AddStudent */}
-      <Route path="/admin/add-faculty" element={<AddFaculty />} />
-      <Route path="/admin/create-course" element={<CreateCourse />} />
+      
       {/* Dashboard routes - protected for any authenticated user */}
       <Route element={<ProtectedRoute />}>
         <Route path="/dashboard/*" element={<Dashboard course={courses} />} />

@@ -9,6 +9,7 @@ import manageCourse from "../../assets/manageCourse.png";
 import { useAuth } from '../../contexts/AuthContext';
 import LogoutButton from '../../components/LogoutButton';
 import { useNavigate } from 'react-router-dom';
+
 export default function Admin() {
   const navigate = useNavigate();
 
@@ -23,6 +24,19 @@ export default function Admin() {
   const handleCreateCourseClick = () => {
     navigate('/admin/create-course');
   };
+
+  const handleManageUsersClick = () => {
+    navigate('/admin/manage-users');
+  };
+
+  const handleManageCoursesClick = () => {
+    navigate('/admin/manage-courses');
+  };
+
+  const handleContactDevelopersClick = () => {
+    navigate('/admin/contact-developers');
+  };
+
   const { currentUser } = useAuth();
 
   return (
@@ -69,19 +83,28 @@ export default function Admin() {
           </div>
           <div className='m-auto mb-8'>
             <img src={manageCourse} alt="" className="cursor-pointer" />
-            <p className='bg-[#D9D9D9] w-11/12 m-auto text-center py-[12px] font-semibold mt-2 rounded-md hover:bg-[#3B82F6] hover:text-white transition-all duration-200 cursor-pointer'>
+            <p 
+              className='bg-[#D9D9D9] w-11/12 m-auto text-center py-[12px] font-semibold mt-2 rounded-md hover:bg-[#3B82F6] hover:text-white transition-all duration-200 cursor-pointer'
+              onClick={handleManageCoursesClick}
+            > 
               Manage Courses
             </p>
           </div>
           <div className='m-auto mb-8'>
             <img src={manageUser} alt="" className="cursor-pointer" />
-            <p className='bg-[#D9D9D9] w-11/12 m-auto text-center py-[12px] font-semibold mt-2 rounded-md hover:bg-[#3B82F6] hover:text-white transition-all duration-200 cursor-pointer'>
+            <p 
+              className='bg-[#D9D9D9] w-11/12 m-auto text-center py-[12px] font-semibold mt-2 rounded-md hover:bg-[#3B82F6] hover:text-white transition-all duration-200 cursor-pointer'
+              onClick={handleManageUsersClick}
+            > 
               Manage Users
             </p>
           </div>
           <div className='m-auto mb-8'>
             <img src={cntDev} alt="" className="cursor-pointer" />
-            <p className='bg-[#D9D9D9] w-11/12 m-auto text-center py-[12px] font-semibold mt-2 rounded-md hover:bg-[#3B82F6] hover:text-white transition-all duration-200 cursor-pointer'>
+            <p 
+              className='bg-[#D9D9D9] w-11/12 m-auto text-center py-[12px] font-semibold mt-2 rounded-md hover:bg-[#3B82F6] hover:text-white transition-all duration-200 cursor-pointer'
+              onClick={handleContactDevelopersClick}
+            > 
               Contact Developers
             </p>
           </div>
@@ -89,5 +112,4 @@ export default function Admin() {
       </div>
     </div>
   );
-
 }
