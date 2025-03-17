@@ -10,5 +10,7 @@
     "**/node_modules": true,
     "**/build": true,
     "**/dist": true
+    "**/package-lock.json": true
+    "**/package.json": true
   }
 }

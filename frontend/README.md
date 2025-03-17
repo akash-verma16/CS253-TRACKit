@@ -37,7 +37,7 @@ npm install
 Create a `.env` file in the `frontend/` directory (if not already present) and add the following (adjust as needed):
 
 ```env
-REACT_APP_API_URL=http://localhost:5000
+BACKEND_URL=http://localhost:3001
 ```
 
 This variable tells the frontend where to send its API requests.
@@ -52,13 +52,12 @@ npm start
 
 The frontend will be available at: [http://localhost:3000](http://localhost:3000)
 
-
-
 ## Available Routes
 
 ### Frontend Routes
 
 #### General Routes
+
 - **Login Page:**  
   [http://localhost:3000/login](http://localhost:3000/login)
 - **Admin Dashboard:**  
