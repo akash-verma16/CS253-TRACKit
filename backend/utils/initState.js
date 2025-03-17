@@ -118,6 +118,34 @@ async function createCourses() {
       description: 'Software development methodologies, design patterns, testing strategies, version control systems, and project management.',
       credits: 3,
       semester: 'Fall 2023'
+    },
+    {
+      code: 'PHI452',
+      name: 'Philosophy of Mind',
+      description: 'Exploration of consciousness, intentionality, mental causation, and the relationship between mind and brain.',
+      credits: 3,
+      semester: 'Fall 2023'
+    },
+    {
+      code: 'EE210',
+      name: 'Digital Electronics',
+      description: 'Introduction to digital logic, Boolean algebra, combinational and sequential circuits, and digital system design.',
+      credits: 4,
+      semester: 'Fall 2023'
+    },
+    {
+      code: 'EE200',
+      name: 'Circuit Theory',
+      description: 'Fundamentals of electric circuits, network theorems, transient and steady-state analysis of RLC circuits.',
+      credits: 4,
+      semester: 'Fall 2023'
+    },
+    {
+      code: 'ECO111',
+      name: 'Principles of Economics',
+      description: 'Introduction to microeconomics and macroeconomics, supply and demand, market structures, and economic policy.',
+      credits: 3,
+      semester: 'Fall 2023'
     }
   ];
   
@@ -160,6 +188,46 @@ async function createFaculty(courses) {
       department: 'Computer Science',
       position: 'Assistant Professor',
       courseIndex: 1 // CS253
+    },
+    {
+      username: 'faculty3',
+      password: 'faculty123',
+      email: 'faculty3@trackit.com',
+      firstName: 'Michael',
+      lastName: 'Chen',
+      department: 'Philosophy',
+      position: 'Professor',
+      courseIndex: 2 // PHI452
+    },
+    {
+      username: 'faculty4',
+      password: 'faculty123',
+      email: 'faculty4@trackit.com',
+      firstName: 'Sarah',
+      lastName: 'Johnson',
+      department: 'Electrical Engineering',
+      position: 'Associate Professor',
+      courseIndex: 3 // EE210
+    },
+    {
+      username: 'faculty5',
+      password: 'faculty123',
+      email: 'faculty5@trackit.com',
+      firstName: 'Robert',
+      lastName: 'Wilson',
+      department: 'Electrical Engineering',
+      position: 'Professor',
+      courseIndex: 4 // EE200
+    },
+    {
+      username: 'faculty6',
+      password: 'faculty123',
+      email: 'faculty6@trackit.com',
+      firstName: 'Emily',
+      lastName: 'Garcia',
+      department: 'Economics',
+      position: 'Assistant Professor',
+      courseIndex: 5 // ECO111
     }
   ];
   
@@ -215,7 +283,7 @@ async function createStudents(courses) {
       rollNumber: 'EE19B001',
       enrollmentYear: 2019,
       major: 'Electrical Engineering',
-      courseIndices: [0] // Only EE321
+      courseIndices: [0, 1, 2, 3, 4, 5] // All courses
     },
     {
       username: 'student2',
@@ -226,7 +294,7 @@ async function createStudents(courses) {
       rollNumber: 'CS20B002',
       enrollmentYear: 2020,
       major: 'Computer Science',
-      courseIndices: [1] // Only CS253
+      courseIndices: [0, 1, 2, 3, 4, 5] // All courses
     },
     {
       username: 'student3',
@@ -237,7 +305,7 @@ async function createStudents(courses) {
       rollNumber: 'EE21B003',
       enrollmentYear: 2021,
       major: 'Electrical Engineering',
-      courseIndices: [0, 1] // Both courses
+      courseIndices: [0, 1, 2, 3, 4, 5] // All courses
     },
     {
       username: 'student4',
@@ -248,7 +316,7 @@ async function createStudents(courses) {
       rollNumber: 'CS19B004',
       enrollmentYear: 2019,
       major: 'Computer Science',
-      courseIndices: [0, 1] // Both courses
+      courseIndices: [0, 1, 2, 3, 4, 5] // All courses
     },
     {
       username: 'student5',
@@ -259,7 +327,7 @@ async function createStudents(courses) {
       rollNumber: 'EE20B005',
       enrollmentYear: 2020,
       major: 'Electrical Engineering',
-      courseIndices: [0, 1] // Both courses
+      courseIndices: [0, 1, 2, 3, 4, 5] // All courses
     }
   ];
   
