@@ -39,7 +39,7 @@ export default function Lectures({ role }) {
 
   return (
     <div className='w-full h-screen overflow-y-auto'>
-      <div className='flex justify-between p-3 px-8 items-center sticky top-0 bg-[#F5F5F5]'>
+      <div className='flex justify-between p-3 px-8 items-center sticky top-0 bg-[#F5F5F5] shadow-md'>
         <p className='text-[32px] uppercase font-semibold m-4'>Lectures</p>
         <div className='flex items-center gap-4'>
           {role !== "student" && (
@@ -49,16 +49,16 @@ export default function Lectures({ role }) {
             </button>
           )}
           <NavLink to="/dashboard/profile">
-            <CgProfile className='text-[40px] cursor-pointer' />
+            <CgProfile className='text-[40px] cursor-pointer hover:text-blue-500 duration-200 transition-all' />
           </NavLink>
         </div>
       </div>
 
       <div className='p-6'> 
         {lecturesData.map((week) => (
-          <div key={week.id} className='mb-6'>
+          <div key={week.id} className='mb-3'>
             <div 
-              className='w-full py-4 border-2 flex flex-col px-8 rounded-xl cursor-pointer hover:shadow-md transition-all duration-200'
+              className='w-[98%] py-3 ml-6 border-2 flex flex-col px-8 rounded-xl cursor-pointer hover:shadow-md transition-all duration-200'
               onClick={() => toggleWeek(week.id)}
             >
               <div className='flex justify-between w-full font-semibold'>
@@ -69,14 +69,13 @@ export default function Lectures({ role }) {
                   }`}
                 />
               </div>
-            </div>
             
             {/* Week content */}
             <div 
               className={`overflow-hidden transition-all duration-300 ${
                 expandedWeeks[week.id] ? 'max-h-[1000px] opacity-100 py-3' : 'max-h-0 opacity-0'
               }`}
-            >
+              >
               {week.topics.map((topic, topicIndex) => (
                 <div key={topicIndex} className="mb-4">
                   <h3 className="font-medium text-lg mb-2">{topic.title}</h3>
@@ -89,7 +88,7 @@ export default function Lectures({ role }) {
                         <button 
                           onClick={(e) => downloadHandler(e, lecture.id)}
                           className="flex items-center gap-1 text-gray-600 hover:text-blue-600 hover:underline"
-                        >
+                          >
                           <FaFilePdf className="text-red-500" />
                           <FaDownload className="text-[14px]" />
                         </button>
@@ -110,6 +109,7 @@ export default function Lectures({ role }) {
                 </div>
               ))}
             </div>
+              </div>
           </div>
         ))}
       </div>
