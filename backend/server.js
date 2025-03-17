@@ -30,6 +30,7 @@ app.use('/api/announcements', require('./routes/announcement.routes'));
 app.use('/api/course-descriptions', require('./routes/courseDescriptionEntry.routes'));
 app.use('/api/student', require('./routes/student.routes'));
 app.use('/api/faculty', require('./routes/faculty.routes'));
+app.use('/api/result', require('./routes/result.routes'));
 
 // Initialize database and sync models
 db.sequelize.sync({ force: process.env.NODE_ENV === 'development' })
