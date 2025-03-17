@@ -7,11 +7,16 @@ import { TfiAnnouncement } from "react-icons/tfi";
 import { IoNewspaperOutline } from "react-icons/io5";
 import { MdOutlineForum } from "react-icons/md";
 import { useCourse } from '../contexts/CourseContext';
+import { FiLogOut } from "react-icons/fi"; // Import logout icon
+import {useAuth} from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 export default function CourseMenu() {
   const { courseCode } = useParams();
   const { courseDetails, loading } = useCourse();
   const [activeTab, setActiveTab] = useState('coursehome');
+  const {logout}= useAuth();
+  const navigate = useNavigate();
 
   const tabs = [
     { id: 'coursehome', label: 'Course Home', icon: <GoHome /> , link: `coursehome`},
@@ -22,9 +27,18 @@ export default function CourseMenu() {
     { id: 'forum', label: 'Forum', icon: <MdOutlineForum />, link: `forum` },
   ];
 
+  // handler to logout from the application
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
   return (
-    <div className='w-full h-screen border-2 rounded-lg flex flex-col items-center justify-start
+    <div className='w-full h-screen border-2 rounded-lg flex flex-col items-center justify-between
                 px-4 py-5 bg-white shadow-lg'>
+
+      <div className='flex flex-col items-center justify-start w-full'>
+     
       <NavLink to="/dashboard/courses" onClick={() => setActiveTab("courses")}>
         {loading ? (
           <p className='text-[28px] font-semibold'>Loading...</p>
@@ -44,6 +58,16 @@ export default function CourseMenu() {
             {tab.label}
           </NavLink>
         ))}
+      </div>
+      </div>
+      <div className='w-11/12 mb-5 border-t pt-4'>
+        <button 
+          onClick={handleLogout}
+          className="flex gap-2 items-center py-2 px-5 my-1 rounded-lg cursor-pointer hover:scale-[97%] duration-200 transition-all w-full text-red-600 hover:bg-red-50"
+        >
+          <FiLogOut />
+          Logout
+        </button>
       </div>
     </div>
   );
