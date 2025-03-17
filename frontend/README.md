@@ -97,6 +97,40 @@ Your backend API endpoints may include (refer to specific backend documentation)
 
 ---
 
+## How to access course parameters?
+Each course has certain basic parameters (not to be confused with each courses announcements, forum posts etc. – they are in a separate table in the database.)
+These are received after faculty/student login in a JSON that looks like this:
+```json
+{
+    "success": true,
+    "data": [
+        {
+            "id": 1,
+            "code": "EE321",
+            "name": "Communication Systems",
+            "description": "Introduction to signals and systems, discrete-time signals, linear time-invariant systems, z-transforms, Fourier analysis, and other aspects of communication systems.",
+            "credits": 4,
+            "semester": "Fall 2023",
+            "createdAt": "2025-03-16T10:46:26.511Z",
+            "updatedAt": "2025-03-16T10:46:26.511Z"
+        },
+        {
+            "id": 2,
+            "code": "CS253",
+            "name": "Software Development",
+            "description": "Software development methodologies, design patterns, testing strategies, version control systems, and project management.",
+            "credits": 3,
+            "semester": "Fall 2023",
+            "createdAt": "2025-03-16T10:46:26.513Z",
+            "updatedAt": "2025-03-16T10:46:26.513Z"
+        }
+    ]
+}
+```
+These parameters, most importantly the id of the course, required to access its associated APIs, can be accessed in any of the 6 course pages using `courseDetails.id`, `courseDetails.code`, and so on.
+
+
+
 ## Development
 
 - **React Components & Routing:**  
