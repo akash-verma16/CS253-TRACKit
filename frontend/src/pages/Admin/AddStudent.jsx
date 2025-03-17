@@ -17,6 +17,7 @@ export default function AddStudent() {
   });
   const [csvFile, setCsvFile] = useState(null);
   const navigate = useNavigate();
+
   const handleChange = (e) => {
     setStudentData({
       ...studentData,
@@ -42,14 +43,20 @@ export default function AddStudent() {
 
   return (
     <div className="bg-[#F5F5F5] min-h-screen">
-      <nav className="flex justify-between p-5">
-        <p className="text-[33px] font-semibold ml-3">TRACKit</p>
-        <p className="text-[33px] font-semibold">Welcome System Admin: IIT Kanpur</p>
-        <CgProfile className="text-[45px] m-2" />
-      </nav>
+      {/* Fixed Header */}
+      <div className="fixed top-0 left-0 right-0 bg-white p-6 shadow-lg z-10 flex justify-between items-center">
+        <span
+          className="text-4xl font-semibold cursor-pointer"
+          onClick={() => navigate("/Admin")}
+        >
+          TRACKit
+        </span>
+        <h1 className="text-2xl font-semibold text-gray-700">Add Student</h1>
+      </div>
       
-      <div className="flex items-center justify-center mt-8">
-        <div className="bg-white p-8 rounded shadow-md w-full max-w-md">
+      {/* Main Content */}
+      <div className="pt-24 px-4">
+        <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-8">
           <h2 className="text-2xl font-bold mb-6 text-center">Add Students</h2>
           
           <div className="flex mb-6">

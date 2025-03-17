@@ -108,7 +108,7 @@ export default function ContactDevelopers() {
     <div className="pt-32 min-h-screen grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6 p-6">
       <div className="fixed top-0 left-0 right-0 bg-white p-4 shadow-lg z-10 flex justify-between items-center animate-fade-in">
         <span
-          className="text-3xl font-bold cursor-pointer"
+          className="text-3xl font-semibold cursor-pointer"
           onClick={() => navigate("/Admin")}
         >
           TRACKit

@@ -81,7 +81,7 @@ const ManageUser = () => {
     <div className="p-12">
       <div className="fixed top-0 left-0 right-0 bg-white p-6 shadow-lg z-20 flex justify-between items-center">
         <span
-          className="text-4xl font-bold cursor-pointer"
+          className="text-4xl font-semibold cursor-pointer"
           onClick={() => navigate("/Admin")}
         >
           TRACKit
