@@ -98,7 +98,7 @@ const ManageCourses = () => {
           {filteredCourses.map((course) => (
             <div
               key={course.Course_Id}
-              className="p-4 rounded-lg mb-4 transition-all duration-300 hover:scale-[102%] hover:shadow-xl bg-gray-100"
+              className="p-4 rounded-lg mb-4 transition-all duration-200 hover:scale-[101%] hover:shadow-lg bg-gray-100"
             >
               <div className="flex justify-between items-center">
                 <div>
@@ -110,13 +110,13 @@ const ManageCourses = () => {
                 <div className="flex gap-4">
                   <button
                     onClick={() => handleEditCourse(course)}
-                    className="bg-yellow-500 text-white px-4 py-2 rounded-lg transition-all duration-300 hover:scale-110 hover:shadow-xl"
+                    className="bg-yellow-500 text-white px-4 py-2 rounded-lg transition-all duration-300 hover:scale-95 hover:shadow-xl"
                   >
                     <FaEdit />
                   </button>
                   <button
                     onClick={() => handleDeleteCourse(course.Course_Id)}
-                    className="bg-red-500 text-white px-4 py-2 rounded-lg transition-all duration-300 hover:scale-110 hover:shadow-xl"
+                    className="bg-red-500 text-white px-4 py-2 rounded-lg transition-all duration-300 hover:scale-95 hover:shadow-xl"
                   >
                     <FaTrashAlt />
                   </button>
