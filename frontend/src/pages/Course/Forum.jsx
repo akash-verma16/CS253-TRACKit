@@ -4,6 +4,7 @@ import { CgProfile } from 'react-icons/cg';
 import { NavLink } from 'react-router-dom';
 
 import { AiOutlineDelete } from 'react-icons/ai';
+import { useCourse } from '../../contexts/CourseContext';
 
 export default function Forum({ role }) {
   const [posts, setPosts] = useState([
@@ -32,6 +33,8 @@ export default function Forum({ role }) {
       ]
     }
   ]);
+
+  const {courseDetails} = useCourse();
 
   const [newQuery, setNewQuery] = useState('');
   const [showNewPostForm, setShowNewPostForm] = useState(false);
@@ -108,10 +111,13 @@ export default function Forum({ role }) {
   };
 
   return (
-    <div className="bg-gray-100 min-h-screen flex flex-col items-center w-full h-full ml-9">
+    <div className="bg-gray-100 min-h-screen flex flex-col items-center w-full h-full">
       <div className="flex items-center justify-between w-full mb-6 sticky top-0 bg-[#F5F5F5] shadow-lg px-8">
         <div className="flex items-center h-[100px]">
-          <h1 className="text-3xl font-bold">FORUM</h1>
+          <div className='mr-8'>
+            <h1 className="text-3xl font-bold">FORUM</h1>
+            <p className='text-gray-600'>{courseDetails.code} • {courseDetails.credits} Credits • {courseDetails.semester}</p>
+          </div>
           <button 
             className="bg-blue-500 shadow-lg hover:scale-95 transition-all duration-200 text-white px-4 py-2 rounded-md ml-4"
             onClick={handleAddPost}>
