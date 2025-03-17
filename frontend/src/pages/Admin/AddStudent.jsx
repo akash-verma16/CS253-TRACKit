@@ -42,9 +42,9 @@ export default function AddStudent() {
   };
 
   return (
-    <div className="bg-[#F5F5F5] min-h-screen">
+    <div className="bg-[#F5F5F5] min-h-screen pb-8">
       {/* Fixed Header */}
-      <div className="fixed top-0 left-0 right-0 bg-white p-6 shadow-lg z-10 flex justify-between items-center">
+      <div className="fixed top-0 left-0 right-0 bg-white p-8 shadow-lg z-10 flex justify-between items-center">
         <span
           className="text-4xl font-semibold cursor-pointer"
           onClick={() => navigate("/Admin")}
@@ -167,7 +167,8 @@ export default function AddStudent() {
               </div>
               <button
                 type="submit"
-                className="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                className="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline
+                hover:scale-95 transition-all duration-200"
               >
                 Add Student
               </button>
@@ -189,7 +190,8 @@ export default function AddStudent() {
               </div>
               <button
                 type="submit"
-                className="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                className="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline
+                hover:scale-95 transition-all duration-200"
               >
                 Upload and Add Students
               </button>

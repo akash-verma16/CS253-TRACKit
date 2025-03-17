@@ -79,7 +79,7 @@ const ManageUser = () => {
 
   return (
     <div className="p-12">
-      <div className="fixed top-0 left-0 right-0 bg-white p-6 shadow-lg z-20 flex justify-between items-center">
+      <div className="fixed top-0 left-0 right-0 bg-white p-8 shadow-lg z-20 flex justify-between items-center">
         <span
           className="text-4xl font-semibold cursor-pointer"
           onClick={() => navigate("/Admin")}
@@ -104,7 +104,7 @@ const ManageUser = () => {
           {filteredUsers.map((user) => (
             <div
               key={user.UserName}
-              className="p-4 rounded-lg mb-4 transition-all duration-300 hover:scale-105 hover:shadow-2xl bg-gray-100"
+              className="p-4 rounded-lg mb-4 transition-all duration-300 hover:scale-[102%] hover:shadow-xl bg-gray-100"
             >
               <div className="flex justify-between items-center">
                 <div>

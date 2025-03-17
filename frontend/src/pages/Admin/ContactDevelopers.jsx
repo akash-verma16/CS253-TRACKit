@@ -106,7 +106,7 @@ export default function ContactDevelopers() {
 
   return (
     <div className="pt-32 min-h-screen grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6 p-6">
-      <div className="fixed top-0 left-0 right-0 bg-white p-4 shadow-lg z-10 flex justify-between items-center animate-fade-in">
+      <div className="fixed top-0 left-0 right-0 bg-white p-8 shadow-lg z-10 flex justify-between items-center animate-fade-in">
         <span
           className="text-3xl font-semibold cursor-pointer"
           onClick={() => navigate("/Admin")}
@@ -119,7 +119,7 @@ export default function ContactDevelopers() {
       {developers.map((dev, index) => (
         <div
           key={dev.id}
-          className={`flex flex-col items-center p-4 border rounded-xl shadow-md transition-transform transform hover:scale-105 hover:shadow-xl ${cardColors[index % cardColors.length]}`}
+          className={`flex flex-col items-center p-4 border rounded-xl shadow-md transition-transform transform hover:scale-[102%] hover:shadow-xl ${cardColors[index % cardColors.length]}`}
         >
           <div className="w-28 h-28 rounded-full flex items-center justify-center bg-gray-300 mb-4 overflow-hidden">
             <img src={profilePic} alt="Profile" className="w-full h-full object-cover" />
