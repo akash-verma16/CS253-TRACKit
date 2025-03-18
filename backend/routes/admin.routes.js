@@ -9,6 +9,7 @@ router.use([authMiddleware.verifyToken, authMiddleware.isAdmin]);
 // User management routes
 router.post('/student', adminController.addStudent);
 router.post('/faculty', adminController.addFaculty);
+router.post('/bulk-faculty', adminController.bulkCreateFaculty); // Add bulk faculty endpoint
 router.post('/user', adminController.createUser);
 router.post('/bulk-students', adminController.bulkCreateStudents);
 router.get('/users', adminController.getAllUsers);

@@ -136,6 +136,34 @@ exports.addFaculty = async (req, res) => {
   const t = await db.sequelize.transaction();
   
   try {
+    // Validate required fields
+    const requiredFields = ['username', 'email', 'password', 'firstName', 'department', 'position'];
+    const missingFields = requiredFields.filter(field => !req.body[field]);
+    
+    if (missingFields.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: `Missing required fields: ${missingFields.join(', ')}`
+      });
+    }
+
+    // Check if username or email already exists
+    const existingUser = await User.findOne({
+      where: {
+        [db.Sequelize.Op.or]: [
+          { username: req.body.username },
+          { email: req.body.email }
+        ]
+      }
+    });
+
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: 'Username or email already exists'
+      });
+    }
+    
     const hashedPassword = bcrypt.hashSync(req.body.password, 8);
     
     const user = await User.create({
@@ -143,7 +171,7 @@ exports.addFaculty = async (req, res) => {
       email: req.body.email,
       password: hashedPassword,
       firstName: req.body.firstName,
-      lastName: req.body.lastName,
+      lastName: req.body.lastName || '',
       userType: 'faculty'
     }, { transaction: t });
 
@@ -161,9 +189,16 @@ exports.addFaculty = async (req, res) => {
     });
   } catch (error) {
     await t.rollback();
+    let errorMessage = 'Error creating faculty';
+    if (error.name === 'SequelizeValidationError') {
+      errorMessage = error.errors.map(e => e.message).join(', ');
+    } else if (error.name === 'SequelizeUniqueConstraintError') {
+      errorMessage = 'Username or email already exists';
+    }
+    
     res.status(400).json({
       success: false,
-      message: error.message || 'Error creating faculty'
+      message: errorMessage
     });
   }
 };
@@ -402,6 +437,128 @@ exports.bulkCreateStudents = async (req, res) => {
     res.status(201).json({
       success: true,
       message: `Successfully created ${createdUsers.length} students`,
+      userIds: createdUsers
+    });
+  } catch (error) {
+    await t.rollback();
+    res.status(400).json({
+      success: false,
+      message: error.message || 'Error processing CSV file'
+    });
+  }
+};
+
+// Bulk create faculty from CSV
+exports.bulkCreateFaculty = async (req, res) => {
+  if (!req.files || !req.files.file) {
+    return res.status(400).json({
+      success: false,
+      message: 'Please upload a CSV file'
+    });
+  }
+
+  const t = await db.sequelize.transaction();
+  
+  try {
+    const csvData = req.files.file.data.toString('utf8');
+    const records = parse(csvData, {  
+      columns: true,
+      skip_empty_lines: true,
+      trim: true
+    });
+
+    const requiredColumns = ['username', 'email', 'password', 'firstName', 'lastName', 
+                           'department', 'position'];
+    
+    if (records.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'CSV file is empty'
+      });
+    }
+    
+    const firstRecord = records[0];
+    const missingColumns = requiredColumns.filter(col => !(col in firstRecord));
+
+    if (missingColumns.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: `Missing required columns in CSV: ${missingColumns.join(', ')}`
+      });
+    }
+
+    const createdUsers = [];
+    const errors = [];
+
+    for (const [index, record] of records.entries()) {
+      try {
+        // Basic validation
+        if (!record.username || !record.email || !record.password || !record.firstName || 
+            !record.department || !record.position) {
+          throw new Error('Missing required fields');
+        }
+
+        // Email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(record.email)) {
+          throw new Error('Invalid email format');
+        }
+
+        // Username validation
+        if (record.username.length < 3 || record.username.length > 50) {
+          throw new Error('Username must be between 3 and 50 characters');
+        }
+
+        // Check for existing username or email
+        const existingUser = await User.findOne({
+          where: {
+            [db.Sequelize.Op.or]: [
+              { username: record.username },
+              { email: record.email }
+            ]
+          }
+        });
+
+        if (existingUser) {
+          throw new Error('Username or email already exists');
+        }
+
+        const hashedPassword = bcrypt.hashSync(record.password, 8);
+        
+        const user = await User.create({
+          username: record.username,
+          email: record.email,
+          password: hashedPassword,
+          firstName: record.firstName,
+          lastName: record.lastName || '',
+          userType: 'faculty'
+        }, { transaction: t });
+
+        await Faculty.create({
+          userId: user.id,
+          department: record.department,
+          position: record.position
+        }, { transaction: t });
+
+        createdUsers.push(user.id);
+      } catch (error) {
+        errors.push(`Row ${index + 1}: ${error.message}`);
+      }
+    }
+
+    if (errors.length > 0) {
+      await t.rollback();
+      return res.status(400).json({
+        success: false,
+        message: 'Errors occurred while processing CSV',
+        errors: errors
+      });
+    }
+
+    await t.commit();
+    res.status(201).json({
+      success: true,
+      message: `Successfully created ${createdUsers.length} faculty members`,
       userIds: createdUsers
     });
   } catch (error) {

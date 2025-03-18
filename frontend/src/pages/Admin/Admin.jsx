@@ -26,7 +26,7 @@ export default function Admin() {
       id: 2,
       title: "Add Faculty",
       image: faculty,
-      path: '/admin/add-faculty'
+      path: '/admin/add-faculty' 
     },
     {
       id: 3,

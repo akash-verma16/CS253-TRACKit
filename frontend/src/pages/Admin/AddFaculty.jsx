@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CgProfile } from "react-icons/cg";
+import axios from 'axios';
+import { API_URL } from '../../services/auth';
+import { useAuth } from '../../contexts/AuthContext';
 
 export default function AddFaculty() {
   const [activeTab, setActiveTab] = useState('manual');
@@ -15,7 +18,10 @@ export default function AddFaculty() {
     userType: 'faculty'
   });
   const [csvFile, setCsvFile] = useState(null);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
 
   const handleChange = (e) => {
     setFacultyData({
@@ -28,20 +34,111 @@ export default function AddFaculty() {
     setCsvFile(e.target.files[0]);
   };
 
-  const handleManualSubmit = (e) => {
-    e.preventDefault();
-    // Log form data for development purposes
-    console.log('Faculty Data:', facultyData);
+  // Create an axios instance that always includes the auth token
+  const getAxiosConfig = () => {
+    const token = localStorage.getItem('token');
+    return {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    };
   };
 
-  const handleBulkSubmit = (e) => {
+  const handleManualSubmit = async (e) => {
     e.preventDefault();
-    // Log CSV file for development purposes
-    console.log('CSV File:', csvFile);
+    setError('');
+    setSuccess('');
+    
+    try {
+      const response = await axios.post(
+        `${API_URL}/api/admin/faculty`, 
+        facultyData, 
+        getAxiosConfig()
+      );
+      
+      console.log('API Response:', response);
+      setSuccess('Faculty added successfully!');
+      setFacultyData({
+        username: '',
+        email: '',
+        password: '',
+        firstName: '',
+        lastName: '',
+        department: '',
+        position: '',
+        userType: 'faculty'
+      });
+    } catch (error) {
+      console.error('Error adding faculty:', error.response?.data || error);
+      const errorMessage = error.response?.data?.message || 'Error adding faculty';
+      setError(Array.isArray(errorMessage) ? errorMessage.join(', ') : errorMessage);
+    }
+  };
+
+  const handleBulkSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+
+    if (!csvFile) {
+      setError('Please select a CSV file');
+      return;
+    }
+
+    // Validate file type
+    if (!csvFile.type && !csvFile.name.endsWith('.csv')) {
+      setError('Please upload a valid CSV file');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', csvFile);
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API_URL}/api/admin/bulk-faculty`, 
+        formData, 
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      
+      console.log('Bulk upload response:', response);
+      
+      setSuccess(response.data.message);
+      setCsvFile(null);
+      // Reset the file input
+      const fileInput = document.querySelector('input[type="file"]');
+      if (fileInput) fileInput.value = '';
+    } catch (error) {
+      console.error('Upload error:', error.response?.data || error);
+      const errorMessage = error.response?.data?.message;
+      const errorList = error.response?.data?.errors;
+      
+      if (errorList && Array.isArray(errorList)) {
+        setError(
+          <div>
+            <p>{errorMessage}</p>
+            <ul className="list-disc pl-5 mt-2">
+              {errorList.map((err, index) => (
+                <li key={index}>{err}</li>
+              ))}
+            </ul>
+          </div>
+        );
+      } else {
+        setError(errorMessage || 'Error uploading faculty');
+      }
+    }
   };
 
   return (
-    <div className="bg-[#F5F5F5] min-h-screen">
+    <div className="bg-[#F5F5F5] min-h-screen pb-8">
       {/* Fixed Header */}
       <div className="fixed top-0 left-0 right-0 bg-white p-8 shadow-lg z-10 flex justify-between items-center">
         <span
@@ -56,6 +153,18 @@ export default function AddFaculty() {
       {/* Main Content */}
       <div className="pt-24 px-4">
         <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-8">
+          {/* Show error/success messages */}
+          {error && (
+            <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">
+              {error}
+            </div>
+          )}
+          {success && (
+            <div className="mb-4 p-3 bg-green-100 text-green-700 rounded">
+              {success}
+            </div>
+          )}
+          
           <h2 className="text-2xl font-bold mb-6 text-center">Add Faculty</h2>
           
           <div className="flex mb-6">
