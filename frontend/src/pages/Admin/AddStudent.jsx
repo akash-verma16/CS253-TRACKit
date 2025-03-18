@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CgProfile } from "react-icons/cg";
+import axios from 'axios';
+import axiosInstance from '../../utils/axiosConfig';
 
 export default function AddStudent() {
   const [activeTab, setActiveTab] = useState('manual');
@@ -16,6 +18,8 @@ export default function AddStudent() {
     userType: 'student'
   });
   const [csvFile, setCsvFile] = useState(null);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -29,16 +33,88 @@ export default function AddStudent() {
     setCsvFile(e.target.files[0]);
   };
 
-  const handleManualSubmit = (e) => {
+  const handleManualSubmit = async (e) => {
     e.preventDefault();
-    // Add logic for manual student addition
-    console.log('Manual student data:', studentData);
+    setError('');
+    setSuccess('');
+    
+    try {
+      const response = await axios.post('http://localhost:3001/api/users', studentData, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      setSuccess('Student added successfully!');
+      setStudentData({
+        username: '',
+        email: '',
+        password: '',
+        firstName: '',
+        lastName: '',
+        rollNumber: '',
+        enrollmentYear: '',
+        major: '',
+        userType: 'student'
+      });
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || 'Error adding student';
+      setError(Array.isArray(errorMessage) ? errorMessage.join(', ') : errorMessage);
+    }
   };
 
-  const handleBulkSubmit = (e) => {
+  const handleBulkSubmit = async (e) => {
     e.preventDefault();
-    // Add logic for bulk student addition
-    console.log('CSV File:', csvFile);
+    setError('');
+    setSuccess('');
+
+    if (!csvFile) {
+      setError('Please select a CSV file');
+      return;
+    }
+
+    // Validate file type
+    if (!csvFile.type && !csvFile.name.endsWith('.csv')) {
+      setError('Please upload a valid CSV file');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', csvFile);
+
+    try {
+      const response = await axiosInstance.post('/users/bulk-students', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      
+      setSuccess(response.data.message);
+      setCsvFile(null);
+      // Reset the file input
+      const fileInput = document.querySelector('input[type="file"]');
+      if (fileInput) fileInput.value = '';
+    } catch (error) {
+      console.error('Upload error:', error.response?.data || error);
+      const errorMessage = error.response?.data?.message;
+      const errorList = error.response?.data?.errors;
+      
+      if (errorList && Array.isArray(errorList)) {
+        setError(
+          <div>
+            <p>{errorMessage}</p>
+            <ul className="list-disc pl-5 mt-2">
+              {errorList.map((err, index) => (
+                <li key={index}>{err}</li>
+              ))}
+            </ul>
+          </div>
+        );
+      } else {
+        setError(errorMessage || 'Error uploading students');
+      }
+    }
   };
 
   return (
@@ -57,6 +133,18 @@ export default function AddStudent() {
       {/* Main Content */}
       <div className="pt-24 px-4">
         <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-8">
+          {/* Show error/success messages */}
+          {error && (
+            <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">
+              {error}
+            </div>
+          )}
+          {success && (
+            <div className="mb-4 p-3 bg-green-100 text-green-700 rounded">
+              {success}
+            </div>
+          )}
+          
           <h2 className="text-2xl font-bold mb-6 text-center">Add Students</h2>
           
           <div className="flex mb-6">
