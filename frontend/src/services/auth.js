@@ -39,5 +39,42 @@ export const authFetch = async (url, options = {}) => {
     }
   };
   
-  return fetch(`${API_URL}${url}`, mergedOptions);
+  try {
+    const response = await fetch(`${API_URL}${url}`, mergedOptions);
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `Request failed with status ${response.status}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error(`Error in authFetch for ${url}:`, error);
+    throw error;
+  }
+};
+
+// Login function to authenticate users and store token
+export const loginUser = async (credentials) => {
+  try {
+    const response = await fetch(`${API_URL}/api/auth/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(credentials),
+    });
+    
+    const data = await response.json();
+    
+    if (data.success && data.token) {
+      localStorage.setItem('token', data.token);
+      return data;
+    } else {
+      throw new Error(data.message || 'Login failed');
+    }
+  } catch (error) {
+    console.error('Login error:', error);
+    throw error;
+  }
 };

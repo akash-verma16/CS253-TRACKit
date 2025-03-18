@@ -3,12 +3,11 @@ const db = require('../models');
 const User = db.User;
 
 const verifyToken = (req, res, next) => {
-  const token = req.headers['x-access-token'] || req.headers['authorization']?.split(' ')[1];
+  const token = req.headers.authorization?.split(' ')[1];
 
   if (!token) {
-    return res.status(403).json({ 
-      success: false, 
-      message: 'No token provided' 
+    return res.status(403).json({
+      message: "No token provided!"
     });
   }
 
@@ -16,10 +15,9 @@ const verifyToken = (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.userId = decoded.id;
     next();
-  } catch (error) {
-    return res.status(401).json({ 
-      success: false, 
-      message: 'Unauthorized - Invalid token' 
+  } catch (err) {
+    return res.status(401).json({
+      message: "Unauthorized!"
     });
   }
 };
@@ -27,49 +25,23 @@ const verifyToken = (req, res, next) => {
 const isAdmin = async (req, res, next) => {
   try {
     const user = await User.findByPk(req.userId);
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+    
+    if (user && user.userType === 'admin') {
+      next();
+      return;
     }
 
-    if (user.userType !== 'admin') {
-      return res.status(403).json({ 
-        success: false, 
-        message: 'Require Admin role' 
-      });
-    }
-    next();
-  } catch (error) {
-    return res.status(500).json({ 
-      success: false, 
-      message: error.message 
+    res.status(403).json({
+      message: "Require Admin Role!"
     });
-  }
-};
-
-const isFaculty = async (req, res, next) => {
-  try {
-    const user = await User.findByPk(req.userId);
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-
-    if (user.userType !== 'faculty' && user.userType !== 'admin') {
-      return res.status(403).json({
-        success: false,
-        message: 'Require Faculty role'
-      });
-    }
-    next();
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message
+  } catch (err) {
+    res.status(500).json({
+      message: err.message
     });
   }
 };
 
 module.exports = {
   verifyToken,
-  isAdmin,
-  isFaculty
+  isAdmin
 };

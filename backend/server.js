@@ -9,7 +9,12 @@ const app = express();
 
 // Security middleware
 app.use(helmet());
-app.use(cors());
+
+// Update CORS configuration
+app.use(cors({
+  origin: 'http://localhost:3000', // or whatever port your frontend is running on
+  credentials: true
+}));
 
 // Rate limiting
 const limiter = rateLimit({
@@ -38,6 +43,7 @@ app.use('/api/course-descriptions', require('./routes/courseDescriptionEntry.rou
 app.use('/api/student', require('./routes/student.routes'));
 app.use('/api/faculty', require('./routes/faculty.routes'));
 app.use('/api/result', require('./routes/result.routes'));
+app.use('/api/admin', require('./routes/admin.routes'));
 
 // Initialize database and sync models
 db.sequelize.sync({ force: process.env.NODE_ENV === 'development' })

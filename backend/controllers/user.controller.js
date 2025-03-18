@@ -1,6 +1,6 @@
 const bcrypt = require('bcryptjs');
 const db = require('../models');
-const csv = require('csv-parse');
+const { parse } = require('csv-parse/sync'); // Update this line
 const User = db.User;
 const Admin = db.Admin;
 const Faculty = db.Faculty;
@@ -27,6 +27,14 @@ exports.getAllUsers = async (req, res) => {
 // Get user by ID
 exports.getUserById = async (req, res) => {
   try {
+    // Authorization check: Users can only view themselves unless they're admins
+    if (req.userId != req.params.id && req.userRole !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied: You can only view your own profile'
+      });
+    }
+    
     const user = await User.findByPk(req.params.id, {
       attributes: { exclude: ['password'] }
     });
@@ -41,11 +49,11 @@ exports.getUserById = async (req, res) => {
     // Get specific user type information
     let specificInfo = {};
     if (user.userType === 'admin') {
-      specificInfo = await Admin.findByPk(user.id);
+      specificInfo = await Admin.findOne({ where: { userId: user.id } });
     } else if (user.userType === 'faculty') {
-      specificInfo = await Faculty.findByPk(user.id);
+      specificInfo = await Faculty.findOne({ where: { userId: user.id } });
     } else if (user.userType === 'student') {
-      specificInfo = await Student.findByPk(user.id);
+      specificInfo = await Student.findOne({ where: { userId: user.id } });
     }
     
     res.status(200).json({
@@ -174,15 +182,10 @@ exports.bulkCreateStudents = async (req, res) => {
   
   try {
     const csvData = req.files.file.data.toString('utf8');
-    const records = await new Promise((resolve, reject) => {
-      csv.parse(csvData, {
-        columns: true,
-        skip_empty_lines: true,
-        trim: true
-      }, (err, data) => {
-        if (err) reject(err);
-        else resolve(data);
-      });
+    const records = parse(csvData, {  // Update this line
+      columns: true,
+      skip_empty_lines: true,
+      trim: true
     });
 
     const requiredColumns = ['username', 'email', 'password', 'firstName', 'lastName', 
@@ -373,6 +376,14 @@ exports.deleteUser = async (req, res) => {
 // In user.controller.js
 exports.getUserCourses = async (req, res) => {
   try {
+    // Authorization check: Users can only view their own courses unless they're admins
+    if (req.userId != req.params.id && req.userRole !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied: You can only view your own courses'
+      });
+    }
+    
     const userId = req.params.id;
     const user = await User.findByPk(userId, {
       attributes: ['id', 'userType']

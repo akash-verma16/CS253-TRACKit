@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CgProfile } from "react-icons/cg";
 import axios from 'axios';
-import axiosInstance from '../../utils/axiosConfig';
+import { API_URL, authFetch } from '../../services/auth';
+import { useAuth } from '../../contexts/AuthContext';
 
 export default function AddStudent() {
   const [activeTab, setActiveTab] = useState('manual');
@@ -21,6 +22,7 @@ export default function AddStudent() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
 
   const handleChange = (e) => {
     setStudentData({
@@ -33,19 +35,30 @@ export default function AddStudent() {
     setCsvFile(e.target.files[0]);
   };
 
+  // Create an axios instance that always includes the auth token
+  const getAxiosConfig = () => {
+    const token = localStorage.getItem('token');
+    return {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    };
+  };
+
   const handleManualSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setSuccess('');
     
     try {
-      const response = await axios.post('http://localhost:3001/api/users', studentData, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      const response = await axios.post(
+        `${API_URL}/api/admin/user`, // Updated endpoint to use admin routes
+        studentData, 
+        getAxiosConfig()
+      );
       
+      console.log('API Response:', response);
       setSuccess('Student added successfully!');
       setStudentData({
         username: '',
@@ -59,6 +72,7 @@ export default function AddStudent() {
         userType: 'student'
       });
     } catch (error) {
+      console.error('Error adding student:', error.response?.data || error);
       const errorMessage = error.response?.data?.message || 'Error adding student';
       setError(Array.isArray(errorMessage) ? errorMessage.join(', ') : errorMessage);
     }
@@ -84,11 +98,19 @@ export default function AddStudent() {
     formData.append('file', csvFile);
 
     try {
-      const response = await axiosInstance.post('/users/bulk-students', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API_URL}/api/admin/bulk-students`, 
+        formData, 
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            'Authorization': `Bearer ${token}`
+          }
         }
-      });
+      );
+      
+      console.log('Bulk upload response:', response);
       
       setSuccess(response.data.message);
       setCsvFile(null);
