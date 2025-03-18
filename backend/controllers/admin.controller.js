@@ -713,3 +713,36 @@ exports.deleteCourse = async (req, res) => {
     });
   }
 };
+
+// Helper function to verify user addition and database persistence
+exports.testDBPersistence = async (req, res) => {
+  try {
+    // Count total users
+    const userCount = await User.count();
+    
+    // Get basic DB stats
+    const dbStats = {
+      totalUsers: userCount,
+      students: await Student.count(),
+      faculty: await Faculty.count(),
+      admins: await Admin.count(),
+      courses: await Course.count()
+    };
+    
+    res.status(200).json({
+      success: true,
+      message: 'Database connection test successful',
+      persistenceEnabled: process.env.FORCE_SYNC !== 'true',
+      stats: dbStats,
+      note: process.env.FORCE_SYNC === 'true' ? 
+        'WARNING: Database is configured to reset on server restart!' : 
+        'Database persistence is enabled'
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Database connection test failed',
+      error: error.message
+    });
+  }
+};

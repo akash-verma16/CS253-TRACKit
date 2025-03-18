@@ -22,4 +22,7 @@ router.get('/courses', adminController.getAllCourses);
 router.put('/course/:courseId', adminController.updateCourse);
 router.delete('/course/:courseId', adminController.deleteCourse);
 
+// Add a test endpoint to check database connectivity and persistence
+router.get('/test-db', adminController.testDBPersistence);
+
 module.exports = router;

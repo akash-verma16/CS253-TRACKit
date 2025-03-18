@@ -46,16 +46,19 @@ app.use('/api/result', require('./routes/result.routes'));
 app.use('/api/admin', require('./routes/admin.routes'));
 
 // Initialize database and sync models
-db.sequelize.sync({ force: process.env.NODE_ENV === 'development' })
+// Modified to preserve data between restarts in development mode
+const shouldForceSync = process.env.NODE_ENV === 'development' && process.env.FORCE_SYNC === 'true';
+
+db.sequelize.sync({ force: shouldForceSync })
   .then(async () => {
     console.log('Database synced successfully');
-    // Initialize database with sample data (in development)
-    if (process.env.NODE_ENV === 'development') {
-      // Add a longer delay to ensure all tables are fully created and ready
+    // Only initialize sample data if we're forcing a sync
+    if (shouldForceSync) {
       console.log('Waiting for database tables to settle before initialization...');
       await new Promise(resolve => setTimeout(resolve, 3000));
       try {
         await require('./utils/initState')();
+        console.log('Sample data initialized successfully');
       } catch (error) {
         console.error('Error during state initialization:', error);
       }
