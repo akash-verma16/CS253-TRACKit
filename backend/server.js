@@ -22,6 +22,13 @@ app.use(limiter);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Add file upload middleware
+const fileUpload = require('express-fileupload');
+app.use(fileUpload({
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB max file size
+  abortOnLimit: true
+}));
+
 // Routes
 app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/users', require('./routes/user.routes'));
