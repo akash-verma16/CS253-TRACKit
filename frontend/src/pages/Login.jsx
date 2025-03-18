@@ -79,8 +79,8 @@ const Login = () => {
           >
             {isLoading ? 'Signing in...' : 'Continue'}
           </button>
-          {error && <p className="text-red-500 text-sm mt-2 w-full text-center">{error}</p>}
         </form>
+          {error && <p className="text-red-500 text-sm mt-2 w-full text-center">{error}</p>}
       </div>
     </div>
   );
