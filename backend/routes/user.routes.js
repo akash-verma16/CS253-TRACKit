@@ -15,12 +15,13 @@ router.get('/courses', (req, res) => {
   res.redirect(`/api/users/${req.userId}/courses`);
 });
 
-// Get user by ID - Protected with additional authorization check
+// Get user by ID - Protected with authorization check
 router.get('/:id', userController.getUserById);
 
-// Get user courses - Protected with additional authorization check
-router.get('/:id/courses', userController.getUserCourses);
+// Update user's own profile
+router.put('/:id', userController.updateProfile);
 
-// Note: User creation route has been moved to admin routes
+// Get user courses - Protected with authorization check
+router.get('/:id/courses', userController.getUserCourses);
 
 module.exports = router;

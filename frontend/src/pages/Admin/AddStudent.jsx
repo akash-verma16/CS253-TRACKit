@@ -53,7 +53,7 @@ export default function AddStudent() {
     
     try {
       const response = await axios.post(
-        `${API_URL}/api/admin/user`, // Updated endpoint to use admin routes
+        `${API_URL}/api/admin/student`, // Updated endpoint to use admin's addStudent
         studentData, 
         getAxiosConfig()
       );

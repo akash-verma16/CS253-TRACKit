@@ -30,6 +30,65 @@ exports.addStudent = async (req, res) => {
   const t = await db.sequelize.transaction();
   
   try {
+    // Validate required fields
+    const requiredFields = ['username', 'email', 'password', 'firstName'];
+    const missingFields = requiredFields.filter(field => !req.body[field]);
+    
+    if (missingFields.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: `Missing required fields: ${missingFields.join(', ')}`
+      });
+    }
+
+    // Additional validation for student-specific fields
+    const studentFields = ['rollNumber', 'enrollmentYear', 'major'];
+    const missingStudentFields = studentFields.filter(field => !req.body[field]);
+    
+    if (missingStudentFields.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: `Missing required student fields: ${missingStudentFields.join(', ')}`
+      });
+    }
+
+    // Validate enrollment year
+    if (isNaN(req.body.enrollmentYear) || req.body.enrollmentYear < 2000 || req.body.enrollmentYear > 2099) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid enrollment year'
+      });
+    }
+
+    // Check if username or email already exists
+    const existingUser = await User.findOne({
+      where: {
+        [db.Sequelize.Op.or]: [
+          { username: req.body.username },
+          { email: req.body.email }
+        ]
+      }
+    });
+
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: 'Username or email already exists'
+      });
+    }
+
+    // Check for existing roll number
+    const existingStudent = await Student.findOne({
+      where: { rollNumber: req.body.rollNumber }
+    });
+
+    if (existingStudent) {
+      return res.status(400).json({
+        success: false,
+        message: 'Roll number already exists'
+      });
+    }
+
     const hashedPassword = bcrypt.hashSync(req.body.password, 8);
     
     const user = await User.create({
@@ -59,7 +118,9 @@ exports.addStudent = async (req, res) => {
     
     // Better error handling
     let errorMessage = 'Error creating student';
-    if (error.name === 'SequelizeUniqueConstraintError') {
+    if (error.name === 'SequelizeValidationError') {
+      errorMessage = error.errors.map(e => e.message).join(', ');
+    } else if (error.name === 'SequelizeUniqueConstraintError') {
       errorMessage = 'Username, email or roll number already exists';
     }
     
@@ -103,6 +164,113 @@ exports.addFaculty = async (req, res) => {
     res.status(400).json({
       success: false,
       message: error.message || 'Error creating faculty'
+    });
+  }
+};
+
+// Create a generic user (admin only)
+exports.createUser = async (req, res) => {
+  const t = await db.sequelize.transaction();
+  
+  try {
+    // Validate required fields
+    const requiredFields = ['username', 'email', 'password', 'firstName', 'userType'];
+    const missingFields = requiredFields.filter(field => !req.body[field]);
+    
+    if (missingFields.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: `Missing required fields: ${missingFields.join(', ')}`
+      });
+    }
+
+    // Additional validation for student-specific fields
+    if (req.body.userType === 'student') {
+      const studentFields = ['rollNumber', 'enrollmentYear', 'major'];
+      const missingStudentFields = studentFields.filter(field => !req.body[field]);
+      
+      if (missingStudentFields.length > 0) {
+        return res.status(400).json({
+          success: false,
+          message: `Missing required student fields: ${missingStudentFields.join(', ')}`
+        });
+      }
+
+      // Validate enrollment year
+      if (isNaN(req.body.enrollmentYear) || req.body.enrollmentYear < 2000 || req.body.enrollmentYear > 2099) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid enrollment year'
+        });
+      }
+    }
+
+    // Check if username or email already exists
+    const existingUser = await User.findOne({
+      where: {
+        [db.Sequelize.Op.or]: [
+          { username: req.body.username },
+          { email: req.body.email }
+        ]
+      }
+    });
+
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: 'Username or email already exists'
+      });
+    }
+
+    const hashedPassword = bcrypt.hashSync(req.body.password, 8);
+
+    const user = await User.create({
+      username: req.body.username,
+      email: req.body.email,
+      password: hashedPassword,
+      firstName: req.body.firstName,
+      lastName: req.body.lastName,
+      userType: req.body.userType
+    }, { transaction: t });
+
+    if (req.body.userType === 'student') {
+      await Student.create({
+        userId: user.id,
+        rollNumber: req.body.rollNumber,
+        enrollmentYear: parseInt(req.body.enrollmentYear),
+        major: req.body.major
+      }, { transaction: t });
+    } else if (req.body.userType === 'faculty') {
+      await Faculty.create({
+        userId: user.id,
+        department: req.body.department || '',
+        position: req.body.position || ''
+      }, { transaction: t });
+    } else if (req.body.userType === 'admin') {
+      await Admin.create({
+        userId: user.id
+      }, { transaction: t });
+    }
+
+    await t.commit();
+    res.status(201).json({
+      success: true,
+      message: 'User created successfully',
+      userId: user.id
+    });
+  } catch (error) {
+    await t.rollback();
+    // Improve error message handling
+    let errorMessage = 'Some error occurred while creating the user';
+    if (error.name === 'SequelizeValidationError') {
+      errorMessage = error.errors.map(e => e.message).join(', ');
+    } else if (error.name === 'SequelizeUniqueConstraintError') {
+      errorMessage = 'Username or email already exists';
+    }
+    
+    res.status(400).json({
+      success: false,
+      message: errorMessage
     });
   }
 };
