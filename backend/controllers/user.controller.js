@@ -27,14 +27,20 @@ exports.getUserById = async (req, res) => {
       });
     }
     
-    // Get specific user type information
+    // Get specific user type information with more detailed attributes
     let specificInfo = {};
     if (user.userType === 'admin') {
       specificInfo = await Admin.findOne({ where: { userId: user.id } });
     } else if (user.userType === 'faculty') {
-      specificInfo = await Faculty.findOne({ where: { userId: user.id } });
+      specificInfo = await Faculty.findOne({ 
+        where: { userId: user.id },
+        attributes: ['department', 'position'] // Explicitly include these fields
+      });
     } else if (user.userType === 'student') {
-      specificInfo = await Student.findOne({ where: { userId: user.id } });
+      specificInfo = await Student.findOne({ 
+        where: { userId: user.id },
+        attributes: ['rollNumber', 'enrollmentYear', 'major'] // Explicitly include these fields
+      });
     }
     
     res.status(200).json({
@@ -45,6 +51,7 @@ exports.getUserById = async (req, res) => {
       }
     });
   } catch (error) {
+    console.error('Error in getUserById:', error);
     res.status(500).json({
       success: false,
       message: error.message || 'Some error occurred while retrieving the user'

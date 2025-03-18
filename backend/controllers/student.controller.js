@@ -6,11 +6,10 @@ const User = db.User;
 exports.getStudentProfile = async (req, res) => {
   try {
     const studentId = req.params.id;
-    const student = await Student.findByPk(studentId, {
-      include: [{
-        model: User,
-        attributes: ['id', 'username', 'email', 'firstName', 'lastName', 'userType']
-      }]
+    
+    // First find the student record
+    const student = await Student.findOne({ 
+      where: { userId: studentId }
     });
 
     if (!student) {
@@ -19,12 +18,35 @@ exports.getStudentProfile = async (req, res) => {
         message: 'Student not found'
       });
     }
+    
+    // Then get the associated user
+    const user = await User.findByPk(studentId, {
+      attributes: ['id', 'username', 'email', 'firstName', 'lastName', 'userType']
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Combine student and user data
+    const profileData = {
+      ...user.dataValues,
+      rollNumber: student.rollNumber,
+      enrollmentYear: student.enrollmentYear,
+      major: student.major
+    };
+
+    console.log('Student profile data:', profileData);
 
     res.status(200).json({
       success: true,
-      data: student
+      data: profileData
     });
   } catch (error) {
+    console.error('Error fetching student profile:', error);
     res.status(500).json({
       success: false,
       message: error.message || 'Some error occurred while retrieving student profile'

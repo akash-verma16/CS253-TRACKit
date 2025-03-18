@@ -3,7 +3,18 @@ export const API_URL = process.env.BACKEND_URL || 'http://localhost:3001';
 // Fetch user profile data (student/faculty)
 export const fetchUserProfile = async (userType, id, token) => {
   try {
-    const response = await fetch(`${API_URL}/api/${userType}/${id}/profile`, {
+    let endpoint;
+    
+    // Select the correct endpoint based on user type
+    if (userType === 'student') {
+      endpoint = `/api/student/${id}/profile`;
+    } else if (userType === 'faculty') {
+      endpoint = `/api/faculty/${id}/profile`;
+    } else {
+      endpoint = `/api/users/${id}`;
+    }
+    
+    const response = await fetch(`${API_URL}${endpoint}`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -11,10 +22,15 @@ export const fetchUserProfile = async (userType, id, token) => {
       },
     });
     
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || `Request failed with status ${response.status}`);
+    }
+    
     return await response.json();
   } catch (error) {
     console.error('Error fetching user profile:', error);
-    return { success: false, message: 'Network error' };
+    return { success: false, message: error.message || 'Network error' };
   }
 };
 

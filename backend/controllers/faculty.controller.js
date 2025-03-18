@@ -6,7 +6,8 @@ const User = db.User;
 exports.getFacultyProfile = async (req, res) => {
   try {
     const facultyId = req.params.id;
-    const faculty = await Faculty.findByPk(facultyId, {
+    const faculty = await Faculty.findOne({ 
+      where: { userId: facultyId },
       include: [{
         model: User,
         attributes: ['id', 'username', 'email', 'firstName', 'lastName', 'userType']
@@ -20,11 +21,24 @@ exports.getFacultyProfile = async (req, res) => {
       });
     }
 
+    // Combine faculty and user data for a complete profile
+    const profileData = {
+      userId: faculty.User.id,
+      username: faculty.User.username,
+      firstName: faculty.User.firstName,
+      lastName: faculty.User.lastName,
+      email: faculty.User.email,
+      userType: faculty.User.userType,
+      department: faculty.department,
+      position: faculty.position
+    };
+
     res.status(200).json({
       success: true,
-      data: faculty
+      data: profileData
     });
   } catch (error) {
+    console.error('Error fetching faculty profile:', error);
     res.status(500).json({
       success: false,
       message: error.message || 'Some error occurred while retrieving faculty profile'

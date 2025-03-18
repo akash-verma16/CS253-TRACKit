@@ -80,6 +80,28 @@ exports.login = async (req, res) => {
       });
     }
 
+    // Fetch additional user-specific data based on user type
+    let additionalData = {};
+
+    if (user.userType === 'student') {
+      const student = await Student.findOne({ where: { userId: user.id } });
+      if (student) {
+        additionalData = {
+          rollNumber: student.rollNumber,
+          enrollmentYear: student.enrollmentYear,
+          major: student.major
+        };
+      }
+    } else if (user.userType === 'faculty') {
+      const faculty = await Faculty.findOne({ where: { userId: user.id } });
+      if (faculty) {
+        additionalData = {
+          department: faculty.department,
+          position: faculty.position
+        };
+      }
+    }
+
     // Generate token
     const token = jwt.sign(
       { id: user.id, userType: user.userType }, 
@@ -87,9 +109,10 @@ exports.login = async (req, res) => {
       { expiresIn: '24h' }
     );
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: 'Login successful',
+      token: token,
       user: {
         id: user.id,
         username: user.username,
@@ -97,8 +120,8 @@ exports.login = async (req, res) => {
         firstName: user.firstName,
         lastName: user.lastName,
         userType: user.userType,
-      },
-      token
+        ...additionalData  // Include the user-specific data
+      }
     });
   } catch (error) {
     res.status(500).json({
