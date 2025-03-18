@@ -71,6 +71,7 @@ export default function AddStudent() {
         major: '',
         userType: 'student'
       });
+      navigate('/Admin')
     } catch (error) {
       console.error('Error adding student:', error.response?.data || error);
       const errorMessage = error.response?.data?.message || 'Error adding student';

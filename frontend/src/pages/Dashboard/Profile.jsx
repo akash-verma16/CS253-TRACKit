@@ -64,7 +64,7 @@ export default function Profile() {
               }}
             >
             </div>
-            <img src={imgMy} alt="img" className='w-[130px] aspect-square rounded-full absolute right-[42%] top-[29%]' />
+            <img src={imgMy} alt="img" className='flex flex-col items-start w-[130px] aspect-square rounded-full absolute right-[42%] top-[29%]' />
 
             <div>
                 <p className='text-[50px] mt-[60px] text-center'>{displayData?.firstName} {displayData?.lastName}</p>
@@ -76,17 +76,17 @@ export default function Profile() {
                 
                 {/* Show student-specific information */}
                 {displayData?.userType === 'student' && (
-                    <>
+                    <div >
                         <p className='text-center text-[18px] mt-6'>
                             <span className='font-bold'>Roll No :</span> <span>{displayData.rollNumber}</span>
                         </p>
                         <p className='text-center text-[18px] mt-2'>
                             <span className='font-bold'>Department :</span> <span>{displayData.major}</span>
                         </p>
-                        <p className='text-center text-[18px] mt-2'>
+                        {/* <p className='text-center text-[18px] mt-2'>
                             <span className='font-bold'>Year :</span> <span>{displayData.enrollmentYear}</span>
-                        </p>
-                    </>
+                        </p> */}
+                    </div>
                 )}
                 
                 {/* Show faculty-specific information */}
@@ -102,9 +102,9 @@ export default function Profile() {
                 )}
                 
                 {/* Generic information for all users */}
-                <p className='text-center text-[18px] mt-2'>
+                {/* <p className='text-center text-[18px] mt-2'>
                     <span className='font-bold'>Email :</span> <span>{displayData?.email}</span>
-                </p>
+                </p> */}
             </div>
         </div>
     </div>
