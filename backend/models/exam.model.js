@@ -17,7 +17,7 @@ module.exports = (sequelize, Sequelize) => {
         type: Sequelize.FLOAT,
         allowNull: false
       },
-      max: {
+      mean: {
         type: Sequelize.FLOAT,
         allowNull: true
       },
@@ -25,7 +25,7 @@ module.exports = (sequelize, Sequelize) => {
         type: Sequelize.FLOAT,
         allowNull: true
       },
-      mode: {
+      max: {
         type: Sequelize.FLOAT,
         allowNull: true
       },
