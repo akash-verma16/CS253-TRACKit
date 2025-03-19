@@ -6,45 +6,26 @@ import { FaRegEdit } from "react-icons/fa";
 import { AiOutlineDelete } from "react-icons/ai";
 import { NavLink } from 'react-router-dom';
 import { useCourse } from '../../contexts/CourseContext';
+import { useNotification } from '../../contexts/NotificationContext';
 import axios from 'axios';
+
+const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3001';
 
 export default function CourseHome({ present, total, role }) {
   const { courseDetails, loading, error } = useCourse();
+  const { showNotification } = useNotification();
   const [expandedIndices, setExpandedIndices] = useState({});
-  const [courseSections, setCourseSections] = useState([
-    {
-        "title": "No class this monday",
-        "description": "Due to some technical issues, the class scheduled for this Monday has been postponed to next week."
-    },
-    {
-        "title": "seating arrangement for the major quiz-2",
-        "description": "The seating arrangement for the major quiz-2 has been uploaded on the website. Please check your roll number and seat number."
-    },
-    {
-        "title": "Syllabus for the major quiz-2",
-        "description": "The syllabus for the major quiz-2 has been uploaded on the website. Please check the syllabus and prepare accordingly."
-    },
-    {
-        "title": "Assignment 2 submission date extended",
-        "description": "The submission date for assignment 2 has been extended to 15th October. Please submit your assignments before the deadline."
-    },
-    {
-        "title": "Major quiz-1 marks released",
-        "description": "JSON consists of key-value pairs, arrays, and nested objects, making it flexible for different data representations."
-    },
-    {
-        "title": "Assignment 2 uploaded",
-        "description": "Assignment 2 has been uploaded on the website. Please download the assignment and submit it before the deadline."
-    },
-    {
-        "title": "Changes in the class discussion hours",
-        "description": "The class discussion hours have been changed to 4-5 PM. Please note the changes and attend the class accordingly"
-    },
-    {
-        "title": "Project submission date extended",
-        "description": "The submission date for the project has been extended to 20th October. Please submit your projects before the deadline."
-    }
-]);
+  const [courseDescriptions, setCourseDescriptions] = useState([]);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [descriptionToDelete, setDescriptionToDelete] = useState(null);
+  const [showForm, setShowForm] = useState(false);
+  const [formType, setFormType] = useState('create'); // 'create' or 'edit'
+  const [formData, setFormData] = useState({
+    courseDescriptionEntryHeading: '',
+    courseDescriptionEntryBody: ''
+  });
+  const [currentDescriptionId, setCurrentDescriptionId] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Debug logs
   useEffect(() => {
@@ -58,6 +39,35 @@ export default function CourseHome({ present, total, role }) {
     });
   }, [courseDetails, loading, error, role, present, total]);
   
+  useEffect(() => {
+    if (courseDetails?.id) {
+      fetchCourseDescriptions();
+    }
+  }, [courseDetails]);
+
+  const fetchCourseDescriptions = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${BACKEND_URL}/api/course-descriptions/course/${courseDetails.id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+      
+      if (response.data.success) {
+        setCourseDescriptions(response.data.data);
+      } else {
+        showNotification('Failed to fetch course descriptions', 'error');
+      }
+    } catch (err) {
+      console.error('Error fetching course descriptions:', err);
+      showNotification('Error loading course descriptions', 'error');
+    }
+  };
+  
   const toggleExpand = (index) => {
     setExpandedIndices(prev => ({
       ...prev,
@@ -65,17 +75,136 @@ export default function CourseHome({ present, total, role }) {
     }));
   };
   
-  function addSectionHandler() {
-    console.log("Add section");
-  }
+  const addSectionHandler = () => {
+    setFormType('create');
+    setFormData({
+      courseDescriptionEntryHeading: '',
+      courseDescriptionEntryBody: ''
+    });
+    setShowForm(true);
+  };
   
-  function editHandler() {
-    console.log("Edit section");
-  }
+  const handleEditClick = (e, description) => {
+    e.stopPropagation();
+    setFormType('edit');
+    setFormData({
+      courseDescriptionEntryHeading: description.courseDescriptionEntryHeading,
+      courseDescriptionEntryBody: description.courseDescriptionEntryBody
+    });
+    setCurrentDescriptionId(description.id);
+    setShowForm(true);
+  };
   
-  function deleteHandler() {
-    console.log("Delete section");
-  }
+  const handleDeleteClick = (e, description) => {
+    e.stopPropagation();
+    setDescriptionToDelete(description);
+    setShowDeleteConfirm(true);
+  };
+  
+  const confirmDelete = async () => {
+    if (!descriptionToDelete) return;
+    
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.delete(
+        `${BACKEND_URL}/api/course-descriptions/${courseDetails.id}/${descriptionToDelete.id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+      
+      if (response.data.success) {
+        showNotification('Course description entry deleted successfully', 'success');
+        setCourseDescriptions(prev => prev.filter(d => d.id !== descriptionToDelete.id));
+      } else {
+        showNotification('Failed to delete course description entry', 'error');
+      }
+    } catch (err) {
+      console.error('Error deleting course description entry:', err);
+      showNotification('Error deleting course description entry', 'error');
+    } finally {
+      setShowDeleteConfirm(false);
+      setDescriptionToDelete(null);
+    }
+  };
+  
+  const handleFormSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    
+    try {
+      const token = localStorage.getItem('token');
+      let response;
+      
+      if (formType === 'create') {
+        response = await axios.post(
+          `${BACKEND_URL}/api/course-descriptions`,
+          {
+            courseId: courseDetails.id,
+            courseDescriptionEntryHeading: formData.courseDescriptionEntryHeading,
+            courseDescriptionEntryBody: formData.courseDescriptionEntryBody
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+        
+        if (response.data.success) {
+          showNotification('Course description entry created successfully', 'success');
+          // Refresh descriptions to get the new one with all details
+          fetchCourseDescriptions();
+        }
+      } else if (formType === 'edit') {
+        response = await axios.put(
+          `${BACKEND_URL}/api/course-descriptions/${courseDetails.id}/${currentDescriptionId}`,
+          {
+            courseDescriptionEntryHeading: formData.courseDescriptionEntryHeading,
+            courseDescriptionEntryBody: formData.courseDescriptionEntryBody
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+        
+        if (response.data.success) {
+          showNotification('Course description entry updated successfully', 'success');
+          // Update the description in our state
+          setCourseDescriptions(prev => 
+            prev.map(d => {
+              if (d.id === currentDescriptionId) {
+                return {
+                  ...d,
+                  courseDescriptionEntryHeading: formData.courseDescriptionEntryHeading,
+                  courseDescriptionEntryBody: formData.courseDescriptionEntryBody,
+                  updatedAt: new Date().toISOString()
+                };
+              }
+              return d;
+            })
+          );
+        }
+      }
+    } catch (err) {
+      console.error('Error submitting form:', err);
+      showNotification(`Error ${formType === 'create' ? 'creating' : 'updating'} course description entry`, 'error');
+    } finally {
+      setIsSubmitting(false);
+      setShowForm(false);
+      setFormData({
+        courseDescriptionEntryHeading: '',
+        courseDescriptionEntryBody: ''
+      });
+      setCurrentDescriptionId(null);
+    }
+  };
   
   if (loading) {
     return (
@@ -172,7 +301,7 @@ export default function CourseHome({ present, total, role }) {
         </div>
       }
       {
-        role!="student" &&
+        role!=="student" &&
         <button 
           onClick={addSectionHandler}
           className='bg-blue-500 shadow-xl text-white py-2 px-4 mt-4 ml-6 flex justify-center items-center gap-2 hover:bg-green-600 hover:scale-95 transition-all duration-200 rounded'
@@ -186,44 +315,132 @@ export default function CourseHome({ present, total, role }) {
       <div className='p-4 mb-10'>
         <h2 className="text-xl font-bold ml-2 mb-2">Course Details</h2>
         
-        {courseSections.map((item, index) => (
-          <div key={index} className='mb-2'>
-            <div className='w-full py-3 border-2 flex flex-col m-2 px-6 rounded-xl cursor-pointer'>
-              <div className='flex justify-between w-full font-semibold'>
-                {item.title}
-                <div className='flex gap-8 items-center'>
-                {
-                  role !== "student" && (
-                    <div className='flex gap-2 items-center'>
-                      <button onClick={() => editHandler(item.id || index)}>
-                        <FaRegEdit className='text-[22px] hover:scale-105 transition-all duration-200 hover:shadow-lg'></FaRegEdit>
-                      </button>
-                      <button onClick={() => deleteHandler(item.id || index)}>
-                        <AiOutlineDelete className='text-[22px] text-red-600 hover:scale-105 duration-200 transition-all hover:shadow-lg'></AiOutlineDelete>
-                      </button>
-                    </div>
-                  )
-                }
-                <IoIosArrowDropdown 
-                  onClick={() => toggleExpand(index)}
-                  className={`text-[25px] transform transition-transform hover:scale-105 hover:shadow-xl duration-500 ${expandedIndices[index] ? 'rotate-180' : ''}`}
-                />
+        {courseDescriptions.length > 0 ? (
+          courseDescriptions.map((item, index) => (
+            <div key={item.id} className='mb-2'>
+              <div className='w-full py-3 border-2 flex flex-col m-2 px-6 rounded-xl cursor-pointer hover:shadow-md transition-all duration-200'>
+                <div className='flex justify-between w-full font-semibold'>
+                  <span className='text-lg'>{item.courseDescriptionEntryHeading}</span>
+                  <div className='flex gap-8 items-center'>
+                  {
+                    role !== "student" && (
+                      <div className='flex gap-2 items-center'>
+                        <button onClick={(e) => handleEditClick(e, item)}>
+                          <FaRegEdit className='text-[22px] hover:scale-105 transition-all duration-200 hover:shadow-lg'></FaRegEdit>
+                        </button>
+                        <button onClick={(e) => handleDeleteClick(e, item)}>
+                          <AiOutlineDelete className='text-[22px] text-red-600 hover:scale-105 duration-200 transition-all hover:shadow-lg'></AiOutlineDelete>
+                        </button>
+                      </div>
+                    )
+                  }
+                  <IoIosArrowDropdown 
+                    onClick={() => toggleExpand(index)}
+                    className={`text-[25px] transform transition-transform hover:scale-105 hover:shadow-xl duration-500 ${expandedIndices[index] ? 'rotate-180' : ''}`}
+                  />
+                  </div>
+                </div>
+                <div 
+                  className={`overflow-hidden transition-all duration-300 ${expandedIndices[index] ? 'max-h-96 opacity-100 py-3' : 'max-h-0 opacity-0'}`}
+                >
+                  {item.courseDescriptionEntryBody}
                 </div>
               </div>
-              <div 
-                className={`overflow-hidden transition-all duration-300  ${expandedIndices[index] ? 'max-h-40 opacity-100 py-3' : 'max-h-0 opacity-0'}`}
-              >
-                {item.description}
-              </div>
             </div>
+          ))
+        ) : (
+          <div className="text-center py-10 text-gray-500">
+            No course descriptions available for this course.
           </div>
-        ))}
+        )}
       </div>
 
-      {/* <div className="px-6 py-4 bg-gray-50 border-t">
-        <h3 className="font-bold mb-2">Course Description</h3>
-        <p className="text-gray-700">{courseDetails.description}</p>
-      </div> */}
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md">
+            <h3 className="text-lg font-bold mb-4">Confirm Delete</h3>
+            <p>Are you sure you want to delete this course description entry?</p>
+            <div className="flex justify-end gap-4 mt-6">
+              <button 
+                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+                onClick={() => {
+                  setShowDeleteConfirm(false);
+                  setDescriptionToDelete(null);
+                }}
+              >
+                Cancel
+              </button>
+              <button 
+                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                onClick={confirmDelete}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create/Edit Description Form */}
+      {showForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl">
+            <h3 className="text-lg font-bold mb-4">
+              {formType === 'create' ? 'Create New Course Description' : 'Edit Course Description'}
+            </h3>
+            <form onSubmit={handleFormSubmit}>
+              <div className="mb-4">
+                <label htmlFor="heading" className="block text-sm font-medium text-gray-700 mb-1">
+                  Description Heading
+                </label>
+                <input
+                  id="heading"
+                  type="text"
+                  className="w-full p-2 border border-gray-300 rounded"
+                  value={formData.courseDescriptionEntryHeading}
+                  onChange={(e) => setFormData({...formData, courseDescriptionEntryHeading: e.target.value})}
+                  required
+                />
+              </div>
+              <div className="mb-6">
+                <label htmlFor="body" className="block text-sm font-medium text-gray-700 mb-1">
+                  Description Body
+                </label>
+                <textarea
+                  id="body"
+                  className="w-full p-2 border border-gray-300 rounded h-40"
+                  value={formData.courseDescriptionEntryBody}
+                  onChange={(e) => setFormData({...formData, courseDescriptionEntryBody: e.target.value})}
+                  required
+                ></textarea>
+              </div>
+              <div className="flex justify-end gap-4">
+                <button 
+                  type="button"
+                  className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+                  onClick={() => {
+                    setShowForm(false);
+                    setFormData({
+                      courseDescriptionEntryHeading: '',
+                      courseDescriptionEntryBody: ''
+                    });
+                  }}
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit"
+                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? 'Submitting...' : formType === 'create' ? 'Post Description' : 'Update Description'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

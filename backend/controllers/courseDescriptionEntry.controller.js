@@ -10,14 +10,15 @@ exports.getDescriptionEntriesByCourse = async (req, res) => {
     const entries = await CourseDescriptionEntry.findAll({
       where: { courseId },
       include: [{
-        model: Faculty,
-        attributes: ['userId', 'department', 'position'],
-        include: {
-          model: User,
-          attributes: ['firstName', 'lastName', 'email']
-        }
+      model: Faculty,
+      attributes: ['userId', 'department', 'position'],
+      include: {
+        model: User,
+        attributes: ['firstName', 'lastName', 'email', 'username']
+      }
       }],
-      order: [['createdAt', 'DESC']] // Most recent first
+      // Ascending by id
+      order: [['id', 'ASC']]
     });
     
     res.status(200).json({
