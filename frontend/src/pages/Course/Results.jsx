@@ -10,593 +10,11 @@ export default function Results() {
 }
 */
 
-/*
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCourse } from '../../contexts/CourseContext';
 import axios from 'axios';
-import { Bar } from 'react-chartjs-2'; // Import Bar chart from react-chartjs-2
-import 'chart.js/auto'; // Import Chart.js auto configuration
-
-export default function Results() {
-  const { currentUser } = useAuth();
-  const { courseDetails, loading: courseLoading, error: courseError } = useCourse();
-  const [results, setResults] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    if (currentUser.userType === 'student' && courseDetails?.id) {
-      const fetchResults = async () => {
-        try {
-          const response = await axios.get(
-            `http://localhost:3001/api/result/student/${currentUser.id}/course/${courseDetails.id}`
-          );
-          setResults(response.data);
-        } catch (err) {
-          console.error('Error fetching results:', err);
-          setError('Failed to fetch results. Please try again later.');
-        } finally {
-          setLoading(false);
-        }
-      };
-
-      fetchResults();
-    }
-  }, [currentUser.id, currentUser.userType, courseDetails?.id]);
-
-  if (courseLoading) {
-    return <div>Loading course details...</div>;
-  }
-
-  if (courseError) {
-    return <div>Error loading course details: {courseError}</div>;
-  }
-
-  if (currentUser.userType === 'faculty') {
-    return <div>It is faculty result page</div>;
-  }
-
-  if (loading) {
-    return <div>Loading results...</div>;
-  }
-
-  if (error) {
-    return <div>{error}</div>;
-  }
-
-  // Prepare data for the graph
-  const examNames = results.map((result) => result.examName);
-  const obtainedMarks = results.map((result) => result.obtainedMarks || 0); // Obtained marks
-  const unobtainedMarks = results.map(
-    (result) => (result.totalMarks || 0) - (result.obtainedMarks || 0)
-  ); // Unobtained marks
-  const totalWeightage = results.map((result) => result.weightage || 0); // Total weightage
-  const obtainedWeightage = results.map(
-    (result) => (result.obtainedMarks * result.weightage) / result.totalMarks || 0
-  ); // Obtained weightage
-  const unobtainedWeightage = totalWeightage.map(
-    (total, index) => total - obtainedWeightage[index]
-  ); // Unobtained weightage
-
-  const chartData = {
-    labels: examNames,
-    datasets: [
-      {
-        label: 'Obtained Marks',
-        data: obtainedMarks,
-        backgroundColor: 'rgba(75, 192, 192, 0.6)', // Darker shade for obtained marks
-        borderColor: 'rgba(75, 192, 192, 1)',
-        borderWidth: 1,
-        stack: 'Marks', // Stack for marks
-      },
-      {
-        label: 'Remaining Marks',
-        data: unobtainedMarks,
-        backgroundColor: 'rgba(200, 200, 200, 0.6)', // Lighter shade for unobtained marks
-        borderColor: 'rgba(200, 200, 200, 1)',
-        borderWidth: 1,
-        stack: 'Marks', // Stack for marks
-      },
-      {
-        label: 'Obtained Weightage',
-        data: obtainedWeightage,
-        backgroundColor: 'rgba(153, 102, 255, 0.6)', // Darker shade for obtained weightage
-        borderColor: 'rgba(153, 102, 255, 1)',
-        borderWidth: 1,
-        stack: 'Weightage', // Stack for weightage
-      },
-      {
-        label: 'Remaining Weightage',
-        data: unobtainedWeightage,
-        backgroundColor: 'rgba(230, 230, 230, 0.6)', // Lighter shade for unobtained weightage
-        borderColor: 'rgba(230, 230, 230, 1)',
-        borderWidth: 1,
-        stack: 'Weightage', // Stack for weightage
-      },
-    ],
-  };
-
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: 'top',
-        labels: {
-          filter: (legendItem) =>
-            legendItem.text !== 'Remaining Marks' && legendItem.text !== 'Remaining Weightage', // Remove legends for unobtained marks and weightage
-        },
-      },
-    },
-    scales: {
-      x: {
-        title: {
-          display: true,
-          text: 'Exams',
-        },
-        stacked: true, // Enable stacking for the x-axis
-      },
-      y: {
-        title: {
-          display: true,
-          text: 'Marks / Weightage',
-        },
-        beginAtZero: true,
-        stacked: true, // Enable stacking for the y-axis
-      },
-    },
-  };
-
-  return (
-    <div className="w-full h-screen p-6">
-      <h1 className="text-2xl font-bold mb-4">Results</h1>
-
-      {/* Graph Section }
-      {results.length > 0 && (
-        <div className="w-full h-96 mb-6">
-          <Bar data={chartData} options={chartOptions} />
-        </div>
-      )}
-
-      {/* Table Section }
-      <table className="min-w-full bg-white border border-gray-300">
-        <thead>
-          <tr>
-            <th className="py-2 px-4 border-b text-center w-32">Exam Name</th>
-            <th className="py-2 px-4 border-b text-center w-24">Weightage</th>
-            <th className="py-2 px-4 border-b text-center w-24">Total Marks</th>
-            <th className="py-2 px-4 border-b text-center w-32">Obtained Marks</th>
-            <th className="py-2 px-4 border-b text-center w-24">Mean</th>
-            <th className="py-2 px-4 border-b text-center w-24">Median</th>
-            <th className="py-2 px-4 border-b text-center w-24">Max</th>
-            <th className="py-2 px-4 border-b text-center w-32">Deviation</th>
-          </tr>
-        </thead>
-        <tbody>
-          {results.length === 0 ? (
-            <tr>
-              <td colSpan="8" className="py-4 px-4 text-center text-gray-500">
-                No results available yet
-              </td>
-            </tr>
-          ) : (
-            results.map((result, index) => (
-              <tr key={index}>
-                <td className="py-2 px-4 border-b text-center w-32 overflow-x-auto">
-                  {result.examName}
-                </td>
-                <td className="py-2 px-4 border-b text-center w-24 overflow-x-auto">
-                  {result.weightage}
-                </td>
-                <td className="py-2 px-4 border-b text-center w-24 overflow-x-auto">
-                  {result.totalMarks}
-                </td>
-                <td className="py-2 px-4 border-b text-center w-32 overflow-x-auto">
-                  {result.obtainedMarks !== null ? result.obtainedMarks : 'N/A'}
-                </td>
-                <td className="py-2 px-4 border-b text-center w-24 overflow-x-auto">
-                  {result.mean}
-                </td>
-                <td className="py-2 px-4 border-b text-center w-24 overflow-x-auto">
-                  {result.median}
-                </td>
-                <td className="py-2 px-4 border-b text-center w-24 overflow-x-auto">
-                  {result.max}
-                </td>
-                <td className="py-2 px-4 border-b text-center w-32 overflow-x-auto">
-                  {result.deviation !== null ? result.deviation.toFixed(1) : 'N/A'}
-                </td>
-              </tr>
-            ))
-          )}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-  */
-
-
-
-/*
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
-import { useCourse } from '../../contexts/CourseContext';
-import axios from 'axios';
-import { Bar } from 'react-chartjs-2'; // Import Bar chart from react-chartjs-2
-import 'chart.js/auto'; // Import Chart.js auto configuration
-
-export default function Results() {
-  const { currentUser } = useAuth();
-  const { courseDetails, loading: courseLoading, error: courseError } = useCourse();
-  const [results, setResults] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  // Faculty-specific state variables
-  const [exams, setExams] = useState([]);
-  const [selectedExamId, setSelectedExamId] = useState(null);
-  const [examDetails, setExamDetails] = useState(null);
-  const [loadingExams, setLoadingExams] = useState(false);
-  const [loadingExamDetails, setLoadingExamDetails] = useState(false);
-
-  useEffect(() => {
-    if (currentUser.userType === 'student' && courseDetails?.id) {
-      const fetchResults = async () => {
-        try {
-          const response = await axios.get(
-            `http://localhost:3001/api/result/student/${currentUser.id}/course/${courseDetails.id}`
-          );
-          setResults(response.data);
-        } catch (err) {
-          console.error('Error fetching results:', err);
-          setError('Failed to fetch results. Please try again later.');
-        } finally {
-          setLoading(false);
-        }
-      };
-
-      fetchResults();
-    }
-
-    else if (currentUser.userType === 'faculty' && courseDetails?.id) {
-      const fetchExams = async () => {
-        setLoadingExams(true);
-        try {
-          const response = await axios.get(
-            `http://localhost:3001/api/result/course/${courseDetails.id}/exams`
-          );
-          setExams(response.data || []);
-        } catch (err) {
-          console.error('Error fetching exams:', err);
-          setError('Failed to fetch exams. Please try again later.');
-        } finally {
-          setLoadingExams(false);
-          setLoading(false);
-        }
-      };
-
-      fetchExams();
-    }
-    
-  }, [currentUser.id, currentUser.userType, courseDetails?.id]);
-
-  // Fetch exam details when an exam is selected
-  useEffect(() => {
-    if (selectedExamId && courseDetails?.id) {
-      const fetchExamDetails = async () => {
-        setLoadingExamDetails(true);
-        try {
-          const response = await axios.get(
-            `http://localhost:3001/api/result/course/${courseDetails.id}/exam/${selectedExamId}`
-          );
-          setExamDetails(response.data);
-        } catch (err) {
-          console.error('Error fetching exam details:', err);
-          setError('Failed to fetch exam details. Please try again later.');
-        } finally {
-          setLoadingExamDetails(false);
-        }
-      };
-
-      fetchExamDetails();
-    }
-  }, [selectedExamId, courseDetails?.id]);
-
-  const handleExamChange = (e) => {
-    setSelectedExamId(e.target.value);
-  };
-
-  if (courseLoading) {
-    return <div>Loading course details...</div>;
-  }
-
-  if (courseError) {
-    return <div>Error loading course details: {courseError}</div>;
-  }
-
-  // Faculty View
-  if (currentUser.userType === 'faculty') {
-    return (
-      <div className="w-full h-screen p-6">
-        <h1 className="text-2xl font-bold mb-4">Exam Results</h1>
-        
-        {/* Exam Selection Dropdown }
-        <div className="mb-6">
-          <label className="block mb-2 font-semibold">Select Exam:</label>
-          <select
-            className="p-2 border border-gray-300 rounded w-full md:w-1/2 lg:w-1/3"
-            onChange={handleExamChange}
-            value={selectedExamId || ""}
-            disabled={loadingExams}
-          >
-            <option value="">-- Select an exam --</option>
-            {exams && exams.length > 0 ? (
-              exams.map(exam => (
-                <option key={exam.id} value={exam.id}>{exam.examName}</option>
-              ))
-            ) : (
-              !loadingExams && <option value="" disabled>No exams available</option>
-            )}
-          </select>
-        </div>
-
-        {/* Loading State }
-        {(loadingExams || loadingExamDetails) && (
-          <div className="text-center py-4">Loading...</div>
-        )}
-
-        {/* No Exams Message }
-        {!loadingExams && exams.length === 0 && (
-          <div className="text-center py-4 text-gray-500">
-            No results available yet. Add an exam to see results here.
-          </div>
-        )}
-
-        {/* Exam Details and Results }
-        {selectedExamId && examDetails && !loadingExamDetails && (
-          <div>
-            {/* Exam Statistics }
-            <div className="bg-white p-4 rounded-lg shadow mb-6">
-              <h2 className="text-xl font-bold mb-3">{examDetails.examName}</h2>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="p-3 bg-blue-50 rounded">
-                  <p className="text-sm text-gray-500">Total Marks</p>
-                  <p className="text-xl font-semibold">{examDetails.totalMarks}</p>
-                </div>
-                <div className="p-3 bg-green-50 rounded">
-                  <p className="text-sm text-gray-500">Weightage</p>
-                  <p className="text-xl font-semibold">{examDetails.weightage}%</p>
-                </div>
-                <div className="p-3 bg-purple-50 rounded">
-                  <p className="text-sm text-gray-500">Mean</p>
-                  <p className="text-xl font-semibold">{examDetails.mean?.toFixed(1) || 'N/A'}</p>
-                </div>
-                <div className="p-3 bg-yellow-50 rounded">
-                  <p className="text-sm text-gray-500">Median</p>
-                  <p className="text-xl font-semibold">{examDetails.median || 'N/A'}</p>
-                </div>
-                <div className="p-3 bg-red-50 rounded">
-                  <p className="text-sm text-gray-500">Maximum</p>
-                  <p className="text-xl font-semibold">{examDetails.max || 'N/A'}</p>
-                </div>
-                <div className="p-3 bg-gray-50 rounded">
-                  <p className="text-sm text-gray-500">Standard Deviation</p>
-                  <p className="text-xl font-semibold">{examDetails.deviation?.toFixed(1) || 'N/A'}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Student Results Table }
-            <h3 className="text-lg font-semibold mb-2">Student Results</h3>
-            <div className="overflow-x-auto">
-              <table className="min-w-full bg-white border border-gray-300">
-                <thead>
-                  <tr className="bg-gray-100">
-                    <th className="py-2 px-4 border-b text-left">Roll Number</th>
-                    <th className="py-2 px-4 border-b text-left">Name</th>
-                    <th className="py-2 px-4 border-b text-center">Marks</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {examDetails.results.length === 0 ? (
-                    <tr>
-                      <td colSpan="3" className="py-4 px-4 text-center text-gray-500">
-                        No student results available
-                      </td>
-                    </tr>
-                  ) : (
-                    examDetails.results.map((result, index) => (
-                      <tr key={index} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
-                        <td className="py-2 px-4 border-b">{result.rollNumber}</td>
-                        <td className="py-2 px-4 border-b">{result.name}</td>
-                        <td className="py-2 px-4 border-b text-center">
-                          {result.obtainedMarks !== null ? result.obtainedMarks : 'N/A'}
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {/* Error State }
-        {error && (
-          <div className="text-red-500 py-2">{error}</div>
-        )}
-      </div>
-    );
-  }
-
-  // Student View - Loading and Error States
-  if (loading) {
-    return <div>Loading results...</div>;
-  }
-
-  if (error) {
-    return <div>{error}</div>;
-  }
-
-  // Prepare data for the graph
-  const examNames = results.map((result) => result.examName);
-  const obtainedMarks = results.map((result) => result.obtainedMarks || 0); // Obtained marks
-  const unobtainedMarks = results.map(
-    (result) => (result.totalMarks || 0) - (result.obtainedMarks || 0)
-  ); // Unobtained marks
-  const totalWeightage = results.map((result) => result.weightage || 0); // Total weightage
-  const obtainedWeightage = results.map(
-    (result) => (result.obtainedMarks * result.weightage) / result.totalMarks || 0
-  ); // Obtained weightage
-  const unobtainedWeightage = totalWeightage.map(
-    (total, index) => total - obtainedWeightage[index]
-  ); // Unobtained weightage
-
-  const chartData = {
-    labels: examNames,
-    datasets: [
-      {
-        label: 'Obtained Marks',
-        data: obtainedMarks,
-        backgroundColor: 'rgba(75, 192, 192, 0.6)', // Darker shade for obtained marks
-        borderColor: 'rgba(75, 192, 192, 1)',
-        borderWidth: 1,
-        stack: 'Marks', // Stack for marks
-      },
-      {
-        label: 'Remaining Marks',
-        data: unobtainedMarks,
-        backgroundColor: 'rgba(200, 200, 200, 0.6)', // Lighter shade for unobtained marks
-        borderColor: 'rgba(200, 200, 200, 1)',
-        borderWidth: 1,
-        stack: 'Marks', // Stack for marks
-      },
-      {
-        label: 'Obtained Weightage',
-        data: obtainedWeightage,
-        backgroundColor: 'rgba(153, 102, 255, 0.6)', // Darker shade for obtained weightage
-        borderColor: 'rgba(153, 102, 255, 1)',
-        borderWidth: 1,
-        stack: 'Weightage', // Stack for weightage
-      },
-      {
-        label: 'Remaining Weightage',
-        data: unobtainedWeightage,
-        backgroundColor: 'rgba(230, 230, 230, 0.6)', // Lighter shade for unobtained weightage
-        borderColor: 'rgba(230, 230, 230, 1)',
-        borderWidth: 1,
-        stack: 'Weightage', // Stack for weightage
-      },
-    ],
-  };
-
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: 'top',
-        labels: {
-          filter: (legendItem) =>
-            legendItem.text !== 'Remaining Marks' && legendItem.text !== 'Remaining Weightage', // Remove legends for unobtained marks and weightage
-        },
-      },
-    },
-    scales: {
-      x: {
-        title: {
-          display: true,
-          text: 'Exams',
-        },
-        stacked: true, // Enable stacking for the x-axis
-      },
-      y: {
-        title: {
-          display: true,
-          text: 'Marks / Weightage',
-        },
-        beginAtZero: true,
-        stacked: true, // Enable stacking for the y-axis
-      },
-    },
-  };
-
-  return (
-    <div className="w-full h-screen p-6">
-      <h1 className="text-2xl font-bold mb-4">Results</h1>
-
-      {/* Graph Section }
-      {results.length > 0 && (
-        <div className="w-full h-96 mb-6">
-          <Bar data={chartData} options={chartOptions} />
-        </div>
-      )}
-
-      {/* Table Section }
-      <table className="min-w-full bg-white border border-gray-300">
-        <thead>
-          <tr>
-            <th className="py-2 px-4 border-b text-center w-32">Exam Name</th>
-            <th className="py-2 px-4 border-b text-center w-24">Weightage</th>
-            <th className="py-2 px-4 border-b text-center w-24">Total Marks</th>
-            <th className="py-2 px-4 border-b text-center w-32">Obtained Marks</th>
-            <th className="py-2 px-4 border-b text-center w-24">Mean</th>
-            <th className="py-2 px-4 border-b text-center w-24">Median</th>
-            <th className="py-2 px-4 border-b text-center w-24">Max</th>
-            <th className="py-2 px-4 border-b text-center w-32">Deviation</th>
-          </tr>
-        </thead>
-        <tbody>
-          {results.length === 0 ? (
-            <tr>
-              <td colSpan="8" className="py-4 px-4 text-center text-gray-500">
-                No results available yet
-              </td>
-            </tr>
-          ) : (
-            results.map((result, index) => (
-              <tr key={index}>
-                <td className="py-2 px-4 border-b text-center w-32 overflow-x-auto">
-                  {result.examName}
-                </td>
-                <td className="py-2 px-4 border-b text-center w-24 overflow-x-auto">
-                  {result.weightage}
-                </td>
-                <td className="py-2 px-4 border-b text-center w-24 overflow-x-auto">
-                  {result.totalMarks}
-                </td>
-                <td className="py-2 px-4 border-b text-center w-32 overflow-x-auto">
-                  {result.obtainedMarks !== null ? result.obtainedMarks : 'N/A'}
-                </td>
-                <td className="py-2 px-4 border-b text-center w-24 overflow-x-auto">
-                  {result.mean}
-                </td>
-                <td className="py-2 px-4 border-b text-center w-24 overflow-x-auto">
-                  {result.median}
-                </td>
-                <td className="py-2 px-4 border-b text-center w-24 overflow-x-auto">
-                  {result.max}
-                </td>
-                <td className="py-2 px-4 border-b text-center w-32 overflow-x-auto">
-                  {result.deviation !== null ? result.deviation.toFixed(1) : 'N/A'}
-                </td>
-              </tr>
-            ))
-          )}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-*/
-
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
-import { useCourse } from '../../contexts/CourseContext';
-import axios from 'axios';
-import { Bar } from 'react-chartjs-2';
+import { Bar,Line } from 'react-chartjs-2';
 import 'chart.js/auto';
 
 export default function Results() {
@@ -1078,6 +496,96 @@ export default function Results() {
                 </div>
               </div>
             </div>
+         
+
+{ /* Performance Visualization - Single centered chart */ }
+<div className="bg-white p-4 rounded-lg shadow mb-6">
+  <h3 className="text-lg font-bold mb-4 text-center">Class Performance</h3>
+  
+  {/* Centered Score Distribution Chart */}
+  <div className="max-w-3xl mx-auto mb-6">
+    <div className="bg-gray-50 p-5 rounded-lg">
+      <h4 className="text-md font-medium mb-3 text-center text-gray-700">Score Distribution</h4>
+      <div className="h-72">
+        <Bar
+          data={(() => {
+            // Define grade ranges with improved colors
+            const ranges = [
+              { min: 0, max: 20, label: '0-20%', color: 'rgba(255, 99, 132, 0.7)' },
+              { min: 20, max: 40, label: '20-40%', color: 'rgba(255, 159, 64, 0.7)' },
+              { min: 40, max: 60, label: '40-60%', color: 'rgba(255, 205, 86, 0.7)' },
+              { min: 60, max: 80, label: '60-80%', color: 'rgba(75, 192, 192, 0.7)' },
+              { min: 80, max: 100, label: '80-100%', color: 'rgba(54, 162, 235, 0.7)' }
+            ];
+
+            // Calculate percentages for each student
+            const percentages = examDetails.results
+              .map(r => (r.obtainedMarks / examDetails.totalMarks) * 100)
+              .filter(p => !isNaN(p));
+            
+            // Initialize counts with all zeros
+            const rangeCounts = ranges.map(range => ({
+              range: range.label,
+              count: 0,
+              color: range.color
+            }));
+
+            // Place each student in exactly one range
+            percentages.forEach(p => {
+              if (p === 100) {
+                // Handle 100% exactly
+                rangeCounts[4].count++;
+              } else {
+                const rangeIndex = Math.floor(p / 20);
+                if (rangeIndex >= 0 && rangeIndex < 5) {
+                  rangeCounts[rangeIndex].count++;
+                }
+              }
+            });
+
+            return {
+              labels: rangeCounts.map(c => c.range),
+              datasets: [
+                {
+                  label: 'Number of Students',
+                  data: rangeCounts.map(c => c.count),
+                  backgroundColor: rangeCounts.map(c => c.color),
+                  borderColor: rangeCounts.map(c => c.color.replace('0.7', '1')),
+                  borderWidth: 1,
+                  borderRadius: 5,
+                }
+              ]
+            };
+          })()}
+          options={{
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  label: function(context) {
+                    return `${context.raw} students (${(context.raw / examDetails.results.length * 100).toFixed(1)}%)`;
+                  }
+                }
+              }
+            },
+            scales: {
+              x: {
+                title: { display: true, text: 'Score Range' }
+              },
+              y: {
+                title: { display: true, text: 'Number of Students' },
+                beginAtZero: true,
+                ticks: { precision: 0 }
+              }
+            }
+          }}
+        />
+      </div>
+    </div>
+  </div>
+</div>
 
             {/* Student Results Table */}
             <h3 className="text-lg font-semibold mb-2">Student Results</h3>
