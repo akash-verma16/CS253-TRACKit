@@ -62,10 +62,17 @@ exports.createDescriptionEntry = async (req, res) => {
 exports.updateDescriptionEntry = async (req, res) => {
   try {
     const entryId = req.params.id;
+    const courseId = req.params.courseId;
     const { courseDescriptionEntryHeading, courseDescriptionEntryBody } = req.body;
     
     // Check if entry exists
-    const entry = await CourseDescriptionEntry.findByPk(entryId);
+    //const entry = await CourseDescriptionEntry.findByPk(entryId);
+    const entry = await CourseDescriptionEntry.findOne({
+      where: {
+        id: entryId,
+        courseId: courseId
+      }
+    });
     if (!entry) {
       return res.status(404).json({
         success: false,
@@ -96,9 +103,15 @@ exports.updateDescriptionEntry = async (req, res) => {
 exports.deleteDescriptionEntry = async (req, res) => {
   try {
     const entryId = req.params.id;
-    
+    const courseId = req.params.courseId;
     // Check if entry exists
-    const entry = await CourseDescriptionEntry.findByPk(entryId);
+    //const entry = await CourseDescriptionEntry.findByPk(entryId);
+    const entry = await CourseDescriptionEntry.findOne({
+      where: {
+        id: entryId,
+        courseId: courseId
+      }
+    });
     if (!entry) {
       return res.status(404).json({
         success: false,

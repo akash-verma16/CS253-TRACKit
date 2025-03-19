@@ -14,7 +14,7 @@ exports.getAnnouncementsByCourse = async (req, res) => {
         attributes: ['userId', 'department', 'position'],
         include: {
           model: User,
-          attributes: ['firstName', 'lastName', 'email']
+          attributes: ['firstName', 'lastName', 'email','username']
         }
       }],
       order: [['createdAt', 'DESC']] // Most recent first
@@ -62,10 +62,16 @@ exports.createAnnouncement = async (req, res) => {
 exports.updateAnnouncement = async (req, res) => {
   try {
     const announcementId = req.params.id;
+    const courseId = req.params.courseId;
     const { announcementHeading, announcementBody } = req.body;
     
     // Check if announcement exists
-    const announcement = await Announcement.findByPk(announcementId);
+    const announcement = await Announcement.findOne({
+      where: {
+        id: announcementId,
+        courseId: courseId
+      }
+    });
     if (!announcement) {
       return res.status(404).json({
         success: false,
@@ -96,9 +102,14 @@ exports.updateAnnouncement = async (req, res) => {
 exports.deleteAnnouncement = async (req, res) => {
   try {
     const announcementId = req.params.id;
-    
+    const courseId = req.params.courseId;
     // Check if announcement exists
-    const announcement = await Announcement.findByPk(announcementId);
+    const announcement = await Announcement.findOne({
+      where: {
+        id: announcementId,
+        courseId: courseId
+      }
+    });
     if (!announcement) {
       return res.status(404).json({
         success: false,

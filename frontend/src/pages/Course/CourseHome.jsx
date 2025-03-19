@@ -143,7 +143,7 @@ export default function CourseHome({ present, total, role }) {
       <div className='flex justify-between py-2 px-8 items-center sticky top-0 bg-[#F5F5F5] shadow-lg'>
         <div>
           <p className='text-[32px] uppercase font-semibold m-4'>{courseDetails.name}</p>
-          <p className='text-gray-600 ml-4 -mt-3'>{courseDetails.code} • {courseDetails.credits} Credits • {courseDetails.semester}</p>
+          <p className='text-gray-600 ml-4 -mt-3'>{courseDetails.code} • {courseDetails.credits} Credits • {courseDetails.semester} • {JSON.parse(localStorage.getItem('user')).userType}</p>
         </div>
         <NavLink to="/dashboard/profile">
           <CgProfile className='text-[40px] cursor-pointer hover:scale-95 duration-200 transition-all hover:text-blue-500' />

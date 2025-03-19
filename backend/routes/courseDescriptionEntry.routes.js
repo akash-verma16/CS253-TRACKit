@@ -11,9 +11,9 @@ router.get('/course/:courseId', [verifyToken, isUserInCourse], courseDescEntryCo
 router.post('/', [verifyToken, isFacultyInCourse], courseDescEntryController.createDescriptionEntry);
 
 // Update a course description entry (faculty only)
-router.put('/:id', [verifyToken, isFacultyInCourse], courseDescEntryController.updateDescriptionEntry);
+router.put('/:courseId/:id', [verifyToken, isFacultyInCourse], courseDescEntryController.updateDescriptionEntry);
 
 // Delete a course description entry (faculty only)
-router.delete('/:id', [verifyToken, isFacultyInCourse], courseDescEntryController.deleteDescriptionEntry);
+router.delete('/:courseId/:id', [verifyToken, isFacultyInCourse], courseDescEntryController.deleteDescriptionEntry);
 
 module.exports = router;

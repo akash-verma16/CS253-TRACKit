@@ -11,9 +11,9 @@ router.get('/course/:courseId', [verifyToken, isUserInCourse], announcementContr
 router.post('/', [verifyToken, isFacultyInCourse], announcementController.createAnnouncement);
 
 // Update an announcement (faculty only)
-router.put('/:id', [verifyToken, isFacultyInCourse], announcementController.updateAnnouncement);
+router.put('/:courseId/:id', [verifyToken, isFacultyInCourse], announcementController.updateAnnouncement);
 
 // Delete an announcement (faculty only)
-router.delete('/:id', [verifyToken, isFacultyInCourse], announcementController.deleteAnnouncement);
+router.delete('/:courseId/:id', [verifyToken, isFacultyInCourse], announcementController.deleteAnnouncement);
 
 module.exports = router;
