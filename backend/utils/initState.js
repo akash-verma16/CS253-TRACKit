@@ -65,6 +65,9 @@ module.exports = async function initState() {
     // 8. Print course enrollments
     await printCourseEnrollments(courses);
     
+    // 9. Create lectures for each course
+    await createLectures(courses);
+    
     console.log('Database initialization completed successfully!');
   } catch (error) {
     console.error('Failed to initialize database:', error);
@@ -432,6 +435,23 @@ async function createCourseDescriptionEntries(courses, facultyUsers) {
     } catch (error) {
       console.error(`Error creating course descriptions for course ${course.code}:`, error.message);
     }
+  }
+}
+
+// Create lectures for each course
+async function createLectures(courses) {
+  for (const course of courses) {
+    for (let week = 1; week <= 12; week++) {
+      await db.Lecture.create({
+        courseId: course.id,
+        week: week,
+        topicTitle: `Software Processes`,
+        // topicTitle: `kuch bhi likhde ${week} Topic for ${course.code}`,
+        lectureTitle: `Lecture ${week} for ${course.code}`,
+        lectureDescription: `This is the description for Lecture ${week} of the course ${course.code}.`
+      });
+    }
+    console.log(`Created lectures for ${course.code}`);
   }
 }
 

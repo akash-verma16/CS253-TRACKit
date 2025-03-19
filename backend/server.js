@@ -4,6 +4,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const db = require('./models');
+const path = require('path');
 
 const app = express();
 
@@ -27,18 +28,22 @@ app.use(limiter);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Add file upload middleware
-const fileUpload = require('express-fileupload');
-app.use(fileUpload({
-  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB max file size
-  abortOnLimit: true
-}));
+// Serve static files from the uploads directory
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// // Add file upload middleware
+// const fileUpload = require('express-fileupload');
+// app.use(fileUpload({
+//   limits: { fileSize: 50 * 1024 * 1024 }, // 50MB max file size
+//   abortOnLimit: true
+// }));
 
 // Routes
 app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/users', require('./routes/user.routes'));
 app.use('/api/courses', require('./routes/course.routes'));
 app.use('/api/announcements', require('./routes/announcement.routes'));
+app.use('/api/lectures', require('./routes/lecture.routes'));
 app.use('/api/course-descriptions', require('./routes/courseDescriptionEntry.routes'));
 app.use('/api/student', require('./routes/student.routes'));
 app.use('/api/faculty', require('./routes/faculty.routes'));
