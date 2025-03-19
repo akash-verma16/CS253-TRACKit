@@ -7,7 +7,7 @@ import { FaRegEdit } from "react-icons/fa";
 import { AiOutlineDelete } from "react-icons/ai";
 import { NavLink } from 'react-router-dom';
 import { useCourse } from '../../contexts/CourseContext';
-
+import { useNotification } from '../contexts/NotificationContext';
 export default function Announcements({ role }) {
   const [expandedIndices, setExpandedIndices] = useState({});
   const { courseDetails, loading, error } = useCourse();

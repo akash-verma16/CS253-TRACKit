@@ -15,6 +15,8 @@ import CreateCourse from "./pages/Admin/createCourse";
 import ManageUsers from "./pages/Admin/ManageUsers";
 import ManageCourses from "./pages/Admin/ManageCourses";
 import ContactDevelopers from "./pages/Admin/ContactDevelopers";
+import { NotificationProvider } from './contexts/NotificationContext';
+import NotificationContainer from './components/Notification';
 
 // Wrapper component to handle course params
 const CourseWrapper = () => {
@@ -90,7 +92,10 @@ function App() {
     <Router>
       <AuthProvider>
         <CourseProvider>
-          <AppRoutes />
+          <NotificationProvider>
+            <NotificationContainer />
+            <AppRoutes />
+          </NotificationProvider>
         </CourseProvider>
       </AuthProvider>
     </Router>
