@@ -244,9 +244,13 @@ export default function Announcements({ role }) {
                   <div className="text-xs text-gray-600">
                     <p>Posted by: {announcement.faculty.user.firstName} {announcement.faculty.user.lastName} ({announcement.faculty.user.username})</p>
                     <p>Created: {formatDate(announcement.createdAt)}</p>
-                    {announcement.createdAt !== announcement.updatedAt && (
-                      <p>Updated: {formatDate(announcement.updatedAt)}</p>
+                    {announcement.createdAt !== announcement.updatedAt &&
+                      Math.abs(new Date(announcement.updatedAt) - new Date(announcement.createdAt)) >= 1000 && (
+                        <p>Updated: {formatDate(announcement.updatedAt)}</p>
                     )}
+                    {/* {announcement.createdAt !== announcement.updatedAt && (
+                      <p>Updated: {formatDate(announcement.updatedAt)}</p>
+                    )} */}
                   </div>
                 </div>
               </div>
