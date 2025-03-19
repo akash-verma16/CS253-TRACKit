@@ -154,7 +154,17 @@ export default function Announcements({ role }) {
           showNotification('Announcement updated successfully', 'success');
           // Update the announcement in our state
           setAnnouncements(prev => 
-            prev.map(a => a.id === currentAnnouncementId ? response.data.data : a)
+            prev.map(a => {
+              if (a.id === currentAnnouncementId) {
+                return {
+                  ...a,
+                  announcementHeading: formData.announcementHeading,
+                  announcementBody: formData.announcementBody,
+                  updatedAt: new Date().toISOString()
+                };
+              }
+              return a;
+            })
           );
         }
       }
