@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CgProfile } from "react-icons/cg";
 import axios from 'axios';
@@ -14,12 +14,15 @@ export default function CreateCourse() {
     semester: ''
   });
   const [csvFile, setCsvFile] = useState(null);
+  const [csvFileName, setCsvFileName] = useState('');
+  const fileInputRef = useRef(null);
   const navigate = useNavigate();
   const { token } = useAuth(); // Get token from auth context
   
   // Add new state variables for API interactions
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ text: '', type: '' });
+  const [fileError, setFileError] = useState('');
 
   const handleChange = (e) => {
     setCourseData({
@@ -29,7 +32,40 @@ export default function CreateCourse() {
   };
 
   const handleFileChange = (e) => {
-    setCsvFile(e.target.files[0]);
+    setFileError('');
+    const file = e.target.files[0];
+    
+    if (!file) {
+      setCsvFile(null);
+      setCsvFileName('');
+      return;
+    }
+
+    // More lenient file type checking
+    const validExtensions = ['.csv', '.txt'];
+    const fileExtension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+    
+    if (!validExtensions.includes(fileExtension) && 
+        file.type !== 'text/csv' && 
+        file.type !== 'text/plain' &&
+        file.type !== 'application/vnd.ms-excel') {
+      setFileError(`Please select a valid CSV file. Received file of type: ${file.type}`);
+      setCsvFile(null);
+      setCsvFileName('');
+      return;
+    }
+
+    // Validate file size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      setFileError('File size too large. Maximum size is 5MB.');
+      setCsvFile(null);
+      setCsvFileName('');
+      return;
+    }
+
+    setCsvFile(file);
+    setCsvFileName(file.name);
+    console.log("Selected file:", file.name, "Size:", file.size, "Type:", file.type);
   };
 
   // Reset form after submission
@@ -135,15 +171,6 @@ export default function CreateCourse() {
       return;
     }
 
-    // Check file size - warn if it's too large
-    if (csvFile.size > 5 * 1024 * 1024) { // 5MB
-      setMessage({ 
-        text: 'File size is large (>5MB). Upload may take longer than expected.', 
-        type: 'error' 
-      });
-      // Continue with upload but warn the user
-    }
-
     setLoading(true);
     setMessage({ text: 'Uploading file... Please wait.', type: 'info' });
 
@@ -157,7 +184,7 @@ export default function CreateCourse() {
       
       console.log("User data from localStorage:", userData);
       console.log("Token being used for bulk upload:", authToken);
-      console.log("File being uploaded:", csvFile.name, "Size:", csvFile.size, "bytes");
+      console.log("File being uploaded:", csvFile.name, "Size:", csvFile.size, "bytes", "Type:", csvFile.type);
       
       if (!authToken) {
         setMessage({ text: 'Authentication required. Please log in again.', type: 'error' });
@@ -168,6 +195,11 @@ export default function CreateCourse() {
       // Create FormData object for file upload
       const formData = new FormData();
       formData.append('file', csvFile);
+      
+      // Debug what's in the FormData
+      for (const [key, value] of formData.entries()) {
+        console.log(`FormData contains: ${key} = ${value instanceof File ? value.name : value}`);
+      }
 
       // Create a timeout for the request
       const timeoutDuration = 60000; // 60 seconds
@@ -190,12 +222,19 @@ export default function CreateCourse() {
         }
       );
 
+      console.log("Response received:", response.data);
+      
       if (response.data.success) {
         setMessage({ 
-          text: `${response.data.message}`, 
+          text: `${response.data.message || 'Courses uploaded successfully!'}`, 
           type: 'success' 
         });
         resetForm();
+        // Reset file input
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+        setCsvFileName('');
       }
     } catch (error) {
       console.error('Error object:', error);
@@ -211,6 +250,11 @@ export default function CreateCourse() {
       } else if (error.response) {
         console.error('Error response:', error.response.data);
         errorMessage = error.response.data.message || errorMessage;
+        
+        // Display any debug information sent from the server
+        if (error.response.data.debug) {
+          console.log("Debug info from server:", error.response.data.debug);
+        }
         
         // Check for detailed validation errors
         if (error.response.data.errors && error.response.data.errors.length > 0) {
@@ -266,7 +310,8 @@ export default function CreateCourse() {
           {/* Status Message */}
           {message.text && (
             <div className={`p-3 mb-4 rounded text-sm ${
-              message.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+              message.type === 'success' ? 'bg-green-100 text-green-700' : 
+              message.type === 'info' ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700'
             }`}>
               {message.text}
             </div>
@@ -359,26 +404,56 @@ export default function CreateCourse() {
               </button>
             </form>
           ) : (
-            <form onSubmit={handleBulkSubmit}>
+            <form onSubmit={handleBulkSubmit} encType="multipart/form-data">
               <div className="mb-6">
                 <label className="block text-gray-700 text-sm font-bold mb-2">Upload CSV File:</label>
-                <input
-                  type="file"
-                  accept=".csv"
-                  onChange={handleFileChange}
-                  required
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                />
+                <div className="flex items-center">
+                  <input
+                    type="file"
+                    accept=".csv"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    required
+                    className="hidden"
+                    id="csv-file-input"
+                  />
+                  <label 
+                    htmlFor="csv-file-input"
+                    className="cursor-pointer bg-gray-200 hover:bg-gray-300 py-2 px-4 rounded flex-grow text-center"
+                  >
+                    {csvFileName || "Choose a CSV file"}
+                  </label>
+                  {csvFileName && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCsvFile(null);
+                        setCsvFileName('');
+                        if (fileInputRef.current) {
+                          fileInputRef.current.value = '';
+                        }
+                      }}
+                      className="ml-2 text-red-500 hover:text-red-700"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+                {fileError && (
+                  <p className="text-red-500 text-xs mt-1">{fileError}</p>
+                )}
                 <div className="text-sm text-gray-500 mt-2">
                   <p className="font-bold">CSV file must include these columns:</p>
                   <ul className="list-disc pl-5 mt-1">
                     <li><span className="font-medium">course code</span>: Course code (required)</li>
                     <li><span className="font-medium">course name</span>: Course name (required)</li>
-                    <li><span className="font-medium">credits</span>: Course credits (required, 1-20)</li>
+                    <li><span className="font-medium">credits</span>: Course credits (required, 2-11)</li>
                     <li><span className="font-medium">semester</span>: Fall/Spring/Summer (required)</li>
                     <li><span className="font-medium">description</span>: Course description (optional)</li>
                   </ul>
+                  <p className="mt-2 text-amber-600 font-medium">Important: Make sure your CSV file uses commas (,) as separators and includes a header row.</p>
                 </div>
+                
               </div>
               
               {/* Display detailed error messages if available */}
@@ -410,8 +485,8 @@ export default function CreateCourse() {
               
               <button
                 type="submit"
-                disabled={loading}
-                className={`w-full ${loading ? 'bg-gray-400' : 'bg-blue-500 hover:bg-blue-700'} text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline
+                disabled={loading || !csvFile}
+                className={`w-full ${loading || !csvFile ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-700 cursor-pointer'} text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline
                 hover:scale-95 transition-all duration-200`}
               >
                 {loading ? "Uploading..." : "Upload and Create Courses"}

@@ -708,10 +708,21 @@ exports.getAllCourses = async (req, res) => {
 
 // Bulk create courses from CSV
 exports.bulkCreateCourses = async (req, res) => {
-  if (!req.files || !req.files.file) {
+  // More detailed request inspection for debugging
+  console.log("Request body:", req.body);
+  console.log("Request files:", req.files);
+  console.log("Request headers:", req.headers);
+  
+  if (!req.files || Object.keys(req.files).length === 0 || !req.files.file) {
+    console.log("No files were uploaded or file field is missing");
     return res.status(400).json({
       success: false,
-      message: 'Please upload a CSV file'
+      message: 'Please upload a CSV file',
+      debug: { 
+        hasFiles: !!req.files,
+        filesKeys: req.files ? Object.keys(req.files) : [],
+        contentType: req.headers['content-type'] 
+      }
     });
   }
 
@@ -736,12 +747,21 @@ exports.bulkCreateCourses = async (req, res) => {
     try {
       csvData = req.files.file.data.toString('utf8');
       console.log("CSV Data length:", csvData.length, "characters");
-      console.log("CSV Data (first 200 chars):", csvData.substring(0, 200));
+      if (csvData.length > 0) {
+        console.log("CSV Data (first 200 chars):", csvData.substring(0, 200));
+      } else {
+        console.log("Warning: CSV data is empty");
+        return res.status(400).json({
+          success: false,
+          message: 'The uploaded CSV file is empty'
+        });
+      }
     } catch (error) {
       console.error("Error reading CSV file:", error);
       return res.status(400).json({
         success: false,
-        message: 'Error reading CSV file. Please check file format.'
+        message: 'Error reading CSV file. Please check file format.',
+        error: error.message
       });
     }
 
@@ -754,19 +774,29 @@ exports.bulkCreateCourses = async (req, res) => {
         trim: true,
         skipLinesWithEmpty: true,
         relaxColumnCount: true, // Be more flexible with column counts
-        relaxQuotes: true // Handle quotes more flexibly
+        relaxQuotes: true, // Handle quotes more flexibly
+        delimiter: ',' // Explicitly set comma as delimiter
       });
       
       console.log("Successfully parsed CSV with", records.length, "records");
+      if (records.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'The CSV file contains no valid data rows'
+        });
+      }
     } catch (parseError) {
       console.error("CSV Parse Error:", parseError);
       return res.status(400).json({
         success: false,
         message: `CSV parsing failed: ${parseError.message}`,
-        hint: 'Please check your CSV format and ensure it uses proper formatting'
+        hint: 'Please check your CSV format and ensure it uses proper formatting',
+        error: parseError.message
       });
     }
 
+    // ...rest of the function stays the same...
+    
     // Map expected CSV headers to model fields - handle both formats
     const headerMap = {
       'course code': 'code',
@@ -949,7 +979,8 @@ exports.bulkCreateCourses = async (req, res) => {
     res.status(500).json({
       success: false,
       message: error.message || 'Error processing CSV file',
-      hint: 'Make sure the CSV file contains the required columns: course code, course name, credits, semester'
+      hint: 'Make sure the CSV file contains the required columns: course code, course name, credits, semester',
+      stack: process.env.NODE_ENV !== 'production' ? error.stack : undefined
     });
   }
 };
