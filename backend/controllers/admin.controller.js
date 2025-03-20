@@ -635,6 +635,38 @@ exports.deleteUser = async (req, res) => {
 // Course management functions
 exports.createCourse = async (req, res) => {
   try {
+    // Check if a course with the same code already exists
+    const existingCourse = await Course.findOne({
+      where: { code: req.body.code }
+    });
+    
+    if (existingCourse) {
+      return res.status(400).json({
+        success: false,
+        message: 'A course with this code already exists'
+      });
+    }
+    
+    // Validate required fields
+    const requiredFields = ['code', 'name', 'credits', 'semester'];
+    const missingFields = requiredFields.filter(field => !req.body[field]);
+    
+    if (missingFields.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: `Missing required fields: ${missingFields.join(', ')}`
+      });
+    }
+    
+    // Validate credits
+    const credits = parseInt(req.body.credits);
+    if (isNaN(credits) || credits <= 0 || credits > 20) {
+      return res.status(400).json({
+        success: false,
+        message: 'Credits must be between 1 and 20'
+      });
+    }
+    
     const course = await Course.create(req.body);
     res.status(201).json({
       success: true,
@@ -642,9 +674,19 @@ exports.createCourse = async (req, res) => {
       courseId: course.id
     });
   } catch (error) {
+    // Log the detailed error for debugging
+    console.error('Error creating course:', error);
+    
+    let errorMessage = 'Error creating course';
+    if (error.name === 'SequelizeValidationError') {
+      errorMessage = error.errors.map(e => e.message).join(', ');
+    } else if (error.name === 'SequelizeUniqueConstraintError') {
+      errorMessage = 'Course code already exists';
+    }
+    
     res.status(400).json({
       success: false,
-      message: error.message || 'Error creating course'
+      message: errorMessage
     });
   }
 };
@@ -660,6 +702,254 @@ exports.getAllCourses = async (req, res) => {
     res.status(500).json({
       success: false,
       message: error.message || 'Error retrieving courses'
+    });
+  }
+};
+
+// Bulk create courses from CSV
+exports.bulkCreateCourses = async (req, res) => {
+  if (!req.files || !req.files.file) {
+    return res.status(400).json({
+      success: false,
+      message: 'Please upload a CSV file'
+    });
+  }
+
+  // Log file information for debugging
+  console.log("Received file:", req.files.file.name);
+  console.log("File size:", req.files.file.size, "bytes");
+  console.log("File mimetype:", req.files.file.mimetype);
+
+  // Check if file is too large (optional, adjust size as needed)
+  if (req.files.file.size > 10 * 1024 * 1024) { // 10MB
+    return res.status(413).json({
+      success: false,
+      message: 'File too large. Maximum size is 10MB.'
+    });
+  }
+
+  const t = await db.sequelize.transaction();
+  
+  try {
+    // Read file data with error handling
+    let csvData;
+    try {
+      csvData = req.files.file.data.toString('utf8');
+      console.log("CSV Data length:", csvData.length, "characters");
+      console.log("CSV Data (first 200 chars):", csvData.substring(0, 200));
+    } catch (error) {
+      console.error("Error reading CSV file:", error);
+      return res.status(400).json({
+        success: false,
+        message: 'Error reading CSV file. Please check file format.'
+      });
+    }
+
+    // Parse the CSV with more robust settings and detailed error handling
+    let records;
+    try {
+      records = parse(csvData, {  
+        columns: true,
+        skip_empty_lines: true,
+        trim: true,
+        skipLinesWithEmpty: true,
+        relaxColumnCount: true, // Be more flexible with column counts
+        relaxQuotes: true // Handle quotes more flexibly
+      });
+      
+      console.log("Successfully parsed CSV with", records.length, "records");
+    } catch (parseError) {
+      console.error("CSV Parse Error:", parseError);
+      return res.status(400).json({
+        success: false,
+        message: `CSV parsing failed: ${parseError.message}`,
+        hint: 'Please check your CSV format and ensure it uses proper formatting'
+      });
+    }
+
+    // Map expected CSV headers to model fields - handle both formats
+    const headerMap = {
+      'course code': 'code',
+      'coursecode': 'code',
+      'code': 'code',
+      'course name': 'name',
+      'coursename': 'name',
+      'name': 'name',
+      'credits': 'credits',
+      'semester': 'semester',
+      'description': 'description'
+    };
+    
+    const requiredFields = ['code', 'name', 'credits', 'semester', 'description'];
+    
+    if (!records || records.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'CSV file is empty or could not be parsed correctly'
+      });
+    }
+    
+    const firstRecord = records[0];
+    console.log("First record:", firstRecord);
+    console.log("First record columns:", Object.keys(firstRecord));
+    
+    // Check if all required columns exist in the CSV (with any valid header format)
+    const missingColumns = [];
+    const foundMappings = {};
+    
+    // First, create a mapping from the CSV headers to our field names
+    for (const header of Object.keys(firstRecord)) {
+      const normalizedHeader = header.toLowerCase().trim().replace(/\s+/g, '');
+      if (headerMap[normalizedHeader] || headerMap[header.toLowerCase().trim()]) {
+        const fieldName = headerMap[normalizedHeader] || headerMap[header.toLowerCase().trim()];
+        foundMappings[fieldName] = header;
+      }
+    }
+    
+    console.log("Found header mappings:", foundMappings);
+    
+    // Check for missing required fields
+    for (const field of requiredFields) {
+      if (!foundMappings[field]) {
+        missingColumns.push(field);
+      }
+    }
+
+    if (missingColumns.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: `Missing required columns in CSV: ${missingColumns.join(', ')}`,
+        foundColumns: Object.keys(firstRecord),
+        expectedColumnFormats: Object.keys(headerMap).filter(key => 
+          requiredFields.includes(headerMap[key])),
+        hint: 'Make sure your CSV contains the required headers: course code, course name, credits, semester'
+      });
+    }
+
+    // Extract all course codes from the CSV file to check for duplicates
+    const csvCourseCodes = [];
+    let normalizedRecords = [];
+    
+    // First pass: normalize all records and collect course codes
+    for (const [index, record] of records.entries()) {
+      // Map CSV headers to model fields using the mappings we found
+      const normalizedRecord = {};
+      
+      for (const [fieldName, headerName] of Object.entries(foundMappings)) {
+        normalizedRecord[fieldName] = record[headerName];
+      }
+      
+      // Also check for description which is optional
+      if (foundMappings['description']) {
+        normalizedRecord.description = record[foundMappings['description']] || '';
+      }
+      
+      // Collect all course codes for duplicate checking
+      if (normalizedRecord.code) {
+        csvCourseCodes.push(normalizedRecord.code.trim().toUpperCase());
+      }
+      
+      normalizedRecords.push(normalizedRecord);
+    }
+    
+    // Check if any course codes in the CSV already exist in the database
+    const existingCourses = await Course.findAll({
+      where: { 
+        code: {
+          [db.Sequelize.Op.in]: csvCourseCodes
+        }
+      },
+      attributes: ['code']
+    });
+    
+    // If we found existing courses with the same codes, return an error
+    if (existingCourses.length > 0) {
+      const duplicateCodes = existingCourses.map(course => course.code);
+      return res.status(400).json({
+        success: false,
+        message: 'These course codes already exist. Please use different CSV file or remove duplicate entries.',
+        duplicateCodes: duplicateCodes,
+        hint: `Found ${duplicateCodes.length} courses that already exist in the database.`
+      });
+    }
+
+    const createdCourses = [];
+    const errors = [];
+
+    // Second pass: Create the courses after we've confirmed no duplicates
+    for (const [index, normalizedRecord] of normalizedRecords.entries()) {
+      try {
+        // Basic validation with better error messages
+        if (!normalizedRecord.code) {
+          throw new Error('Missing course code');
+        }
+        if (!normalizedRecord.name) {
+          throw new Error('Missing course name');
+        }
+        if (!normalizedRecord.credits) {
+          throw new Error('Missing credits');
+        }
+        if (!normalizedRecord.semester) {
+          throw new Error('Missing semester');
+        }
+
+        // Credits validation
+        const credits = parseInt(normalizedRecord.credits);
+        if (isNaN(credits)) {
+          throw new Error('Credits must be a number');
+        }
+        if (credits <= 0 || credits > 20) {
+          throw new Error('Credits must be between 1 and 20');
+        }
+
+        // Semester validation
+        const validSemesters = ['fall', 'spring', 'summer'];
+        if (!validSemesters.includes(normalizedRecord.semester.toLowerCase())) {
+          throw new Error('Invalid semester (must be Fall, Spring, or Summer)');
+        }
+
+        const course = await Course.create({
+          code: normalizedRecord.code,
+          name: normalizedRecord.name,
+          description: normalizedRecord.description || '',
+          credits: credits,
+          semester: normalizedRecord.semester,
+        }, { transaction: t });
+
+        createdCourses.push({
+          id: course.id,
+          code: course.code
+        });
+      } catch (error) {
+        errors.push(`Row ${index + 1}: ${error.message}`);
+      }
+    }
+
+    if (errors.length > 0) {
+      console.error("CSV processing errors:", errors);
+      await t.rollback();
+      return res.status(400).json({
+        success: false,
+        message: `Errors occurred while processing CSV (${errors.length} errors)`,
+        errors: errors,
+        totalRows: records.length,
+        successfulRows: createdCourses.length
+      });
+    }
+
+    await t.commit();
+    res.status(201).json({
+      success: true,
+      message: `Successfully created ${createdCourses.length} courses`,
+      courses: createdCourses
+    });
+  } catch (error) {
+    await t.rollback();
+    console.error("CSV Processing Fatal Error:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Error processing CSV file',
+      hint: 'Make sure the CSV file contains the required columns: course code, course name, credits, semester'
     });
   }
 };

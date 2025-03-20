@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CgProfile } from "react-icons/cg";
+import axios from 'axios';
+import { useAuth } from '../../contexts/AuthContext'; // Import useAuth hook
 
 export default function CreateCourse() {
   const [activeTab, setActiveTab] = useState('manual');
@@ -13,6 +15,11 @@ export default function CreateCourse() {
   });
   const [csvFile, setCsvFile] = useState(null);
   const navigate = useNavigate();
+  const { token } = useAuth(); // Get token from auth context
+  
+  // Add new state variables for API interactions
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState({ text: '', type: '' });
 
   const handleChange = (e) => {
     setCourseData({
@@ -25,16 +32,217 @@ export default function CreateCourse() {
     setCsvFile(e.target.files[0]);
   };
 
-  const handleManualSubmit = (e) => {
-    e.preventDefault();
-    // Log form data for development purposes
-    console.log('Course Data:', courseData);
+  // Reset form after submission
+  const resetForm = () => {
+    setCourseData({
+      code: '',
+      name: '',
+      description: '',
+      credits: 9,
+      semester: ''
+    });
+    setCsvFile(null);
   };
 
-  const handleBulkSubmit = (e) => {
+  const handleManualSubmit = async (e) => {
     e.preventDefault();
-    // Log CSV file for development purposes
-    console.log('CSV File:', csvFile);
+    setLoading(true);
+    setMessage({ text: '', type: '' });
+
+    try {
+      // Perform client-side validation
+      const requiredFields = ['code', 'name', 'credits', 'semester'];
+      const missingFields = requiredFields.filter(field => !courseData[field]);
+      
+      if (missingFields.length > 0) {
+        setMessage({ 
+          text: `Missing required fields: ${missingFields.join(', ')}`, 
+          type: 'error' 
+        });
+        setLoading(false);
+        return;
+      }
+      
+      // Try different token formats and storage locations
+      const userData = JSON.parse(localStorage.getItem('user') || '{}');
+      const authToken = token || 
+                        localStorage.getItem('token') || 
+                        userData.token || 
+                        localStorage.getItem('accessToken');
+      
+      console.log("User data from localStorage:", userData);
+      console.log("Token being used:", authToken);
+      
+      if (!authToken) {
+        setMessage({ text: 'Authentication required. Please log in again.', type: 'error' });
+        setTimeout(() => navigate('/login'), 2000);
+        return;
+      }
+
+      const response = await axios.post(
+        `${process.env.REACT_APP_API_URL || 'http://localhost:3001'}/api/admin/course`,
+        courseData,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'x-access-token': authToken,
+            'Authorization': `Bearer ${authToken}` // Add alternative auth header format
+          }
+        }
+      );
+
+      if (response.data.success) {
+        setMessage({ text: 'Course created successfully!', type: 'success' });
+        resetForm();
+      }
+    } catch (error) {
+      // Add more detailed debugging
+      console.error("Full error object:", error);
+      
+      if (error.response) {
+        console.error("Response status:", error.response.status);
+        console.error("Response headers:", error.response.headers);
+        console.error("Response data:", error.response.data);
+      }
+      
+      // Handle specific error cases
+      let errorMessage = 'Error creating course';
+      
+      if (error.response) {
+        if (error.response.status === 400) {
+          errorMessage = error.response.data.message || 'Validation error. Check course details.';
+          if (error.response.data.message.includes('already exists')) {
+            errorMessage = 'This course code already exists. Please use a different code.';
+          }
+        } else if (error.response.status === 401 || error.response.status === 403) {
+          errorMessage = 'Authentication error. Please log in again.';
+          setTimeout(() => navigate('/login'), 2000);
+        } else {
+          errorMessage = error.response.data.message || errorMessage;
+        }
+      }
+      
+      setMessage({ text: errorMessage, type: 'error' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBulkSubmit = async (e) => {
+    e.preventDefault();
+    if (!csvFile) {
+      setMessage({ text: 'Please select a CSV file', type: 'error' });
+      return;
+    }
+
+    // Check file size - warn if it's too large
+    if (csvFile.size > 5 * 1024 * 1024) { // 5MB
+      setMessage({ 
+        text: 'File size is large (>5MB). Upload may take longer than expected.', 
+        type: 'error' 
+      });
+      // Continue with upload but warn the user
+    }
+
+    setLoading(true);
+    setMessage({ text: 'Uploading file... Please wait.', type: 'info' });
+
+    try {
+      // Try different token formats and storage locations
+      const userData = JSON.parse(localStorage.getItem('user') || '{}');
+      const authToken = token || 
+                        localStorage.getItem('token') || 
+                        userData.token || 
+                        localStorage.getItem('accessToken');
+      
+      console.log("User data from localStorage:", userData);
+      console.log("Token being used for bulk upload:", authToken);
+      console.log("File being uploaded:", csvFile.name, "Size:", csvFile.size, "bytes");
+      
+      if (!authToken) {
+        setMessage({ text: 'Authentication required. Please log in again.', type: 'error' });
+        setTimeout(() => navigate('/login'), 2000);
+        return;
+      }
+
+      // Create FormData object for file upload
+      const formData = new FormData();
+      formData.append('file', csvFile);
+
+      // Create a timeout for the request
+      const timeoutDuration = 60000; // 60 seconds
+      
+      const response = await axios.post(
+        `${process.env.REACT_APP_API_URL || 'http://localhost:3001'}/api/admin/bulk-courses`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            'x-access-token': authToken,
+            'Authorization': `Bearer ${authToken}`
+          },
+          timeout: timeoutDuration, // Set timeout
+          onUploadProgress: (progressEvent) => {
+            // Log upload progress
+            const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            console.log(`Upload progress: ${percentCompleted}%`);
+          }
+        }
+      );
+
+      if (response.data.success) {
+        setMessage({ 
+          text: `${response.data.message}`, 
+          type: 'success' 
+        });
+        resetForm();
+      }
+    } catch (error) {
+      console.error('Error object:', error);
+      
+      let errorMessage = 'Error uploading courses';
+      let errorDetails = [];
+      let duplicateCodes = [];
+      
+      if (error.code === 'ECONNABORTED') {
+        errorMessage = 'The request took too long to complete. Please try again with a smaller file or check your network connection.';
+      } else if (error.message && error.message.includes('Network Error')) {
+        errorMessage = 'Network error occurred. Please check your internet connection and try again.';
+      } else if (error.response) {
+        console.error('Error response:', error.response.data);
+        errorMessage = error.response.data.message || errorMessage;
+        
+        // Check for detailed validation errors
+        if (error.response.data.errors && error.response.data.errors.length > 0) {
+          errorDetails = error.response.data.errors;
+        }
+        
+        // Check for duplicate course codes
+        if (error.response.data.duplicateCodes && error.response.data.duplicateCodes.length > 0) {
+          duplicateCodes = error.response.data.duplicateCodes;
+          errorMessage = 'These course codes already exist. Please use a different CSV file.';
+        }
+        
+        if (error.response.status === 401) {
+          errorMessage = 'Authentication failed. Please log in again.';
+          setTimeout(() => navigate('/login'), 2000);
+        } else if (error.response.status === 413) {
+          errorMessage = 'The file is too large. Please try a smaller file.';
+        }
+      } else {
+        console.error('Error:', error.message);
+        errorMessage = error.message || 'An unexpected error occurred';
+      }
+      
+      setMessage({ 
+        text: errorMessage, 
+        type: 'error',
+        details: errorDetails.length > 0 ? errorDetails : null,
+        duplicateCodes: duplicateCodes.length > 0 ? duplicateCodes : null
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -54,6 +262,15 @@ export default function CreateCourse() {
       <div className="pt-24 px-4">
         <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-8">
           <h2 className="text-2xl font-bold mb-6 text-center">Create Course</h2>
+          
+          {/* Status Message */}
+          {message.text && (
+            <div className={`p-3 mb-4 rounded text-sm ${
+              message.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+            }`}>
+              {message.text}
+            </div>
+          )}
           
           <div className="flex mb-6">
             <button
@@ -134,10 +351,11 @@ export default function CreateCourse() {
               </div>
               <button
                 type="submit"
-                className="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline
-                hover:scale-95 transition-all duration-200"
+                disabled={loading}
+                className={`w-full ${loading ? 'bg-gray-400' : 'bg-blue-500 hover:bg-blue-700'} text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline
+                hover:scale-95 transition-all duration-200`}
               >
-                Create Course
+                {loading ? "Creating..." : "Create Course"}
               </button>
             </form>
           ) : (
@@ -151,16 +369,52 @@ export default function CreateCourse() {
                   required
                   className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                 />
-                <p className="text-sm text-gray-500 mt-2">
-                  CSV file should contain columns: code, name, description, credits, semester
-                </p>
+                <div className="text-sm text-gray-500 mt-2">
+                  <p className="font-bold">CSV file must include these columns:</p>
+                  <ul className="list-disc pl-5 mt-1">
+                    <li><span className="font-medium">course code</span>: Course code (required)</li>
+                    <li><span className="font-medium">course name</span>: Course name (required)</li>
+                    <li><span className="font-medium">credits</span>: Course credits (required, 1-20)</li>
+                    <li><span className="font-medium">semester</span>: Fall/Spring/Summer (required)</li>
+                    <li><span className="font-medium">description</span>: Course description (optional)</li>
+                  </ul>
+                </div>
               </div>
+              
+              {/* Display detailed error messages if available */}
+              {message.type === 'error' && message.details && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded">
+                  <p className="text-sm font-bold text-red-700 mb-2">Error details:</p>
+                  <ul className="text-xs text-red-600 ml-2 list-disc pl-3">
+                    {message.details.map((detail, index) => (
+                      <li key={index} className="mb-1">{detail}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              
+              {/* Display duplicate course codes if available */}
+              {message.type === 'error' && message.duplicateCodes && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded">
+                  <p className="text-sm font-bold text-red-700 mb-2">Duplicate course codes:</p>
+                  <div className="text-xs text-red-600 flex flex-wrap gap-1">
+                    {message.duplicateCodes.map((code, index) => (
+                      <span key={index} className="bg-red-100 px-1 py-0.5 rounded">{code}</span>
+                    ))}
+                  </div>
+                  <p className="text-xs mt-2 text-red-600">
+                    Please remove these courses from your CSV file or use different course codes.
+                  </p>
+                </div>
+              )}
+              
               <button
                 type="submit"
-                className="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline
-                hover:scale-95 transition-all duration-200"
+                disabled={loading}
+                className={`w-full ${loading ? 'bg-gray-400' : 'bg-blue-500 hover:bg-blue-700'} text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline
+                hover:scale-95 transition-all duration-200`}
               >
-                Upload and Create Courses
+                {loading ? "Uploading..." : "Upload and Create Courses"}
               </button>
             </form>
           )}
