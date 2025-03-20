@@ -4,6 +4,11 @@ import { useNotification } from '../contexts/NotificationContext';
 export default function NotificationContainer() {
   const { notifications, hideNotification } = useNotification();
 
+  const handleClose = (e, id) => {
+    e.stopPropagation(); // Prevent event bubbling
+    hideNotification(id);
+  };
+
   return (
     <div className="fixed bottom-4 right-4 z-50 flex flex-col space-y-2">
       {notifications.map(notification => (
@@ -15,7 +20,7 @@ export default function NotificationContainer() {
           <div className="flex justify-between items-center">
             <div>{notification.message}</div>
             <button
-              onClick={() => hideNotification(notification.id)}
+              onClick={(e) => handleClose(e, notification.id)}
               className="ml-4 text-white hover:text-gray-200 focus:outline-none"
             >
               ×
