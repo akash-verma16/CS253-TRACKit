@@ -1,116 +1,87 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { fetchUserProfile, API_URL } from '../services/auth';
+import axios from 'axios';
 
-// Create auth context
 const AuthContext = createContext();
 
-export const useAuth = () => useContext(AuthContext);
+export function useAuth() {
+  return useContext(AuthContext);
+}
 
-export const AuthProvider = ({ children }) => {
+export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
-  const [userProfile, setUserProfile] = useState(null);
-  const [token, setToken] = useState(null);
+  const [token, setToken] = useState(localStorage.getItem('token'));
   const [loading, setLoading] = useState(true);
-  
-  // Check if user is already logged in (on app load)
-  useEffect(() => {
-    const checkLoggedIn = async () => {
-      try {
-        const storedToken = localStorage.getItem('token');
-        const storedUser = localStorage.getItem('user');
-        const storedProfile = localStorage.getItem('userProfile');
-        
-        if (storedToken && storedUser) {
-          setToken(storedToken);
-          setCurrentUser(JSON.parse(storedUser));
-          
-          if (storedProfile) {
-            setUserProfile(JSON.parse(storedProfile));
-          } else {
-            // If we have a user but no profile, and the user is faculty/student, fetch profile
-            const user = JSON.parse(storedUser);
-            if (['student', 'faculty'].includes(user.userType)) {
-              const profileData = await fetchUserProfile(user.userType, user.id, storedToken);
-              if (profileData.success) {
-                setUserProfile(profileData.data);
-                localStorage.setItem('userProfile', JSON.stringify(profileData.data));
-              }
-            }
-          }
-        }
-      } catch (error) {
-        console.error("Error restoring auth state:", error);
-        logout();
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    checkLoggedIn();
-  }, []);
 
-  // Login function
+  useEffect(() => {
+    // Check for token and user data in localStorage on initial load
+    const token = localStorage.getItem('token');
+    const userData = localStorage.getItem('user');
+    
+    if (token && userData) {
+      setToken(token);
+      setCurrentUser(JSON.parse(userData));
+    }
+    
+    setLoading(false);
+  }, []);
+  
+  // Function to login user
   const login = async (username, password) => {
     try {
-      const response = await fetch(`${API_URL}/api/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username, password }),
-      });
+      const response = await axios.post(
+        `${process.env.REACT_APP_API_URL || 'http://localhost:3001'}/api/auth/login`,
+        { username, password }
+      );
       
-      const data = await response.json();
-      
-      if (data.success) {
-        setCurrentUser(data.user);
-        setToken(data.token);
+      if (response.data && response.data.success && response.data.token) {
+        const { token, user } = response.data;
         
-        localStorage.setItem('user', JSON.stringify(data.user));
-        localStorage.setItem('token', data.token);
+        console.log("Received token:", token);
+        console.log("Storing user data:", user);
         
-        // If user is student or faculty, fetch additional profile data
-        if (['student', 'faculty'].includes(data.user.userType)) {
-          const profileData = await fetchUserProfile(data.user.userType, data.user.id, data.token);
-          if (profileData.success) {
-            setUserProfile(profileData.data);
-            localStorage.setItem('userProfile', JSON.stringify(profileData.data));
-          }
+        // Store token and user in localStorage
+        localStorage.setItem('token', token);
+        
+        // Also store token in user object for redundancy
+        if (user) {
+          user.token = token;
+          localStorage.setItem('user', JSON.stringify(user));
         }
         
-        return { success: true, user: data.user };
+        // Update state
+        setToken(token);
+        setCurrentUser(user);
+        
+        return response.data;
       } else {
-        return { success: false, message: data.message || 'Login failed' };
+        console.error("Login response missing token:", response.data);
+        throw new Error("Login successful but no token received");
       }
     } catch (error) {
       console.error("Login error:", error);
-      return { success: false, message: 'Network error. Please try again.' };
+      throw error;
     }
   };
-
-  // Logout function
+  
+  // Function to logout user
   const logout = () => {
-    setCurrentUser(null);
-    setUserProfile(null);
-    setToken(null);
-    
-    localStorage.removeItem('user');
     localStorage.removeItem('token');
-    localStorage.removeItem('userProfile');
+    localStorage.removeItem('user');
+    setToken(null);
+    setCurrentUser(null);
   };
-
+  
   const value = {
     currentUser,
-    userProfile,
     token,
-    loading,
     login,
-    logout
+    logout,
+    isAuthenticated: !!token
   };
-
+  
   return (
     <AuthContext.Provider value={value}>
-      {children}
+      {!loading && children}
     </AuthContext.Provider>
   );
-};
+}

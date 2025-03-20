@@ -31,12 +31,14 @@ app.use(express.urlencoded({ extended: true }));
 // Serve static files from the uploads directory
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// // Add file upload middleware
-// const fileUpload = require('express-fileupload');
-// app.use(fileUpload({
-//   limits: { fileSize: 50 * 1024 * 1024 }, // 50MB max file size
-//   abortOnLimit: true
-// }));
+// Add file upload middleware - UNCOMMENT THIS SECTION
+const fileUpload = require('express-fileupload');
+app.use(fileUpload({
+  createParentPath: true,
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB max file size
+  abortOnLimit: true,
+  debug: process.env.NODE_ENV === 'development' // Enable debug in development mode
+}));
 
 // Log all incoming requests
 app.use((req, res, next) => {
