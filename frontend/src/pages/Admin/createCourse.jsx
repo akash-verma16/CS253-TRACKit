@@ -447,7 +447,7 @@ export default function CreateCourse() {
                   <ul className="list-disc pl-5 mt-1">
                     <li><span className="font-medium">course code</span>: Course code (required)</li>
                     <li><span className="font-medium">course name</span>: Course name (required)</li>
-                    <li><span className="font-medium">credits</span>: Course credits (required, 2-11)</li>
+                    <li><span className="font-medium">credits</span>: Course credits (required, 2-14)</li>
                     <li><span className="font-medium">semester</span>: Fall/Spring/Summer (required)</li>
                     <li><span className="font-medium">description</span>: Course description (optional)</li>
                   </ul>
