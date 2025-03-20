@@ -38,6 +38,12 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 //   abortOnLimit: true
 // }));
 
+// Log all incoming requests
+app.use((req, res, next) => {
+  console.log(`Incoming request: ${req.method} ${req.originalUrl}`);
+  next();
+});
+
 // Routes
 app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/users', require('./routes/user.routes'));
@@ -49,6 +55,23 @@ app.use('/api/student', require('./routes/student.routes'));
 app.use('/api/faculty', require('./routes/faculty.routes'));
 app.use('/api/result', require('./routes/result.routes'));
 app.use('/api/admin', require('./routes/admin.routes'));
+
+// Log all registered routes
+const listRoutes = (app) => {
+  console.log('Registered routes:');
+  app._router.stack.forEach((middleware) => {
+      if (middleware.route) {
+          console.log(`${middleware.route.stack[0].method.toUpperCase()} ${middleware.route.path}`);
+      } else if (middleware.name === 'router') {
+          middleware.handle.stack.forEach((handler) => {
+              if (handler.route) {
+                  console.log(`${handler.route.stack[0].method.toUpperCase()} /api${handler.route.path}`);
+              }
+          });
+      }
+  });
+};
+listRoutes(app);
 
 // Initialize database and sync models
 // Modified to preserve data between restarts in development mode
@@ -85,4 +108,3 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
-

@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const db = require('../models');
 const User = db.User;
+console.log('verifyToken Middleware Hit');
 
 const verifyToken = (req, res, next) => {
   const token = req.headers.authorization?.split(' ')[1];

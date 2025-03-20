@@ -444,9 +444,8 @@ async function createLectures(courses) {
     for (let week = 1; week <= 12; week++) {
       await db.Lecture.create({
         courseId: course.id,
-        week: week,
-        topicTitle: `Software Processes`,
-        // topicTitle: `kuch bhi likhde ${week} Topic for ${course.code}`,
+        heading: `Week ${week}`, // Replacing week with heading
+        subheading: `Software Processes`, // Replacing topicTitle with subheading
         lectureTitle: `Lecture ${week} for ${course.code}`,
         lectureDescription: `This is the description for Lecture ${week} of the course ${course.code}.`
       });

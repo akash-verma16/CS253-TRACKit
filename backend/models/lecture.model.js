@@ -12,23 +12,27 @@ module.exports = (sequelize, Sequelize) => {
         key: 'id'
       }
     },
-    week: {
-      type: Sequelize.INTEGER,
+    heading: {
+      type: Sequelize.STRING,
       allowNull: false
     },
-    topicTitle: {
+    subheading: {
       type: Sequelize.TEXT,
-      allowNull: false
+      allowNull: true
     },
     lectureTitle: {
       type: Sequelize.TEXT,
-      allowNull: false
+      allowNull: true
     },
     lectureDescription: {
       type: Sequelize.TEXT,
       allowNull: true
     },
-    pdfPath: {
+    pdfPaths: {
+      type: Sequelize.TEXT, // Store as a JSON string
+      allowNull: true
+    },
+    youtubeLink: {
       type: Sequelize.STRING,
       allowNull: true
     },
