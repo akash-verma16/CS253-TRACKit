@@ -1,159 +1,81 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaTrashAlt, FaTimes } from "react-icons/fa";
-import axiosInstance from "../../utils/axiosInstance";
 
 const ManageUser = () => {
   const navigate = useNavigate();
-  const [users, setUsers] = useState([]);
+  const [users, setUsers] = useState([
+    {
+      UserName: "asharique22",
+      FirstName: "Sharique",
+      LastName: "Ahmad",
+      Courses: ["EE370"],
+      Email: "asharique@everyone.com",
+      Enrollment_Year: 2022,
+      Major: "Electrical Engineering",
+      Role: "Student",
+    },
+    {
+      UserName: "gaditiya22",
+      FirstName: "Aditya",
+      LastName: "Gautam",
+      Courses: ["CS101", "CS102"],
+      Email: "gaditiya@everyone.com",
+      Enrollment_Year: 2022,
+      Major: "Computer Science",
+      Role: "Student",
+    },
+    {
+      UserName: "pved22",
+      FirstName: "Ved Prakash",
+      LastName: "Vishwakarma",
+      Courses: ["CS101", "CS102", "CS103"],
+      Email: "abc@everyone.com",
+      Enrollment_Year: 2022,
+      Major: "BSBE",
+      Role: "Faculty",
+    },
+    {
+      UserName: "vdhruv22",
+      FirstName: "Dhruv",
+      LastName: "Varshney",
+      Courses: ["CS101", "CS102", "CS103"],
+      Email: "vdhruv@everyone.com",
+      Enrollment_Year: 2022,
+      Major: "Computer Science",
+      Role: "Faculty",
+    },
+  ]);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedUser, setSelectedUser] = useState(null);
-  const [selectedCourse, setSelectedCourse] = useState("");
-  const [courses, setCourses] = useState([]);
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const response = await axiosInstance.get("/api/admin/users");
-        setUsers(response.data.data);
-      } catch (error) {
-        console.error("Error fetching users:", error);
-        alert("Failed to fetch users.");
-      }
-    };
-    fetchUsers();
-
-    const fetchCourses = async () => {
-      try {
-        const Course = await axiosInstance.get("/api/courses");
-        setCourses(Course.data.data);
-      } catch (error) {
-        console.error("Error fetching courses:", error);
-        alert("Failed to fetch courses.");
-      }
-    };
-    fetchCourses();
-  }, []);
-
-  const handleDeleteUser = async (userId) => {
+  const handleDeleteUser = (userName) => {
     if (window.confirm("Are you sure you want to delete this user?")) {
-      try {
-        await axiosInstance.delete(`/api/admin/user/${userId}`);
-        setUsers(users.filter((user) => user.id !== userId));
-      } catch (error) {
-        console.error("Error deleting user:", error);
-        alert("Failed to delete user.");
-      }
+      setUsers(users.filter((user) => user.UserName !== userName));
     }
   };
 
-  const addstudenttocourse = async (courseId, userId) => {
-    try {
-      await axiosInstance.post("/api/courses/add-student", { courseId, userId });
-      setSelectedUser((prev) => ({
-        ...prev,
-        student: {
-          ...prev.student,
-          courses: [...(prev.student?.courses || []), courseId],
-        },
-      }));
-      
-      setSelectedCourse("");
-    } catch (error) {
-      console.error("Error adding student to course:", error);
-      alert("Failed to add student to course.");
-    }
+  const handleViewDetails = (user) => {
+    setSelectedUser(user);
   };
 
-  const addfacultytocourse = async (courseId, userId) => {
-    try {
-      await axiosInstance.post("/api/courses/add-faculty", { courseId, userId });
-
-      setSelectedUser((prev) => ({
-        ...prev,
-        faculty: {
-          ...prev.faculty,
-          courses: [...(prev.faculty?.courses || []), courseId],
-        },
-      }));
-
-      setSelectedCourse("");
-    } catch (error) {
-      console.error("Error adding faculty to course:", error);
-      alert("Failed to add faculty to course.");
-    }
+  const handleEditUser = (field, value) => {
+    setSelectedUser((prev) => ({ ...prev, [field]: value }));
   };
 
-  const removefacultyfromcourse = async (courseId, userId) => {
-    try {
-      await axiosInstance.delete(
-        `/api/courses/remove-faculty/${courseId}/${userId}`
-      );
-      setSelectedUser((prev) => ({
-        ...prev,
-        faculty: {
-          ...prev.faculty,
-          courses: prev.faculty?.courses.filter((id) => id !== courseId),
-        },
-      }));
-
-      setSelectedCourse("");
-    } catch (error) {
-      console.error("Error removing faculty from course:", error);
-      alert("Failed to remove faculty from course.");
-    }
-  };
-
-  const removestudentfromcourse = async (courseId, userId) => {
-    try {
-      await axiosInstance.delete(
-        `/api/courses/remove-student/${courseId}/${userId}`
-      );
-      setSelectedUser((prev) => ({
-        ...prev,
-        student: {
-          ...prev.student,
-          courses: prev.student?.courses.filter((id) => id !== courseId),
-        },
-      }));
-
-      setSelectedCourse("");
-    } catch (error) {
-      console.error("Error removing student from course:", error);
-      alert("Failed to remove student from course.");
-    }
-  };
-
-  const handleSaveChanges = async () => {
-    try {
-      await axiosInstance.put(`/api/admin/user/${selectedUser.id}`, selectedUser);
-      alert("User details updated successfully.");
-
-      setSelectedUser(null);
-    } catch (error) {
-      console.error("Error updating user details:", error);
-      alert("Failed to update user details.");
-    }
+  const handleSaveChanges = () => {
+    setUsers((prevUsers) =>
+      prevUsers.map((user) =>
+        user.UserName === selectedUser.UserName ? selectedUser : user
+      )
+    );
+    setSelectedUser(null);
   };
 
   const filteredUsers = users.filter((user) =>
-    (user.username && user.username.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (user.name && user.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (user.id && user.id.toString().includes(searchTerm))
+    user.UserName.toLowerCase().includes(searchTerm.toLowerCase())
   );
-  
-
-  const labelMapping = {
-    id: "ID",
-    username: "Username",
-    firstName: "First Name",
-    lastName: "Last Name",
-    email: "Email",
-    userType: "Role",
-    rollNumber: "Roll No",
-    major: "Major",
-    enrollmentYear: "Enrollment Year",
-  };
 
   return (
     <div className="p-12">
@@ -171,7 +93,7 @@ const ManageUser = () => {
         <div className="flex justify-center mb-4">
           <input
             type="text"
-            placeholder="Search users by ID or Name..."
+            placeholder="Search users..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="p-4 w-2/3 border border-gray-300 rounded-lg"
@@ -181,25 +103,25 @@ const ManageUser = () => {
         <div className="rounded-lg">
           {filteredUsers.map((user) => (
             <div
-              key={user.username}
+              key={user.UserName}
               className="p-4 rounded-lg mb-4 transition-all duration-300 hover:scale-[101%] hover:shadow-lg bg-gray-100"
             >
               <div className="flex justify-between items-center">
                 <div>
                   <p className="text-xl font-semibold">
-                    {user.firstName} {user.lastName}
+                    {user.FirstName} {user.LastName}
                   </p>
-                  <p className="text-sm text-gray-700">Role: {user.userType}</p>
+                  <p className="text-sm text-gray-700">Role: {user.Role}</p>
                 </div>
                 <div className="flex gap-4">
                   <button
-                    onClick={() => setSelectedUser(user)}
+                    onClick={() => handleViewDetails(user)}
                     className="bg-blue-500 text-white px-4 py-2 rounded-lg transition-all duration-300 hover:scale-95 hover:shadow-xl"
                   >
                     View Details
                   </button>
                   <button
-                    onClick={() => handleDeleteUser(user.id)}
+                    onClick={() => handleDeleteUser(user.UserName)}
                     className="bg-red-500 text-white px-4 py-2 rounded-lg transition-all duration-300 hover:scale-95 hover:shadow-xl"
                   >
                     <FaTrashAlt />
@@ -216,175 +138,51 @@ const ManageUser = () => {
           <div className="bg-white p-8 rounded-lg shadow-xl w-1/3 max-h-[80vh] overflow-y-auto mt-16">
             <h2 className="text-2xl mb-4">Edit User Details</h2>
 
-            {Object.keys(selectedUser)
-              .filter(
-                (key) =>
-                  !["student", "faculty", "createdAt", "updatedAt"].includes(
-                    key
-                  )
-              )
-              .map((key) => (
-                <div key={key} className="mb-4">
-                  <label className="block text-gray-700 font-semibold">
-                    {labelMapping[key] || key}
-                  </label>
+            {Object.keys(selectedUser).map((key) => (
+              <div key={key} className="mb-4">
+                <label className="block text-gray-700 font-semibold">{key}</label>
+                {key === "Courses" ? (
+                  <div className="flex flex-col gap-2">
+                    {selectedUser[key].map((course, index) => (
+                      <div key={index} className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={course}
+                          onChange={(e) => {
+                            const updatedCourses = [...selectedUser[key]];
+                            updatedCourses[index] = e.target.value;
+                            handleEditUser(key, updatedCourses);
+                          }}
+                          className="p-2 border border-gray-300 rounded-lg w-full"
+                        />
+                        <button
+                          onClick={() => {
+                            const updatedCourses = selectedUser[key].filter((_, i) => i !== index);
+                            handleEditUser(key, updatedCourses);
+                          }}
+                          className="bg-red-500 text-white p-1 rounded-lg"
+                        >
+                          <FaTimes />
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      onClick={() => handleEditUser(key, [...selectedUser[key], ""])}
+                      className="bg-blue-500 text-white px-2 py-1 rounded-lg"
+                    >
+                      Add
+                    </button>
+                  </div>
+                ) : (
                   <input
                     type="text"
                     value={selectedUser[key]}
-                    onChange={(e) =>
-                      setSelectedUser((prev) => ({
-                        ...prev,
-                        [key]: e.target.value,
-                      }))
-                    }
+                    onChange={(e) => handleEditUser(key, e.target.value)}
                     className="w-full p-2 border border-gray-300 rounded-lg"
                   />
-                </div>
-              ))}
-
-            {selectedUser.userType === "faculty" && (
-              <>
-                <div className="mb-4">
-                  <label className="block text-gray-700 font-semibold">
-                    Department
-                  </label>
-                  <input
-                    type="text"
-                    value={selectedUser.faculty?.department || ""}
-                    onChange={(e) =>
-                      setSelectedUser((prev) => ({
-                        ...prev,
-                        faculty: {
-                          ...prev.faculty,
-                          department: e.target.value,
-                        },
-                      }))
-                    }
-                    className="w-full p-2 border border-gray-300 rounded-lg"
-                  />
-                </div>
-
-                <div className="mb-4">
-                  <label className="block text-gray-700 font-semibold">
-                    Position
-                  </label>
-                  <input
-                    type="text"
-                    value={selectedUser.faculty?.position || ""}
-                    onChange={(e) =>
-                      setSelectedUser((prev) => ({
-                        ...prev,
-                        faculty: { ...prev.faculty, position: e.target.value },
-                      }))
-                    }
-                    className="w-full p-2 border border-gray-300 rounded-lg"
-                  />
-                </div>
-
-                <div className="mb-4">
-                  <label className="block text-gray-700 font-semibold">
-                    Teaching Courses
-                  </label>
-                  <select
-                    value={selectedCourse}
-                    onChange={(e) => setSelectedCourse(e.target.value)}
-                    className="w-full p-2 border border-gray-300 rounded-lg"
-                  >
-                    <option value="">Select a course</option>
-                    {courses.map((course) => (
-                      <option key={course.id} value={course.id}>
-                        {course.id} - {course.name}
-                      </option>
-                    ))}
-                  </select>
-                  <div className="flex justify-between items-center mt-2">
-                    <button
-                      onClick={() => {
-                        addfacultytocourse(selectedCourse, selectedUser.id);
-                      }}
-                      className="bg-green-500 text-white px-4 py-2 rounded-lg"
-                    >
-                      Add to Course
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        removefacultyfromcourse(
-                          selectedCourse,
-                          selectedUser.id
-                        );
-                      }}
-                      className="bg-red-500 text-white px-4 py-2 rounded-lg"
-                    >
-                      Remove from Course
-                    </button>
-                  </div>
-                </div>
-              </>
-            )}
-
-            {selectedUser.userType === "student" && (
-              <>
-                {["rollNumber", "major", "enrollmentYear"].map((field) => (
-                  <div key={field} className="mb-4">
-                    <label className="block text-gray-700 font-semibold">
-                      {labelMapping[field]}
-                    </label>
-                    <input
-                      type="text"
-                      value={selectedUser.student?.[field] || ""}
-                      onChange={(e) =>
-                        setSelectedUser((prev) => ({
-                          ...prev,
-                          student: { ...prev.student, [field]: e.target.value },
-                        }))
-                      }
-                      className="w-full p-2 border border-gray-300 rounded-lg"
-                    />
-                  </div>
-                ))}
-
-                <div className="mb-4">
-                  <label className="block text-gray-700 font-semibold">
-                    Enrolled Courses
-                  </label>
-                  <select
-                    value={selectedCourse}
-                    onChange={(e) => setSelectedCourse(e.target.value)}
-                    className="w-full p-2 border border-gray-300 rounded-lg"
-                  >
-                    <option value="">Select a course</option>
-                    {courses.map((course) => (
-                      <option key={course.id} value={course.id}>
-                        {course.id} - {course.name}
-                      </option>
-                    ))}
-                  </select>
-                  <div className="flex justify-between items-center mt-2">
-                    <button
-                      onClick={() => {
-                        addstudenttocourse(selectedCourse, selectedUser.id);
-                      }}
-                      className="bg-green-500 text-white px-4 py-2 rounded-lg"
-                    >
-                      Add to Course
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        removestudentfromcourse(
-                          selectedCourse,
-                          selectedUser.id
-                        );
-                      }}
-                      className="bg-red-500 text-white px-4 py-2 rounded-lg"
-                    >
-                      Remove from Course
-                    </button>
-                  </div>
-                </div>
-              </>
-            )}
+                )}
+              </div>
+            ))}
 
             <div className="flex justify-end gap-4 mt-4">
               <button

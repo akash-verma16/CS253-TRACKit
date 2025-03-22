@@ -11,28 +11,16 @@ const Course = db.Course;
 exports.getAllUsers = async (req, res) => {
   try {
     const users = await User.findAll({
-      attributes: { exclude: ['password'] }, // Exclude sensitive fields like password
-      include: [
-        {
-          model: Student,
-          attributes: ['rollNumber', 'enrollmentYear', 'major'], 
-        },
-        {
-          model: Faculty,
-          attributes: ['department', 'position'],
-        },
-      ],
+      attributes: { exclude: ['password'] }
     });
-
     res.status(200).json({
       success: true,
-      data: users,
+      data: users
     });
   } catch (error) {
-    console.error('Error fetching users:', error);
     res.status(500).json({
       success: false,
-      message: error.message || 'Some error occurred while retrieving users',
+      message: error.message || 'Some error occurred while retrieving users'
     });
   }
 };
