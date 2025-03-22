@@ -49,7 +49,10 @@ const ManageUser = () => {
 
   const addstudenttocourse = async (courseId, userId) => {
     try {
-      await axiosInstance.post("/api/courses/add-student", { courseId, userId });
+      await axiosInstance.post("/api/courses/add-student", {
+        courseId,
+        userId,
+      });
       setSelectedUser((prev) => ({
         ...prev,
         student: {
@@ -57,7 +60,7 @@ const ManageUser = () => {
           courses: [...(prev.student?.courses || []), courseId],
         },
       }));
-      
+
       setSelectedCourse("");
     } catch (error) {
       console.error("Error adding student to course:", error);
@@ -67,7 +70,10 @@ const ManageUser = () => {
 
   const addfacultytocourse = async (courseId, userId) => {
     try {
-      await axiosInstance.post("/api/courses/add-faculty", { courseId, userId });
+      await axiosInstance.post("/api/courses/add-faculty", {
+        courseId,
+        userId,
+      });
 
       setSelectedUser((prev) => ({
         ...prev,
@@ -89,13 +95,20 @@ const ManageUser = () => {
       await axiosInstance.delete(
         `/api/courses/remove-faculty/${courseId}/${userId}`
       );
-      setSelectedUser((prev) => ({
-        ...prev,
-        faculty: {
-          ...prev.faculty,
-          courses: prev.faculty?.courses.filter((id) => id !== courseId),
-        },
-      }));
+
+      setSelectedUser((prev) => {
+        const updatedCourses = prev?.faculty?.courses
+          ? prev.faculty.courses.filter((id) => id !== courseId)
+          : [];
+
+        return {
+          ...prev,
+          faculty: {
+            ...prev.faculty,
+            courses: updatedCourses,
+          },
+        };
+      });
 
       setSelectedCourse("");
     } catch (error) {
@@ -109,13 +122,20 @@ const ManageUser = () => {
       await axiosInstance.delete(
         `/api/courses/remove-student/${courseId}/${userId}`
       );
-      setSelectedUser((prev) => ({
-        ...prev,
-        student: {
-          ...prev.student,
-          courses: prev.student?.courses.filter((id) => id !== courseId),
-        },
-      }));
+
+      setSelectedUser((prev) => {
+        const updatedCourses = prev?.student?.courses
+          ? prev.student.courses.filter((id) => id !== courseId)
+          : [];
+
+        return {
+          ...prev,
+          student: {
+            ...prev.student,
+            courses: updatedCourses,
+          },
+        };
+      });
 
       setSelectedCourse("");
     } catch (error) {
@@ -126,7 +146,10 @@ const ManageUser = () => {
 
   const handleSaveChanges = async () => {
     try {
-      await axiosInstance.put(`/api/admin/user/${selectedUser.id}`, selectedUser);
+      await axiosInstance.put(
+        `/api/admin/user/${selectedUser.id}`,
+        selectedUser
+      );
       alert("User details updated successfully.");
 
       setSelectedUser(null);
@@ -136,12 +159,14 @@ const ManageUser = () => {
     }
   };
 
-  const filteredUsers = users.filter((user) =>
-    (user.username && user.username.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (user.name && user.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (user.id && user.id.toString().includes(searchTerm))
+  const filteredUsers = users.filter(
+    (user) =>
+      (user.username &&
+        user.username.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (user.name &&
+        user.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (user.id && user.id.toString().includes(searchTerm))
   );
-  
 
   const labelMapping = {
     id: "ID",
