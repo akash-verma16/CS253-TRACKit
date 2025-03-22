@@ -4,6 +4,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const db = require('./models');
+const path = require('path');
 
 const app = express();
 
@@ -27,23 +28,52 @@ app.use(limiter);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Add file upload middleware
-const fileUpload = require('express-fileupload');
-app.use(fileUpload({
-  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB max file size
-  abortOnLimit: true
-}));
+// Serve static files from the uploads directory
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Add file upload middleware - UNCOMMENT THIS SECTION
+//const fileUpload = require('express-fileupload');
+//app.use(fileUpload({
+//  createParentPath: true,
+//  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB max file size
+//  abortOnLimit: true,
+//  debug: process.env.NODE_ENV === 'development' // Enable debug in development mode
+//}));
+
+// Log all incoming requests
+app.use((req, res, next) => {
+  console.log(`Incoming request: ${req.method} ${req.originalUrl}`);
+  next();
+});
 
 // Routes
 app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/users', require('./routes/user.routes'));
 app.use('/api/courses', require('./routes/course.routes'));
 app.use('/api/announcements', require('./routes/announcement.routes'));
+app.use('/api/lectures', require('./routes/lecture.routes'));
 app.use('/api/course-descriptions', require('./routes/courseDescriptionEntry.routes'));
 app.use('/api/student', require('./routes/student.routes'));
 app.use('/api/faculty', require('./routes/faculty.routes'));
 app.use('/api/result', require('./routes/result.routes'));
 app.use('/api/admin', require('./routes/admin.routes'));
+
+// Log all registered routes
+const listRoutes = (app) => {
+  console.log('Registered routes:');
+  app._router.stack.forEach((middleware) => {
+      if (middleware.route) {
+          console.log(`${middleware.route.stack[0].method.toUpperCase()} ${middleware.route.path}`);
+      } else if (middleware.name === 'router') {
+          middleware.handle.stack.forEach((handler) => {
+              if (handler.route) {
+                  console.log(`${handler.route.stack[0].method.toUpperCase()} /api${handler.route.path}`);
+              }
+          });
+      }
+  });
+};
+listRoutes(app);
 
 // Initialize database and sync models
 // Modified to preserve data between restarts in development mode
@@ -80,4 +110,3 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
-

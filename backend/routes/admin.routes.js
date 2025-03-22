@@ -18,6 +18,7 @@ router.delete('/user/:userId', adminController.deleteUser);
 
 // Course management routes
 router.post('/course', adminController.createCourse);
+router.post('/bulk-courses', adminController.bulkCreateCourses);
 router.get('/courses', adminController.getAllCourses);
 router.put('/course/:courseId', adminController.updateCourse);
 router.delete('/course/:courseId', adminController.deleteCourse);

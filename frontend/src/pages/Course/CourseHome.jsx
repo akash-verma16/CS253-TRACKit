@@ -8,6 +8,8 @@ import { NavLink } from 'react-router-dom';
 import { useCourse } from '../../contexts/CourseContext';
 import { useNotification } from '../../contexts/NotificationContext';
 import axios from 'axios';
+// Import the Calendar component
+import MyCalendar from '../../components/Calendar_Course_Home';
 
 const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3001';
 
@@ -269,7 +271,7 @@ export default function CourseHome({ present, total, role }) {
   
   return (
     <div className='w-full h-full'>
-      <div className='flex justify-between py-2 px-8 items-center sticky top-0 bg-[#F5F5F5] shadow-lg'>
+      <div className='flex justify-between py-2 px-8 items-center sticky top-0 bg-[#F5F5F5] shadow-lg z-50'>
         <div>
           <p className='text-[32px] uppercase font-semibold m-4'>{courseDetails.name}</p>
           <p className='text-gray-600 ml-4 -mt-3'>{courseDetails.code} • {courseDetails.credits} Credits • {courseDetails.semester} • {JSON.parse(localStorage.getItem('user')).userType}</p>
@@ -281,13 +283,14 @@ export default function CourseHome({ present, total, role }) {
 
       <div className='flex justify-evenly items-center'>
         <div>
-          <p className='font-semibold text-[19px] mb-2 mt-4'>New Events</p>
-          <iframe 
-            src="https://calendar.google.com/calendar/embed?height=400&wkst=1&ctz=Asia%2FKolkata&showPrint=0&mode=AGENDA&showNav=0&showDate=0&showCalendars=0&showTz=0&showTitle=0&src=dmVkdmlzaHdha2FybWEyMjZAZ21haWwuY29t&src=OWYxMWIzMDdjZTFjZTU1OWY3NDUyZTQ3ZWJhNmNkN2JkYjY4ODk1ZjI4MmRkODY0MjIxZjQ4NWM4MzVlNGE4MEBncm91cC5jYWxlbmRhci5nb29nbGUuY29t&src=ZW4uaW5kaWFuI2hvbGlkYXlAZ3JvdXAudi5jYWxlbmRhci5nb29nbGUuY29t&color=%23039BE5&color=%23E67C73&color=%230B8043" 
-            width={`${role=="student" ? 700 : 850}`} 
-            height="400" 
-            className='shadow-xl border rounded-lg'
-          ></iframe>
+          <p className='font-semibold text-[22px] mb-2 mt-4'>New Events</p>
+          {/* Replace the iframe with MyCalendar component */}
+          <div 
+            style={{width: role === "student" ? '800px' : '850px', height: '400px'}}
+            className='shadow-xl border rounded-lg p-4 bg-white'
+          >
+            <MyCalendar />
+          </div>
         </div>
 
       {

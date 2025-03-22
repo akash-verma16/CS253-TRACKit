@@ -26,6 +26,8 @@ PORT=3001
 JWT_SECRET=your_secure_random_string_here
 NODE_ENV=development
 DB_PATH=./database.sqlite
+FORCE_SYNC = 'true'
+NODE_ENV = 'development'
 ```
 
 Replace `your_secure_random_string_here` with a strong random string to secure your JWT tokens.

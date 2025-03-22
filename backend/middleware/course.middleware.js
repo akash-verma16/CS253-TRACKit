@@ -82,6 +82,7 @@ const isUserInCourse = async (req, res, next) => {
 /**
  * Middleware to check if user is faculty in course
  */
+console.log('isFacultyInCourse Middleware Hit');
 const isFacultyInCourse = async (req, res, next) => {
   try {
     const userId = req.userId;

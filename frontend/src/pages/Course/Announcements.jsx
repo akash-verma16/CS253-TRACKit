@@ -31,6 +31,8 @@ export default function Announcements({ role }) {
     setExpandedIndices(prev => ({ ...prev, [index]: !prev[index] }));
   };
 
+
+  
   useEffect(() => {
     if (courseDetails?.id) {
       fetchAnnouncements();
