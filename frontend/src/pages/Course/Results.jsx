@@ -335,7 +335,7 @@ export default function Results() {
         // Reload the page after 2 seconds
         setTimeout(() => {
           window.location.reload();
-        }, 2000);
+        }, 800);
       } catch (err) {
         console.error('Error deleting exam:', err);
         setError('Failed to delete exam. Please try again later.');
@@ -497,7 +497,7 @@ export default function Results() {
       // Reload the page after 2 seconds
       setTimeout(() => {
         window.location.reload();
-      }, 2000);
+      }, 800);
     } catch (err) {
       console.error('Error updating results:', err);
       setError('Failed to update results. Please try again later.');
@@ -529,11 +529,9 @@ export default function Results() {
         formattedData
       );
       
-      // Refresh exam list
-      const response = await axios.get(
-        `http://localhost:3001/api/result/course/${courseDetails.id}/exams`
-      );
-      setExams(response.data || []);
+      // Show success message
+      setSuccessMessage(`Results for ${newExam.examName} published successfully`);
+      setShowSuccess(true);
       
       // Reset form
       setShowAddResultForm(false);
@@ -544,6 +542,11 @@ export default function Results() {
         results: []
       });
       setError(null);
+      
+      // Reload the page after 2 seconds (same as in other functions)
+      setTimeout(() => {
+        window.location.reload();
+      }, 800);
     } catch (err) {
       console.error('Error publishing results:', err);
       setError('Failed to publish results. Please try again later.');
@@ -551,14 +554,6 @@ export default function Results() {
       setPublishing(false);
     }
   };
-
-  if (courseLoading) {
-    return <div>Loading course details...</div>;
-  }
-
-  if (courseError) {
-    return <div>Error loading course details: {courseError}</div>;
-  }
 
   // Faculty View
   if (currentUser.userType === 'faculty') {
