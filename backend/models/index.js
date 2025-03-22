@@ -29,6 +29,9 @@ db.CourseDescriptionEntry = require('./courseDescriptionEntry.model')(sequelize,
 db.Exam = require('./exam.model')(sequelize, Sequelize);
 db.Result = require('./result.model')(sequelize, Sequelize);
 db.Event = require('./events_calendar')(sequelize, Sequelize); // Add this line to import the Event model
+db.ForumPost = require('./forum_post.model')(sequelize, Sequelize);
+db.ForumReply = require('./forum_reply.model')(sequelize, Sequelize);
+
 // Setup relationships
 // User relationships with specialized models
 db.User.hasOne(db.Faculty, { foreignKey: 'userId' });
@@ -106,4 +109,18 @@ db.Event.belongsTo(db.Course, { foreignKey: 'courseId' });
 db.User.hasMany(db.Event, { foreignKey: 'createdBy', as: 'createdEvents' });
 db.Event.belongsTo(db.User, { foreignKey: 'createdBy' });
 
+db.ForumPost = require('./forum_post.model')(sequelize, Sequelize);
+db.ForumReply = require('./forum_reply.model')(sequelize, Sequelize);
+
+// Forum post relationships
+db.User.hasMany(db.ForumPost, { foreignKey: 'userId', as: 'posts' });
+db.ForumPost.belongsTo(db.User, { foreignKey: 'userId' });
+db.Course.hasMany(db.ForumPost, { foreignKey: 'courseId', as: 'posts' });
+db.ForumPost.belongsTo(db.Course, { foreignKey: 'courseId' });
+
+// Forum reply relationships
+db.User.hasMany(db.ForumReply, { foreignKey: 'userId', as: 'replies' });
+db.ForumReply.belongsTo(db.User, { foreignKey: 'userId' });
+db.ForumPost.hasMany(db.ForumReply, { foreignKey: 'postId', as: 'replies' });
+db.ForumReply.belongsTo(db.ForumPost, { foreignKey: 'postId' });
 module.exports = db;

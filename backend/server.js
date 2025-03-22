@@ -65,7 +65,7 @@ app.use('/api/faculty', require('./routes/faculty.routes'));
 app.use('/api/result', require('./routes/result.routes'));
 app.use('/api/admin', require('./routes/admin.routes'));
 app.use('/api/events', require('./routes/event.routes'));
-
+app.use('/api/forum', require('./routes/forum.routes'));
 
 // Log all registered routes
 const listRoutes = (app) => {
@@ -106,6 +106,7 @@ db.sequelize.sync({ force: shouldForceSync })
   .catch(err => {
     console.error('Failed to sync database:', err);
   });
+  
 
 // Add this to server.js before app.listen()
 console.log('Registered routes:');
