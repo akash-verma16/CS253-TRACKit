@@ -32,7 +32,9 @@ export default function Results() {
   const [loadingExams, setLoadingExams] = useState(false);
   const [loadingExamDetails, setLoadingExamDetails] = useState(false);
   
-  
+
+  const [examSummaries, setExamSummaries] = useState([]);
+  const [loadingExamSummaries, setLoadingExamSummaries] = useState(false);
   const [successMessage, setSuccessMessage] = useState(null);
   const [showSuccess, setShowSuccess] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -97,6 +99,27 @@ export default function Results() {
       fetchExams();
     }
   }, [currentUser.id, currentUser.userType, courseDetails?.id]);
+
+  //useEffect to fetch exam summaries
+  useEffect(() => {
+    if (currentUser.userType === 'faculty' && courseDetails?.id) {
+      const fetchExamSummaries = async () => {
+        setLoadingExamSummaries(true);
+        try {
+          const response = await axios.get(
+            `http://localhost:3001/api/result/course/${courseDetails.id}/exams/details`
+          );
+          setExamSummaries(response.data || []);
+        } catch (err) {
+          console.error('Error fetching exam summaries:', err);
+        } finally {
+          setLoadingExamSummaries(false);
+        }
+      };
+
+      fetchExamSummaries();
+    }
+  }, [currentUser.userType, courseDetails?.id]);
 
   // Fetch exam details when an exam is selected
   useEffect(() => {
@@ -598,7 +621,7 @@ export default function Results() {
         {/* Exam Selection Controls */}
         <div className="flex flex-col md:flex-row md:items-end mb-6 gap-4">
           <div className="flex-grow">
-            <label className="block mb-2 font-semibold">Select Exam:</label>
+            <label className="block mb-2 font-semibold">Select Exam to view details:</label>
             <select
               className="p-2 border border-gray-300 rounded w-full"
               onChange={handleExamChange}
@@ -635,10 +658,56 @@ export default function Results() {
         {/* No Exams Message */}
         {!loadingExams && exams.length === 0 && !showAddResultForm && (
           <div className="text-center py-4 text-gray-500">
-            No results available yet. Add an exam to see results here.
+            No results available yet. Use Add result button to create one.
           </div>
         )}
 
+        {/* Exam Summary Table */}
+{!showAddResultForm && !showModifyForm && !selectedExamId && examSummaries.length > 0 && (
+  <div className="mb-6">
+    <h2 className="text-lg font-semibold mb-3">All results</h2>
+    {loadingExamSummaries ? (
+      <div className="text-center py-4">Loading exam summaries...</div>
+    ) : examSummaries.length > 0 ? (
+      <div className="overflow-x-auto">
+        <table className="min-w-full bg-white border border-gray-300 rounded-lg shadow">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="py-3 px-4 border-b text-left">Exam Name</th>
+              <th className="py-3 px-4 border-b text-center">Total Marks</th>
+              <th className="py-3 px-4 border-b text-center">Weightage</th>
+              <th className="py-3 px-4 border-b text-center">Mean</th>
+              <th className="py-3 px-4 border-b text-center">Median</th>
+              <th className="py-3 px-4 border-b text-center">Max</th>
+              <th className="py-3 px-4 border-b text-center">Std Dev</th>
+            </tr>
+          </thead>
+          <tbody>
+            {examSummaries.map((exam, index) => (
+              <tr 
+                key={exam.id} 
+                className={`${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'} cursor-pointer hover:bg-blue-50`}
+                onClick={() => setSelectedExamId(exam.id)}
+              >
+                <td className="py-2 px-4 border-b font-medium">{exam.examName}</td>
+                <td className="py-2 px-4 border-b text-center">{exam.totalMarks}</td>
+                <td className="py-2 px-4 border-b text-center">{exam.weightage}%</td>
+                <td className="py-2 px-4 border-b text-center">{exam.mean?.toFixed(1) || 'N/A'}</td>
+                <td className="py-2 px-4 border-b text-center">{exam.median || 'N/A'}</td>
+                <td className="py-2 px-4 border-b text-center">{exam.max || 'N/A'}</td>
+                <td className="py-2 px-4 border-b text-center">{exam.deviation?.toFixed(1) || 'N/A'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    ) : (
+      <div className="text-center py-4 text-gray-500 bg-white p-4 rounded-lg shadow">
+        No result have been added to this course yet. Use the "Add Result" button to create one.
+      </div>
+    )}
+  </div>
+)}
         {/* Add Result Form */}
         {showAddResultForm && (
           <div className="bg-white p-4 rounded-lg shadow mb-6">
