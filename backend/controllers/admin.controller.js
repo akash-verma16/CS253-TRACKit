@@ -11,7 +11,11 @@ const Course = db.Course;
 exports.getAllUsers = async (req, res) => {
   try {
     const users = await User.findAll({
-      attributes: { exclude: ['password'] }
+      attributes: { exclude: ['password'] },
+      include: [
+        { model: Student, as: 'student', attributes: ['rollNumber', 'enrollmentYear', 'major'] },
+        { model: Faculty, as: 'faculty', attributes: ['department', 'position'] }
+      ]
     });
     res.status(200).json({
       success: true,
@@ -675,17 +679,8 @@ exports.bulkCreateFaculty = async (req, res) => {
 // Update user
 exports.updateUser = async (req, res) => {
   try {
-    const userId = req.params.userId;
-    const updateData = { ...req.body };
-    
-    if (updateData.password) {
-      updateData.password = bcrypt.hashSync(updateData.password, 8);
-    }
-    
-    delete updateData.userType;
-    
-    const [updated] = await User.update(updateData, {
-      where: { id: userId }
+    const [updated] = await User.update(req.body, {
+      where: { id: req.params.userId }
     });
     
     if (updated === 0) {
@@ -706,6 +701,7 @@ exports.updateUser = async (req, res) => {
     });
   }
 };
+
 
 // Delete user
 exports.deleteUser = async (req, res) => {
