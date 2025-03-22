@@ -9,7 +9,8 @@ export default function Results() {
   )
 }
 */
-
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCourse } from '../../contexts/CourseContext';
@@ -177,6 +178,50 @@ export default function Results() {
         [name]: null
       }));
     }
+  };
+
+  const handleExportData = () => {
+    if (!examDetails) return;
+    
+    // Prepare header row with exam details
+    const examInfo = [
+      ['Exam Name:', examDetails.examName],
+      ['Total Marks:', examDetails.totalMarks],
+      ['Weightage:', `${examDetails.weightage}%`],
+      ['Mean:', examDetails.mean?.toFixed(1) || 'N/A'],
+      ['Median:', examDetails.median || 'N/A'],
+      ['Maximum:', examDetails.max || 'N/A'],
+      ['Standard Deviation:', examDetails.deviation?.toFixed(1) || 'N/A'],
+      [], // Empty row to separate headers from data
+      ['Roll Number', 'Name', 'Marks'] // Column headers for student data
+    ];
+    
+    // Add student results
+    const studentData = examDetails.results.map(result => [
+      result.rollNumber,
+      result.name,
+      result.obtainedMarks !== null ? result.obtainedMarks : 'N/A'
+    ]);
+    
+    // Combine all data
+    const exportData = [...examInfo, ...studentData];
+    
+    // Create a worksheet
+    const ws = XLSX.utils.aoa_to_sheet(exportData);
+    
+    // Create workbook and add the worksheet
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Exam Results');
+    
+    // Generate Excel file
+    const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    
+    // Save to file
+    const fileName = `${examDetails.examName.replace(/\s+/g, '_')}_Results`;
+    const fileType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8';
+    
+    const blob = new Blob([excelBuffer], { type: fileType });
+    saveAs(blob, fileName + '.xlsx');
   };
   
   const handleStudentMarkChange = (userId, value) => {
@@ -851,6 +896,15 @@ export default function Results() {
           <div className="flex justify-between mb-4">
             <h2 className="text-xl font-bold">{examDetails.examName}</h2>
             <div className="flex gap-2">
+            <button
+              onClick={handleExportData}
+              className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 flex items-center"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              Download
+            </button>
               <button
                 onClick={handleShowModifyConfirm}
                 className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 flex items-center"
