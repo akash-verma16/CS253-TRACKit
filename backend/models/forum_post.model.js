@@ -7,17 +7,23 @@ module.exports = (sequelize, Sequelize) => {
       },
       query: {
         type: Sequelize.TEXT,
-        allowNull: false
+        allowNull: false,
+        validate: {
+          notEmpty: true
+        }
       },
       courseId: {
         type: Sequelize.INTEGER,
-        allowNull: false
+        allowNull: false,
       },
       userId: {
         type: Sequelize.INTEGER,
         allowNull: false
       }
+    }, {
+      timestamps: true, 
+      paranoid: true
     });
-  
+
     return ForumPost;
   };
