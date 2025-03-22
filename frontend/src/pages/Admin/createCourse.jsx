@@ -1,8 +1,12 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CgProfile } from "react-icons/cg";
 import axios from 'axios';
 import { useAuth } from '../../contexts/AuthContext'; // Import useAuth hook
+import { 
+  validateCSVFile, 
+  createFileUploadFormData, 
+  getFileUploadConfig 
+} from '../../utils/fileUpload';
 
 export default function CreateCourse() {
   const [activeTab, setActiveTab] = useState('manual');
@@ -171,6 +175,13 @@ export default function CreateCourse() {
       return;
     }
 
+    // Validate the file
+    const validation = validateCSVFile(csvFile);
+    if (!validation.isValid) {
+      setMessage({ text: validation.message, type: 'error' });
+      return;
+    }
+
     setLoading(true);
     setMessage({ text: 'Uploading file... Please wait.', type: 'info' });
 
@@ -182,44 +193,31 @@ export default function CreateCourse() {
                         userData.token || 
                         localStorage.getItem('accessToken');
       
-      console.log("User data from localStorage:", userData);
-      console.log("Token being used for bulk upload:", authToken);
-      console.log("File being uploaded:", csvFile.name, "Size:", csvFile.size, "bytes", "Type:", csvFile.type);
-      
       if (!authToken) {
         setMessage({ text: 'Authentication required. Please log in again.', type: 'error' });
         setTimeout(() => navigate('/login'), 2000);
         return;
       }
 
-      // Create FormData object for file upload
-      const formData = new FormData();
-      formData.append('file', csvFile);
+      // Create FormData and log for debugging
+      const formData = createFileUploadFormData(csvFile);
       
-      // Debug what's in the FormData
-      for (const [key, value] of formData.entries()) {
-        console.log(`FormData contains: ${key} = ${value instanceof File ? value.name : value}`);
-      }
+      // Log important request details
+      console.log("Making bulk upload request with:");
+      console.log("- Auth token present:", !!authToken);
+      console.log("- File name:", csvFile.name);
+      console.log("- File size:", csvFile.size);
+      console.log("- Content type:", csvFile.type);
 
-      // Create a timeout for the request
-      const timeoutDuration = 60000; // 60 seconds
-      
+      // Get upload configuration with progress tracking
+      const uploadConfig = getFileUploadConfig(authToken, (percent) => {
+        setMessage({ text: `Uploading: ${percent}% complete`, type: 'info' });
+      });
+
       const response = await axios.post(
         `${process.env.REACT_APP_API_URL || 'http://localhost:3001'}/api/admin/bulk-courses`,
         formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            'x-access-token': authToken,
-            'Authorization': `Bearer ${authToken}`
-          },
-          timeout: timeoutDuration, // Set timeout
-          onUploadProgress: (progressEvent) => {
-            // Log upload progress
-            const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-            console.log(`Upload progress: ${percentCompleted}%`);
-          }
-        }
+        uploadConfig
       );
 
       console.log("Response received:", response.data);

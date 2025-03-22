@@ -4,40 +4,49 @@ const User = db.User;
 console.log('verifyToken Middleware Hit');
 
 const verifyToken = (req, res, next) => {
-  console.log("Headers:", req.headers);
-  
-  // Try x-access-token header first
-  let token = req.headers['x-access-token'];
-  
-  // If not found, try Authorization header
-  if (!token && req.headers['authorization']) {
-    // Extract the token from Bearer format
-    const authHeader = req.headers['authorization'];
-    if (authHeader.startsWith('Bearer ')) {
-      token = authHeader.substring(7, authHeader.length);
-    }
+  // Skip token verification for OPTIONS requests (pre-flight)
+  if (req.method === 'OPTIONS') {
+    return next();
   }
 
+  // Get token from various possible locations
+  let token = req.headers['x-access-token'] || 
+              req.headers['authorization'];
+  
+  // Handle 'Bearer' prefix if present
+  if (token && token.startsWith('Bearer ')) {
+    token = token.slice(7);
+  }
+  
   if (!token) {
-    console.log("No token provided in request headers");
-    return res.status(403).send({
+    return res.status(403).json({
       success: false,
       message: 'No token provided!'
     });
   }
 
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.userId = decoded.id;
-    req.userType = decoded.userType;
-    next();
-  } catch (error) {
-    console.log("Token verification failed:", error.message);
-    return res.status(401).send({
-      success: false,
-      message: 'Unauthorized!'
-    });
+  // Log detailed debugging information for multipart requests
+  if (req.headers['content-type'] && req.headers['content-type'].includes('multipart/form-data')) {
+    console.log('Processing multipart request with:');
+    console.log('- Headers:', JSON.stringify(req.headers, null, 2));
+    console.log('- Files present:', !!req.files);
+    if (req.files) {
+      console.log('- File keys:', Object.keys(req.files));
+    }
   }
+
+  // Verify token
+  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+    if (err) {
+      return res.status(401).json({
+        success: false,
+        message: 'Unauthorized! Token is invalid.',
+        error: err.message
+      });
+    }
+    req.userId = decoded.id;
+    next();
+  });
 };
 
 const isAdmin = async (req, res, next) => {

@@ -5,6 +5,7 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const db = require('./models');
 const path = require('path');
+const fileUpload = require('express-fileupload');
 
 const app = express();
 
@@ -31,20 +32,26 @@ app.use(express.urlencoded({ extended: true }));
 // Serve static files from the uploads directory
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Add file upload middleware - UNCOMMENT THIS SECTION
-//const fileUpload = require('express-fileupload');
-//app.use(fileUpload({
-//  createParentPath: true,
-//  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB max file size
-//  abortOnLimit: true,
-//  debug: process.env.NODE_ENV === 'development' // Enable debug in development mode
-//}));
+// Add file upload middleware
+app.use(fileUpload({
+  createParentPath: true,
+  limits: { 
+    fileSize: 10 * 1024 * 1024 // 10MB max file size
+  },
+  abortOnLimit: true,
+  responseOnLimit: "File size limit has been reached",
+  useTempFiles: false,
+  debug: process.env.NODE_ENV !== 'production'
+}));
 
 // Log all incoming requests
 app.use((req, res, next) => {
   console.log(`Incoming request: ${req.method} ${req.originalUrl}`);
   next();
 });
+
+// Import routes
+
 
 // Routes
 app.use('/api/auth', require('./routes/auth.routes'));
@@ -58,6 +65,8 @@ app.use('/api/faculty', require('./routes/faculty.routes'));
 app.use('/api/result', require('./routes/result.routes'));
 app.use('/api/admin', require('./routes/admin.routes'));
 app.use('/api/events', require('./routes/event.routes'));
+
+
 // Log all registered routes
 const listRoutes = (app) => {
   console.log('Registered routes:');
