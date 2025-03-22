@@ -17,7 +17,7 @@ export default function Forum({ role }) {
   const [showNewPostForm, setShowNewPostForm] = useState(false);
   const [replyingToPost, setReplyingToPost] = useState(null);
   const [replyContent, setReplyContent] = useState('');
-  
+
   const { courseDetails } = useCourse();
   const { currentUser } = useAuth();
   const { showNotification } = useNotification();
@@ -32,35 +32,34 @@ export default function Forum({ role }) {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      
+
       const response = await axios.get(
         `${BACKEND_URL}/api/forum/course/${courseDetails.id}`,
         {
           headers: {
-            Authorization: `Bearer ${token}`
-          }
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
-      
+
       if (response.data.success) {
-        // Format the posts data for our component
-        const formattedPosts = response.data.data.map(post => ({
+        const formattedPosts = response.data.data.map((post) => ({
           id: post.id,
           author: post.user.username,
           query: post.query,
           userId: post.userId,
           userType: post.user.userType,
           createdAt: new Date(post.createdAt),
-          replies: post.replies.map(reply => ({
+          replies: post.replies.map((reply) => ({
             id: reply.id,
             author: reply.user.username,
             content: reply.content,
             userId: reply.userId,
             userType: reply.user.userType,
-            createdAt: new Date(reply.createdAt)
-          }))
+            createdAt: new Date(reply.createdAt),
+          })),
         }));
-        
+
         setPosts(formattedPosts);
       } else {
         showNotification('Failed to fetch forum posts', 'error');
@@ -80,23 +79,22 @@ export default function Forum({ role }) {
   const handleSubmitPost = async (e) => {
     e.preventDefault();
     if (!newQuery.trim()) return;
-    
+
     try {
       const token = localStorage.getItem('token');
-      
+
       const response = await axios.post(
         `${BACKEND_URL}/api/forum/course/${courseDetails.id}`,
         { query: newQuery },
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
+            'Content-Type': 'application/json',
+          },
         }
       );
-      
+
       if (response.data.success) {
-        // Format the new post
         const newPost = {
           id: response.data.data.id,
           author: currentUser.username,
@@ -104,9 +102,9 @@ export default function Forum({ role }) {
           userId: currentUser.id,
           userType: currentUser.userType,
           createdAt: new Date(),
-          replies: []
+          replies: [],
         };
-        
+
         setPosts([newPost, ...posts]);
         setNewQuery('');
         setShowNewPostForm(false);
@@ -123,18 +121,18 @@ export default function Forum({ role }) {
   const handleDeletePost = async (postId) => {
     try {
       const token = localStorage.getItem('token');
-      
+
       const response = await axios.delete(
         `${BACKEND_URL}/api/forum/post/${postId}`,
         {
           headers: {
-            Authorization: `Bearer ${token}`
-          }
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
-      
+
       if (response.data.success) {
-        setPosts(prevPosts => prevPosts.filter(post => post.id !== postId));
+        setPosts((prevPosts) => prevPosts.filter((post) => post.id !== postId));
         showNotification('Post deleted successfully', 'success');
       } else {
         showNotification('Failed to delete post', 'error');
@@ -157,43 +155,41 @@ export default function Forum({ role }) {
 
   const handleSubmitReply = async (postId) => {
     if (!replyContent.trim()) return;
-    
+
     try {
       const token = localStorage.getItem('token');
-      
+
       const response = await axios.post(
         `${BACKEND_URL}/api/forum/post/${postId}/reply`,
         { content: replyContent },
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
+            'Content-Type': 'application/json',
+          },
         }
       );
-      
+
       if (response.data.success) {
-        // Format the new reply
         const newReply = {
           id: response.data.data.id,
           author: currentUser.username,
           content: response.data.data.content,
           userId: currentUser.id,
           userType: currentUser.userType,
-          createdAt: new Date()
+          createdAt: new Date(),
         };
-        
-        // Update posts with the new reply
-        const updatedPosts = posts.map(post => {
+
+        const updatedPosts = posts.map((post) => {
           if (post.id === postId) {
             return {
               ...post,
-              replies: [...post.replies, newReply]
+              replies: [...post.replies, newReply],
             };
           }
           return post;
         });
-        
+
         setPosts(updatedPosts);
         setReplyingToPost(null);
         setReplyContent('');
@@ -210,27 +206,29 @@ export default function Forum({ role }) {
   const handleDeleteReply = async (postId, replyId) => {
     try {
       const token = localStorage.getItem('token');
-      
+
       const response = await axios.delete(
         `${BACKEND_URL}/api/forum/reply/${replyId}`,
         {
           headers: {
-            Authorization: `Bearer ${token}`
-          }
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
-      
+
       if (response.data.success) {
-        setPosts(prevPosts => prevPosts.map(post => {
-          if (post.id === postId) {
-            return {
-              ...post,
-              replies: post.replies.filter(reply => reply.id !== replyId)
-            };
-          }
-          return post;
-        }));
-        
+        setPosts((prevPosts) =>
+          prevPosts.map((post) => {
+            if (post.id === postId) {
+              return {
+                ...post,
+                replies: post.replies.filter((reply) => reply.id !== replyId),
+              };
+            }
+            return post;
+          })
+        );
+
         showNotification('Reply deleted successfully', 'success');
       } else {
         showNotification('Failed to delete reply', 'error');
@@ -241,7 +239,6 @@ export default function Forum({ role }) {
     }
   };
 
-  // Check if current user is faculty or admin
   const canDelete = () => {
     return currentUser?.userType === 'faculty' || currentUser?.userType === 'admin';
   };
@@ -258,18 +255,22 @@ export default function Forum({ role }) {
     <div className="bg-gray-100 min-h-screen flex flex-col items-center w-full h-full">
       <div className="flex items-center justify-between w-full mb-6 sticky top-0 bg-[#F5F5F5] shadow-lg px-8">
         <div className="flex items-center h-[100px]">
-          <div className='mr-8'>
+          <div className="mr-8">
             <h1 className="text-3xl font-bold">FORUM</h1>
-            <p className='text-gray-600'>{courseDetails.code} • {courseDetails.credits} Credits • {courseDetails.semester}</p>
+            <p className="text-gray-600">
+              {courseDetails.code} • {courseDetails.credits} Credits •{' '}
+              {courseDetails.semester}
+            </p>
           </div>
-          <button 
+          <button
             className="bg-blue-500 shadow-lg hover:scale-95 transition-all duration-200 text-white px-4 py-2 rounded-md ml-4"
-            onClick={handleAddPost}>
+            onClick={handleAddPost}
+          >
             Add Post
           </button>
         </div>
         <NavLink to="/dashboard/profile">
-          <CgProfile className='text-[40px] cursor-pointer hover:scale-95 transition-all duration-200 hover:text-blue-500' />
+          <CgProfile className="text-[40px] cursor-pointer hover:scale-95 transition-all duration-200 hover:text-blue-500" />
         </NavLink>
       </div>
 
@@ -282,17 +283,20 @@ export default function Forum({ role }) {
               placeholder="Your Query"
               value={newQuery}
               onChange={(e) => setNewQuery(e.target.value)}
-              required />
+              required
+            />
             <div className="flex justify-end">
-              <button 
-                className='mr-4 bg-gray-300 shadow-lg rounded-md px-4 py-2 hover:scale-95 transition-all duration-200'
+              <button
+                className="mr-4 bg-gray-300 shadow-lg rounded-md px-4 py-2 hover:scale-95 transition-all duration-200"
                 onClick={() => setShowNewPostForm(false)}
-                type="button">
+                type="button"
+              >
                 Cancel
               </button>
-              <button 
-                type="submit" 
-                className="bg-blue-500 shadow-lg text-white px-4 py-2 rounded-md duration-200 transition-all hover:scale-95">
+              <button
+                type="submit"
+                className="bg-blue-500 shadow-lg text-white px-4 py-2 rounded-md duration-200 transition-all hover:scale-95"
+              >
                 Submit
               </button>
             </div>
@@ -309,23 +313,25 @@ export default function Forum({ role }) {
           <div key={post.id} className="bg-gray-200 rounded-md shadow-md mb-6 w-[95%]">
             <div className="p-4">
               <div className="flex items-center justify-between mb-2">
-                <div className='flex items-center'>
+                <div className="flex items-center">
                   <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center text-gray-500 mr-2">
                     <FaUser className="h-6 w-6" />
                   </div>
                   <div>
                     <span className="text-sm text-gray-600">{post.author}</span>
-                    {post.userType === 'faculty' && 
-                      <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded">Instructor</span>
-                    }
+                    {post.userType === 'faculty' && (
+                      <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded">
+                        Instructor
+                      </span>
+                    )}
                     <div className="text-xs text-gray-500">
                       {post.createdAt.toLocaleString()}
                     </div>
                   </div>
                 </div>
                 {(canDelete() || post.userId === currentUser?.id) && (
-                  <AiOutlineDelete 
-                    className='text-red-600 mr-4 text-[28px] hover:scale-110 transition-all duration-200 cursor-pointer'
+                  <AiOutlineDelete
+                    className="text-red-600 mr-4 text-[28px] hover:scale-110 transition-all duration-200 cursor-pointer"
                     onClick={() => handleDeletePost(post.id)}
                   />
                 )}
@@ -343,23 +349,25 @@ export default function Forum({ role }) {
                   post.replies.map((reply) => (
                     <div key={reply.id} className="bg-white p-4 rounded-md mb-2">
                       <div className="flex items-center justify-between mb-2">
-                        <div className='flex items-center'>
+                        <div className="flex items-center">
                           <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-gray-500 mr-2">
-                            <FaUser className="h-4 w-4" /> 
+                            <FaUser className="h-4 w-4" />
                           </div>
                           <div>
                             <span className="text-sm text-gray-600">{reply.author}</span>
-                            {reply.userType === 'faculty' && 
-                              <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded">Instructor</span>
-                            }
+                            {reply.userType === 'faculty' && (
+                              <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded">
+                                Instructor
+                              </span>
+                            )}
                             <div className="text-xs text-gray-500">
                               {reply.createdAt.toLocaleString()}
                             </div>
                           </div>
                         </div>
                         {(canDelete() || reply.userId === currentUser?.id) && (
-                          <AiOutlineDelete 
-                            className='text-red-600 text-[28px] hover:scale-110 transition-all duration-200 cursor-pointer'
+                          <AiOutlineDelete
+                            className="text-red-600 text-[28px] hover:scale-110 transition-all duration-200 cursor-pointer"
                             onClick={() => handleDeleteReply(post.id, reply.id)}
                           />
                         )}
@@ -378,23 +386,26 @@ export default function Forum({ role }) {
                       onChange={(e) => setReplyContent(e.target.value)}
                     ></textarea>
                     <div className="flex justify-end gap-2">
-                      <button 
+                      <button
                         className="bg-gray-300 shadow-lg text-black px-4 py-2 rounded-md hover:scale-95 transition-all duration-200"
-                        onClick={handleCancelReply}>
+                        onClick={handleCancelReply}
+                      >
                         Cancel
                       </button>
-                      <button 
+                      <button
                         className="bg-blue-500 hover:scale-95 transition-all duration-200 shadow-lg text-white px-4 py-2 rounded-md"
-                        onClick={() => handleSubmitReply(post.id)}>
+                        onClick={() => handleSubmitReply(post.id)}
+                      >
                         Submit
                       </button>
                     </div>
                   </div>
                 ) : (
                   <div className="flex justify-end mt-2">
-                    <button 
+                    <button
                       className="bg-black text-white px-4 py-2 rounded-md hover:scale-95 transition-all duration-200 hover:bg-blue-500"
-                      onClick={() => handleReplyClick(post.id)}>
+                      onClick={() => handleReplyClick(post.id)}
+                    >
                       Reply
                     </button>
                   </div>
