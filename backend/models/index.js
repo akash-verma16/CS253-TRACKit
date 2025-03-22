@@ -38,6 +38,9 @@ db.Faculty.belongsTo(db.User, { foreignKey: 'userId' });
 db.User.hasOne(db.Student, { foreignKey: 'userId' });
 db.Student.belongsTo(db.User, { foreignKey: 'userId' });
 
+db.User.hasOne(db.Admin, { foreignKey: 'userId' });
+db.Admin.belongsTo(db.User, { foreignKey: 'userId' });
+
 // Course relationships
 db.Course.belongsToMany(db.Faculty, { 
   through: 'course_faculty',
