@@ -3,27 +3,20 @@ import { Calendar, momentLocalizer, Views } from 'react-big-calendar';
 import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import Modal from 'react-modal';
+import { useEvents } from '../contexts/EventContext';
+import { useCourse } from '../contexts/CourseContext';
+import { useNotification } from '../contexts/NotificationContext';
 
 const localizer = momentLocalizer(moment);
 
-Modal.setAppElement('#root'); // Set the root element for accessibility
+Modal.setAppElement('#root');
 
 const MyCalendar = () => {
-  const [events, setEvents] = useState([
-    {
-      title: 'Meeting',
-      start: new Date(2025, 2, 20, 10, 0), // March 20, 2025, 10:00 AM
-      end: new Date(2025, 2, 20, 12, 0),   // March 20, 2025, 12:00 PM
-      description: 'Discuss project updates',
-    },
-    {
-      title: 'Lunch',
-      start: new Date(2025, 2, 21, 12, 0), // March 21, 2025, 12:00 PM
-      end: new Date(2025, 2, 21, 13, 0),   // March 21, 2025, 1:00 PM
-      description: 'Lunch with team',
-    },
-  ]);
-
+  const { courseDetails } = useCourse();
+  const { eventsByCourse, loading, addEvent, deleteEvent, refreshEvents } = useEvents();
+  const { showNotification } = useNotification();
+  
+  const [courseEvents, setCourseEvents] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [showEventModal, setShowEventModal] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
@@ -31,40 +24,83 @@ const MyCalendar = () => {
   const [view, setView] = useState(Views.MONTH);
   const [date, setDate] = useState(new Date());
   const [scrollToTime, setScrollToTime] = useState(new Date());
+  const [refreshCounter, setRefreshCounter] = useState(0);
 
+  // Get events for this course from the eventsByCourse object
   useEffect(() => {
-    if (events.length > 0) {
-      const firstEventStart = events.reduce((earliest, event) => {
-        return event.start < earliest ? event.start : earliest;
-      }, events[0].start);
-      setScrollToTime(firstEventStart);
+    if (courseDetails?.id && eventsByCourse[courseDetails.id]) {
+      setCourseEvents(eventsByCourse[courseDetails.id]);
+    } else {
+      setCourseEvents([]);
     }
-  }, [events]);
+  }, [courseDetails, eventsByCourse]);
 
-  const handleAddEvent = () => {
-    const start = new Date(newEvent.start);
-    const end = new Date(newEvent.end);
+  // Update scrollToTime based on first event
+  useEffect(() => {
+    if (courseEvents.length > 0) {
+      try {
+        const firstEventStart = courseEvents.reduce((earliest, event) => {
+          return event.start < earliest ? event.start : earliest;
+        }, courseEvents[0].start);
+        setScrollToTime(firstEventStart);
+      } catch (err) {
+        console.warn("Error setting scroll time:", err);
+      }
+    }
+  }, [courseEvents]);
 
-    if (end <= start) {
-      alert('End time must be greater than start time');
+  const handleAddEvent = async (e) => {
+    e.preventDefault();
+    
+    if (!courseDetails?.id) {
+      showNotification('Course details not available', 'error');
       return;
     }
+    
+    try {
+      const start = new Date(newEvent.start);
+      const end = new Date(newEvent.end);
 
-    const updatedEvents = [...events, { ...newEvent, start, end }];
-    setEvents(updatedEvents);
-
-    // Update scrollToTime to the start time of the first event
-    const firstEventStart = updatedEvents.reduce((earliest, event) => {
-      return event.start < earliest ? event.start : earliest;
-    }, updatedEvents[0].start);
-    setScrollToTime(firstEventStart);
-
-    setShowForm(false);
+      if (end <= start) {
+        showNotification('End time must be greater than start time', 'error');
+        return;
+      }
+      
+      const result = await addEvent(courseDetails.id, {
+        title: newEvent.title,
+        description: newEvent.description,
+        start: start.toISOString(),
+        end: end.toISOString()
+      });
+      
+      if (result.success) {
+        showNotification('Event added successfully', 'success');
+        setShowForm(false);
+        setNewEvent({ title: '', start: '', end: '', description: '' });
+        setRefreshCounter(prev => prev + 1);
+      } else {
+        showNotification('Failed to add event', 'error');
+      }
+    } catch (error) {
+      console.error('Error adding event:', error);
+      showNotification('Failed to add event', 'error');
+    }
   };
 
   const handleSelectSlot = (slotInfo) => {
+    const formattedStart = moment(slotInfo.start).format('YYYY-MM-DDTHH:mm');
+    const formattedEnd = moment(slotInfo.end).format('YYYY-MM-DDTHH:mm');
+    
+    setNewEvent({
+      title: '',
+      description: '',
+      start: formattedStart,
+      end: formattedEnd
+    });
+    
     setDate(slotInfo.start);
     setView(Views.DAY);
+    setShowForm(true);
   };
 
   const handleSelectEvent = (event) => {
@@ -72,21 +108,29 @@ const MyCalendar = () => {
     setShowEventModal(true);
   };
 
-  const handleRemoveEvent = () => {
-    const updatedEvents = events.filter(event => event !== selectedEvent);
-    setEvents(updatedEvents);
-
-    // Update scrollToTime to the start time of the first event
-    if (updatedEvents.length > 0) {
-      const firstEventStart = updatedEvents.reduce((earliest, event) => {
-        return event.start < earliest ? event.start : earliest;
-      }, updatedEvents[0].start);
-      setScrollToTime(firstEventStart);
-    } else {
-      setScrollToTime(new Date());
+  const handleRemoveEvent = async () => {
+    if (!selectedEvent || !selectedEvent.id) return;
+    
+    try {
+      const result = await deleteEvent(selectedEvent.id, courseDetails.id);
+      
+      if (result.success) {
+        showNotification('Event removed successfully', 'success');
+        setShowEventModal(false);
+        setRefreshCounter(prev => prev + 1);
+      } else {
+        showNotification('Failed to remove event', 'error');
+      }
+    } catch (error) {
+      console.error('Error removing event:', error);
+      showNotification('Failed to remove event', 'error');
     }
+  };
 
-    setShowEventModal(false);
+  const handleManualRefresh = () => {
+    refreshEvents();
+    showNotification('Refreshing calendar events...', 'info');
+    setRefreshCounter(prev => prev + 1);
   };
 
   const formats = {
@@ -106,9 +150,32 @@ const MyCalendar = () => {
 
   return (
     <div>
+      {loading && (
+        <div className="text-center py-2 text-blue-500 bg-white rounded shadow mb-2">
+          Loading calendar events...
+        </div>
+      )}
+      
+      <div className="flex justify-between items-center mb-3">
+        <button
+          onClick={() => setShowForm(true)}
+          className="bg-blue-500 text-white px-4 py-2 rounded"
+        >
+          Add Event
+        </button>
+        
+        <button 
+          onClick={handleManualRefresh}
+          className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1 rounded-full text-xs"
+        >
+          Refresh Calendar
+        </button>
+      </div>
+      
       <Calendar
+        key={`calendar-${refreshCounter}`}
         localizer={localizer}
-        events={events}
+        events={courseEvents}
         startAccessor="start"
         endAccessor="end"
         style={{ height: 500 }}
@@ -124,12 +191,7 @@ const MyCalendar = () => {
         views={['month', 'week', 'day']}
         scrollToTime={scrollToTime}
       />
-      <button
-        onClick={() => setShowForm(true)}
-        className="bg-blue-500 text-white px-4 py-2 rounded mt-4"
-      >
-        Add Event
-      </button>
+      
       <Modal
         isOpen={showForm}
         onRequestClose={() => setShowForm(false)}
@@ -137,14 +199,15 @@ const MyCalendar = () => {
         className="modal"
         overlayClassName="overlay"
       >
-        <h3>Add New Event</h3>
-        <form onSubmit={(e) => { e.preventDefault(); handleAddEvent(); }}>
+        <h3 className="text-xl font-bold mb-4">Add New Event</h3>
+        <form onSubmit={handleAddEvent}>
           <input
             type="text"
             placeholder="Title"
             value={newEvent.title}
             onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
             className="block w-full p-2 mb-2 border rounded"
+            required
           />
           <input
             type="datetime-local"
@@ -152,6 +215,7 @@ const MyCalendar = () => {
             value={newEvent.start}
             onChange={(e) => setNewEvent({ ...newEvent, start: e.target.value })}
             className="block w-full p-2 mb-2 border rounded"
+            required
           />
           <input
             type="datetime-local"
@@ -159,6 +223,7 @@ const MyCalendar = () => {
             value={newEvent.end}
             onChange={(e) => setNewEvent({ ...newEvent, end: e.target.value })}
             className="block w-full p-2 mb-2 border rounded"
+            required
           />
           <textarea
             placeholder="Description"
@@ -166,18 +231,24 @@ const MyCalendar = () => {
             onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
             className="block w-full p-2 mb-2 border rounded"
           />
-          <button type="submit" className="bg-green-500 text-white px-4 py-2 rounded">
-            Add Event
+          <button 
+            type="submit" 
+            className="bg-green-500 text-white px-4 py-2 rounded"
+            disabled={loading}
+          >
+            {loading ? 'Adding...' : 'Add Event'}
           </button>
           <button
             type="button"
             onClick={() => setShowForm(false)}
             className="bg-red-500 text-white px-4 py-2 rounded ml-2"
+            disabled={loading}
           >
             Cancel
           </button>
         </form>
       </Modal>
+      
       <Modal
         isOpen={showEventModal}
         onRequestClose={() => setShowEventModal(false)}
@@ -187,28 +258,28 @@ const MyCalendar = () => {
       >
         {selectedEvent && (
           <div>
-            <h3>{selectedEvent.title}</h3>
-            <p><strong>Start:</strong> {selectedEvent.start.toLocaleString()}</p>
-            <p><strong>End:</strong> {selectedEvent.end.toLocaleString()}</p>
-            <p><strong>Description:</strong> {selectedEvent.description}</p>
+            <h3 className="text-xl font-bold mb-3">{selectedEvent.title}</h3>
+            <p className="mb-2"><strong>Start:</strong> {selectedEvent.start.toLocaleString()}</p>
+            <p className="mb-2"><strong>End:</strong> {selectedEvent.end.toLocaleString()}</p>
+            <p className="mb-4"><strong>Description:</strong> {selectedEvent.description || 'No description provided'}</p>
             <button
-              onClick={() => {
-                handleRemoveEvent();
-                setView(view); // Force re-render
-              }}
+              onClick={handleRemoveEvent}
               className="bg-red-500 text-white px-4 py-2 rounded mt-4"
+              disabled={loading}
             >
-              Remove Event
+              {loading ? 'Removing...' : 'Remove Event'}
             </button>
             <button
               onClick={() => setShowEventModal(false)}
               className="bg-blue-500 text-white px-4 py-2 rounded mt-4 ml-2"
+              disabled={loading}
             >
               Close
             </button>
           </div>
         )}
       </Modal>
+      
       <style jsx>{`
         .modal {
           position: absolute;
@@ -222,6 +293,9 @@ const MyCalendar = () => {
           padding: 20px;
           border-radius: 8px;
           box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+          z-index: 1000;
+          max-width: 500px;
+          width: 90%;
         }
 
         .overlay {
@@ -231,6 +305,17 @@ const MyCalendar = () => {
           right: 0;
           bottom: 0;
           background-color: rgba(0, 0, 0, 0.75);
+          z-index: 999;
+        }
+        
+        /* Fix for potential z-index issues */
+        :global(.rbc-calendar) {
+          z-index: 1;
+        }
+        
+        /* Improve event display */
+        :global(.rbc-event) {
+          padding: 2px 3px !important;
         }
       `}</style>
     </div>

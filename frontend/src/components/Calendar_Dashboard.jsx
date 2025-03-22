@@ -3,82 +3,37 @@ import { Calendar, momentLocalizer, Views } from 'react-big-calendar';
 import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import Modal from 'react-modal';
+import { useEvents } from '../contexts/EventContext';
+import { useNotification } from '../contexts/NotificationContext';
 
 const localizer = momentLocalizer(moment);
 
-Modal.setAppElement('#root'); // Set the root element for accessibility
-
-// Generate a unique ID
-const generateId = () => Math.random().toString(36).substr(2, 9);
+Modal.setAppElement('#root');
 
 const MyCalendar = () => {
-  const [events, setEvents] = useState([
-    {
-      id: generateId(),
-      title: 'Meeting',
-      start: new Date(2025, 2, 20, 10, 0), // March 20, 2025, 10:00 AM
-      end: new Date(2025, 2, 20, 12, 0),   // March 20, 2025, 12:00 PM
-      description: 'Discuss project updates',
-    },
-    {
-      id: generateId(),
-      title: 'Lunch',
-      start: new Date(2025, 2, 21, 12, 0), // March 21, 2025, 12:00 PM
-      end: new Date(2025, 2, 21, 13, 0),   // March 21, 2025, 1:00 PM
-      description: 'Lunch with team',
-    },
-  ]);
+  const { allEvents, loading, refreshEvents } = useEvents();
+  const { showNotification } = useNotification();
 
-  const [showForm, setShowForm] = useState(false);
   const [showEventModal, setShowEventModal] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
-  const [newEvent, setNewEvent] = useState({ title: '', start: '', end: '', description: '' });
   const [view, setView] = useState(Views.MONTH);
   const [date, setDate] = useState(new Date());
   const [scrollToTime, setScrollToTime] = useState(new Date());
-  // Add a counter state to force re-renders
   const [refreshCounter, setRefreshCounter] = useState(0);
 
+  // Update scrollToTime based on first event
   useEffect(() => {
-    if (events.length > 0) {
-      const firstEventStart = events.reduce((earliest, event) => {
-        return event.start < earliest ? event.start : earliest;
-      }, events[0].start);
-      setScrollToTime(firstEventStart);
+    if (allEvents.length > 0) {
+      try {
+        const firstEventStart = allEvents.reduce((earliest, event) => {
+          return event.start < earliest ? event.start : earliest;
+        }, allEvents[0].start);
+        setScrollToTime(firstEventStart);
+      } catch (err) {
+        console.warn("Error setting scroll time:", err);
+      }
     }
-  }, [events]);
-
-  const handleAddEvent = () => {
-    const start = new Date(newEvent.start);
-    const end = new Date(newEvent.end);
-
-    if (end <= start) {
-      alert('End time must be greater than start time');
-      return;
-    }
-
-    const eventWithId = {
-      ...newEvent,
-      id: generateId(),
-      start,
-      end
-    };
-    
-    const updatedEvents = [...events, eventWithId];
-    setEvents(updatedEvents);
-
-    // Update scrollToTime to the start time of the first event
-    if (updatedEvents.length > 0) {
-      const firstEventStart = updatedEvents.reduce((earliest, event) => {
-        return event.start < earliest ? event.start : earliest;
-      }, updatedEvents[0].start);
-      setScrollToTime(firstEventStart);
-    }
-
-    setShowForm(false);
-    // Force a re-render
-    setRefreshCounter(prev => prev + 1);
-  };
+  }, [allEvents]);
 
   const handleSelectSlot = (slotInfo) => {
     setDate(slotInfo.start);
@@ -90,37 +45,34 @@ const MyCalendar = () => {
     setShowEventModal(true);
   };
 
-  // const handleRemoveEvent = () => {
-  //   // Filter by ID instead of object reference
-  //   const updatedEvents = events.filter(event => event.id !== selectedEvent.id);
-  //   setEvents(updatedEvents);
+  const handleManualRefresh = () => {
+    refreshEvents();
+    showNotification('Refreshing calendar events...', 'info');
+    setRefreshCounter(prev => prev + 1);
+  };
 
-  //   // Update scrollToTime to the start time of the first event
-  //   if (updatedEvents.length > 0) {
-  //     const firstEventStart = updatedEvents.reduce((earliest, event) => {
-  //       return event.start < earliest ? event.start : earliest;
-  //     }, updatedEvents[0].start);
-  //     setScrollToTime(firstEventStart);
-  //   } else {
-  //     setScrollToTime(new Date());
-  //   }
+  // Custom event styling with course colors
+  const eventStyleGetter = (event) => {
+    const style = {
+      backgroundColor: event.color || '#3174ad',
+      borderRadius: '5px',
+      opacity: 0.8,
+      color: 'white',
+      border: '0px',
+      display: 'block'
+    };
+    return { style };
+  };
 
-  //   setShowEventModal(false);
-    
-  //   // Force a re-render by changing the view slightly and then back
-  //   const currentView = view;
-  //   if (currentView === Views.DAY || currentView === Views.WEEK) {
-  //     setView(Views.MONTH);
-  //     setTimeout(() => {
-  //       setView(currentView);
-  //       // Force another re-render by incrementing the counter
-  //       setRefreshCounter(prev => prev + 1);
-  //     }, 10);
-  //   } else {
-  //     // Force a re-render
-  //     setRefreshCounter(prev => prev + 1);
-  //   }
-  // };
+  // Custom event component to show course code
+  const EventComponent = ({ event }) => (
+    <div>
+      <strong>{event.title}</strong>
+      {event.courseCode && (
+        <div className="text-xs text-white opacity-90">{event.courseCode}</div>
+      )}
+    </div>
+  );
 
   const formats = {
     agendaDateFormat: (date, culture, localizer) =>
@@ -139,10 +91,25 @@ const MyCalendar = () => {
 
   return (
     <div className="calendar-container">
+      {loading && (
+        <div className="text-center py-2 text-blue-500 bg-white rounded shadow mb-2">
+          Loading calendar events...
+        </div>
+      )}
+      
+      <div className="flex justify-end mb-2">
+        <button 
+          onClick={handleManualRefresh}
+          className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1 rounded-full text-xs"
+        >
+          Refresh Calendar
+        </button>
+      </div>
+      
       <Calendar
-        key={`calendar-${refreshCounter}`} // Add a key that changes to force re-render
+        key={`calendar-${refreshCounter}`}
         localizer={localizer}
-        events={events}
+        events={allEvents}
         startAccessor="start"
         endAccessor="end"
         style={{ height: '100%', width: '100%' }}
@@ -157,64 +124,14 @@ const MyCalendar = () => {
         messages={messages}
         views={['month', 'week', 'day']}
         scrollToTime={scrollToTime}
-        // Ensure day view shows all events
-        min={new Date(0, 0, 0, 6, 0)} // Start at 6 AM
-        max={new Date(0, 0, 0, 22, 0)} // End at 10 PM
+        min={new Date(0, 0, 0, 6, 0)}
+        max={new Date(0, 0, 0, 22, 0)}
+        eventPropGetter={eventStyleGetter}
+        components={{
+          event: EventComponent
+        }}
       />
-      <button
-        onClick={() => setShowForm(true)}
-        className="bg-blue-500 text-white px-4 py-2 rounded mt-4"
-      >
-        Add Event
-      </button>
-      <Modal
-        isOpen={showForm}
-        onRequestClose={() => setShowForm(false)}
-        contentLabel="Add Event"
-        className="modal"
-        overlayClassName="overlay"
-      >
-        <h3>Add New Event</h3>
-        <form onSubmit={(e) => { e.preventDefault(); handleAddEvent(); }}>
-          <input
-            type="text"
-            placeholder="Title"
-            value={newEvent.title}
-            onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
-            className="block w-full p-2 mb-2 border rounded"
-          />
-          <input
-            type="datetime-local"
-            placeholder="Start"
-            value={newEvent.start}
-            onChange={(e) => setNewEvent({ ...newEvent, start: e.target.value })}
-            className="block w-full p-2 mb-2 border rounded"
-          />
-          <input
-            type="datetime-local"
-            placeholder="End"
-            value={newEvent.end}
-            onChange={(e) => setNewEvent({ ...newEvent, end: e.target.value })}
-            className="block w-full p-2 mb-2 border rounded"
-          />
-          <textarea
-            placeholder="Description"
-            value={newEvent.description}
-            onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
-            className="block w-full p-2 mb-2 border rounded"
-          />
-          <button type="submit" className="bg-green-500 text-white px-4 py-2 rounded">
-            Add Event
-          </button>
-          <button
-            type="button"
-            onClick={() => setShowForm(false)}
-            className="bg-red-500 text-white px-4 py-2 rounded ml-2"
-          >
-            Cancel
-          </button>
-        </form>
-      </Modal>
+      
       <Modal
         isOpen={showEventModal}
         onRequestClose={() => setShowEventModal(false)}
@@ -224,19 +141,29 @@ const MyCalendar = () => {
       >
         {selectedEvent && (
           <div>
-            <h3>{selectedEvent.title}</h3>
-            <p><strong>Start:</strong> {selectedEvent.start.toLocaleString()}</p>
-            <p><strong>End:</strong> {selectedEvent.end.toLocaleString()}</p>
-            <p><strong>Description:</strong> {selectedEvent.description}</p>
-            {/* <button
-              onClick={handleRemoveEvent}
-              className="bg-red-500 text-white px-4 py-2 rounded mt-4"
-            >
-              Remove Event
-            </button> */}
+            <h3 className="text-xl font-bold mb-3">{selectedEvent.title}</h3>
+            
+            {/* Course information */}
+            {selectedEvent.courseName && (
+              <div 
+                className="mb-3 p-2 rounded" 
+                style={{ 
+                  backgroundColor: selectedEvent.color || '#3174ad',
+                  color: 'white'
+                }}
+              >
+                <p className="font-bold">{selectedEvent.courseCode}</p>
+                <p>{selectedEvent.courseName}</p>
+              </div>
+            )}
+            
+            <p className="mb-2"><strong>Start:</strong> {selectedEvent.start.toLocaleString()}</p>
+            <p className="mb-2"><strong>End:</strong> {selectedEvent.end.toLocaleString()}</p>
+            <p className="mb-4"><strong>Description:</strong> {selectedEvent.description || 'No description provided'}</p>
+            
             <button
               onClick={() => setShowEventModal(false)}
-              className="bg-blue-500 text-white px-4 py-2 rounded mt-4 ml-2"
+              className="bg-blue-500 text-white px-4 py-2 rounded mt-4"
             >
               Close
             </button>
@@ -245,7 +172,7 @@ const MyCalendar = () => {
       </Modal>
       <style jsx>{`
         .calendar-container {
-          height: 100%; /* Adjust height to fit in the "New Events" section */
+          height: 100%;
           width: 100%;
           overflow: hidden;
         }
@@ -262,6 +189,7 @@ const MyCalendar = () => {
           padding: 20px;
           border-radius: 8px;
           box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+          z-index: 101;
         }
 
         .overlay {
@@ -271,44 +199,34 @@ const MyCalendar = () => {
           right: 0;
           bottom: 0;
           background-color: rgba(0, 0, 0, 0.75);
+          z-index: 100;
         }
 
-          /* Fix z-index issues with modals/overlays */
-  :global(.rbc-calendar) {
-    position: relative;
-    z-index: 1; /* Lower z-index for the calendar */
-  }
-  
-  /* When modals are open, force calendar to a lower z-index */
-  :global(.modal-open .rbc-calendar) {
-    z-index: 1;
-  }
-  
-  /* Ensure modals have higher z-index */
-  .overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.75);
-    z-index: 100; /* Much higher z-index */
-  }
-  
-  .modal {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    right: auto;
-    bottom: auto;
-    margin-right: -50%;
-    transform: translate(-50%, -50%);
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    z-index: 101; /* Higher than overlay */
-  }
+        /* Fix for toolbar buttons spacing */
+        :global(.rbc-toolbar) {
+          flex-wrap: nowrap !important;
+          font-size: 0.9rem;
+        }
+        
+        :global(.rbc-toolbar button) {
+          padding: 5px 8px !important;
+          margin: 0 1px !important;
+        }
+        
+        :global(.rbc-btn-group) {
+          white-space: nowrap;
+          margin: 0 2px !important;
+        }
+        
+        /* Fix for potential z-index issues */
+        :global(.rbc-calendar) {
+          z-index: 1;
+        }
+        
+        /* Improve event display */
+        :global(.rbc-event) {
+          padding: 2px 3px !important;
+        }
       `}</style>
     </div>
   );

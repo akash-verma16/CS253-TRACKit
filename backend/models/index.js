@@ -28,7 +28,7 @@ db.Announcement = require('./announcement.model')(sequelize, Sequelize);
 db.CourseDescriptionEntry = require('./courseDescriptionEntry.model')(sequelize, Sequelize);
 db.Exam = require('./exam.model')(sequelize, Sequelize);
 db.Result = require('./result.model')(sequelize, Sequelize);
-
+db.Event = require('./events_calendar')(sequelize, Sequelize); // Add this line to import the Event model
 // Setup relationships
 // User relationships with specialized models
 db.User.hasOne(db.Faculty, { foreignKey: 'userId' });
@@ -95,5 +95,15 @@ db.Result.belongsTo(db.Exam, { foreignKey: 'examId' });
 // student and result relationships
 db.Student.hasMany(db.Result, { foreignKey: 'userId', as: 'results' });
 db.Result.belongsTo(db.Student, { foreignKey: 'userId' });
+
+// Add these relationships after other model associations
+
+// Event relationships
+db.Course.hasMany(db.Event, { foreignKey: 'courseId', as: 'events' });
+db.Event.belongsTo(db.Course, { foreignKey: 'courseId' });
+
+// If you want to track who created the event:
+db.User.hasMany(db.Event, { foreignKey: 'createdBy', as: 'createdEvents' });
+db.Event.belongsTo(db.User, { foreignKey: 'createdBy' });
 
 module.exports = db;

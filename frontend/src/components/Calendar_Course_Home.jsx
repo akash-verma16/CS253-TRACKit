@@ -3,82 +3,47 @@ import { Calendar, momentLocalizer, Views } from 'react-big-calendar';
 import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import Modal from 'react-modal';
+import { useEvents } from '../contexts/EventContext';
+import { useCourse } from '../contexts/CourseContext';
 
 const localizer = momentLocalizer(moment);
 
-Modal.setAppElement('#root'); // Set the root element for accessibility
-
-// Generate a unique ID
-const generateId = () => Math.random().toString(36).substr(2, 9);
+Modal.setAppElement('#root');
 
 const MyCalendar = () => {
-  const [events, setEvents] = useState([
-    {
-      id: generateId(),
-      title: 'Meeting',
-      start: new Date(2025, 2, 20, 10, 0), // March 20, 2025, 10:00 AM
-      end: new Date(2025, 2, 20, 12, 0),   // March 20, 2025, 12:00 PM
-      description: 'Discuss project updates',
-    },
-    {
-      id: generateId(),
-      title: 'Lunch',
-      start: new Date(2025, 2, 21, 12, 0), // March 21, 2025, 12:00 PM
-      end: new Date(2025, 2, 21, 13, 0),   // March 21, 2025, 1:00 PM
-      description: 'Lunch with team',
-    },
-  ]);
-
-  const [showForm, setShowForm] = useState(false);
+  const { courseDetails } = useCourse();
+  const { eventsByCourse, loading, refreshEvents } = useEvents();
+  
+  const [courseEvents, setCourseEvents] = useState([]);
   const [showEventModal, setShowEventModal] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
-  const [newEvent, setNewEvent] = useState({ title: '', start: '', end: '', description: '' });
   const [view, setView] = useState(Views.MONTH);
   const [date, setDate] = useState(new Date());
   const [scrollToTime, setScrollToTime] = useState(new Date());
-  // Add a counter state to force re-renders
   const [refreshCounter, setRefreshCounter] = useState(0);
 
+  // Get events for this course from the context
   useEffect(() => {
-    if (events.length > 0) {
-      const firstEventStart = events.reduce((earliest, event) => {
-        return event.start < earliest ? event.start : earliest;
-      }, events[0].start);
-      setScrollToTime(firstEventStart);
+    if (courseDetails?.id && eventsByCourse[courseDetails.id]) {
+      setCourseEvents(eventsByCourse[courseDetails.id]);
+    } else {
+      setCourseEvents([]);
     }
-  }, [events]);
+  }, [courseDetails, eventsByCourse]);
 
-  const handleAddEvent = () => {
-    const start = new Date(newEvent.start);
-    const end = new Date(newEvent.end);
-
-    if (end <= start) {
-      alert('End time must be greater than start time');
-      return;
+  // Update scrollToTime based on first event
+  useEffect(() => {
+    if (courseEvents.length > 0) {
+      try {
+        const firstEventStart = courseEvents.reduce((earliest, event) => {
+          return event.start < earliest ? event.start : earliest;
+        }, courseEvents[0].start);
+        setScrollToTime(firstEventStart);
+      } catch (err) {
+        console.warn("Error setting scroll time:", err);
+      }
     }
-
-    const eventWithId = {
-      ...newEvent,
-      id: generateId(),
-      start,
-      end
-    };
-    
-    const updatedEvents = [...events, eventWithId];
-    setEvents(updatedEvents);
-
-    // Update scrollToTime to the start time of the first event
-    if (updatedEvents.length > 0) {
-      const firstEventStart = updatedEvents.reduce((earliest, event) => {
-        return event.start < earliest ? event.start : earliest;
-      }, updatedEvents[0].start);
-      setScrollToTime(firstEventStart);
-    }
-
-    setShowForm(false);
-    // Force a re-render
-    setRefreshCounter(prev => prev + 1);
-  };
+  }, [courseEvents]);
 
   const handleSelectSlot = (slotInfo) => {
     setDate(slotInfo.start);
@@ -90,37 +55,37 @@ const MyCalendar = () => {
     setShowEventModal(true);
   };
 
-  // const handleRemoveEvent = () => {
-  //   // Filter by ID instead of object reference
-  //   const updatedEvents = events.filter(event => event.id !== selectedEvent.id);
-  //   setEvents(updatedEvents);
-
-  //   // Update scrollToTime to the start time of the first event
-  //   if (updatedEvents.length > 0) {
-  //     const firstEventStart = updatedEvents.reduce((earliest, event) => {
-  //       return event.start < earliest ? event.start : earliest;
-  //     }, updatedEvents[0].start);
-  //     setScrollToTime(firstEventStart);
-  //   } else {
-  //     setScrollToTime(new Date());
-  //   }
-
-  //   setShowEventModal(false);
-    
-  //   // Force a re-render by changing the view slightly and then back
-  //   const currentView = view;
-  //   if (currentView === Views.DAY || currentView === Views.WEEK) {
-  //     setView(Views.MONTH);
-  //     setTimeout(() => {
-  //       setView(currentView);
-  //       // Force another re-render by incrementing the counter
-  //       setRefreshCounter(prev => prev + 1);
-  //     }, 10);
-  //   } else {
-  //     // Force a re-render
-  //     setRefreshCounter(prev => prev + 1);
-  //   }
-  // };
+  // Custom toolbar to fit all buttons in one line
+  const CustomToolbar = (toolbar) => {
+    return (
+      <div className="rbc-toolbar">
+        <span className="rbc-btn-group">
+          <button type="button" onClick={() => toolbar.onNavigate('PREV')}>
+            {view === Views.MONTH ? 'Last Month' : view === Views.WEEK ? 'Last Week' : 'Last Day'}
+          </button>
+          <button type="button" onClick={() => toolbar.onNavigate('TODAY')}>
+            {view === Views.MONTH ? 'This Month' : view === Views.WEEK ? 'This Week' : 'This Day'}
+          </button>
+          <button type="button" onClick={() => toolbar.onNavigate('NEXT')}>
+            {view === Views.MONTH ? 'Next Month' : view === Views.WEEK ? 'Next Week' : 'Next Day'}
+          </button>
+        </span>
+        <span className="rbc-toolbar-label">{toolbar.label}</span>
+        <span className="rbc-btn-group">
+          {toolbar.views.map(view => (
+            <button 
+              key={view}
+              type="button"
+              onClick={() => toolbar.onView(view)}
+              className={toolbar.view === view ? 'rbc-active' : ''}
+            >
+              {view === 'month' ? 'Month' : view === 'week' ? 'Week' : 'Day'}
+            </button>
+          ))}
+        </span>
+      </div>
+    );
+  };
 
   const formats = {
     agendaDateFormat: (date, culture, localizer) =>
@@ -131,18 +96,18 @@ const MyCalendar = () => {
       `${localizer.format(start, 'DD/MM/YYYY', culture)} – ${localizer.format(end, 'DD/MM/YYYY', culture)}`,
   };
 
-  const messages = {
-    today: view === Views.MONTH ? 'This Month' : view === Views.WEEK ? 'This Week' : view === Views.DAY ? 'This Day' : 'Today',
-    previous: view === Views.MONTH ? 'Last Month' : view === Views.WEEK ? 'Last Week' : 'Last Day',
-    next: view === Views.MONTH ? 'Next Month' : view === Views.WEEK ? 'Next Week' : 'Next Day',
-  };
-
   return (
     <div className="calendar-container">
+      {loading && (
+        <div className="text-center py-2 text-blue-500">
+          Loading calendar events...
+        </div>
+      )}
+      
       <Calendar
-        key={`calendar-${refreshCounter}`} // Add a key that changes to force re-render
+        key={`calendar-${refreshCounter}`}
         localizer={localizer}
-        events={events}
+        events={courseEvents}
         startAccessor="start"
         endAccessor="end"
         style={{ height: '100%', width: '100%' }}
@@ -154,67 +119,15 @@ const MyCalendar = () => {
         onSelectSlot={handleSelectSlot}
         onSelectEvent={handleSelectEvent}
         formats={formats}
-        messages={messages}
         views={['month', 'week', 'day']}
         scrollToTime={scrollToTime}
-        // Ensure day view shows all events
-        min={new Date(0, 0, 0, 6, 0)} // Start at 6 AM
-        max={new Date(0, 0, 0, 22, 0)} // End at 10 PM
+        min={new Date(0, 0, 0, 6, 0)}
+        max={new Date(0, 0, 0, 22, 0)}
+        components={{
+          toolbar: CustomToolbar
+        }}
       />
-      <button
-        onClick={() => setShowForm(true)}
-        className="bg-blue-500 text-white px-4 py-2 rounded mt-4"
-      >
-        Add Event
-      </button>
-      <Modal
-        isOpen={showForm}
-        onRequestClose={() => setShowForm(false)}
-        contentLabel="Add Event"
-        className="modal"
-        overlayClassName="overlay"
-      >
-        <h3>Add New Event</h3>
-        <form onSubmit={(e) => { e.preventDefault(); handleAddEvent(); }}>
-          <input
-            type="text"
-            placeholder="Title"
-            value={newEvent.title}
-            onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
-            className="block w-full p-2 mb-2 border rounded"
-          />
-          <input
-            type="datetime-local"
-            placeholder="Start"
-            value={newEvent.start}
-            onChange={(e) => setNewEvent({ ...newEvent, start: e.target.value })}
-            className="block w-full p-2 mb-2 border rounded"
-          />
-          <input
-            type="datetime-local"
-            placeholder="End"
-            value={newEvent.end}
-            onChange={(e) => setNewEvent({ ...newEvent, end: e.target.value })}
-            className="block w-full p-2 mb-2 border rounded"
-          />
-          <textarea
-            placeholder="Description"
-            value={newEvent.description}
-            onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
-            className="block w-full p-2 mb-2 border rounded"
-          />
-          <button type="submit" className="bg-green-500 text-white px-4 py-2 rounded">
-            Add Event
-          </button>
-          <button
-            type="button"
-            onClick={() => setShowForm(false)}
-            className="bg-red-500 text-white px-4 py-2 rounded ml-2"
-          >
-            Cancel
-          </button>
-        </form>
-      </Modal>
+      
       <Modal
         isOpen={showEventModal}
         onRequestClose={() => setShowEventModal(false)}
@@ -224,28 +137,23 @@ const MyCalendar = () => {
       >
         {selectedEvent && (
           <div>
-            <h3>{selectedEvent.title}</h3>
-            <p><strong>Start:</strong> {selectedEvent.start.toLocaleString()}</p>
-            <p><strong>End:</strong> {selectedEvent.end.toLocaleString()}</p>
-            <p><strong>Description:</strong> {selectedEvent.description}</p>
-            {/* <button
-              onClick={handleRemoveEvent}
-              className="bg-red-500 text-white px-4 py-2 rounded mt-4"
-            >
-              Remove Event
-            </button> */}
+            <h3 className="text-xl font-bold mb-3">{selectedEvent.title}</h3>
+            <p className="mb-2"><strong>Start:</strong> {selectedEvent.start.toLocaleString()}</p>
+            <p className="mb-2"><strong>End:</strong> {selectedEvent.end.toLocaleString()}</p>
+            <p className="mb-4"><strong>Description:</strong> {selectedEvent.description || 'No description provided'}</p>
             <button
               onClick={() => setShowEventModal(false)}
-              className="bg-blue-500 text-white px-4 py-2 rounded mt-4 ml-2"
+              className="bg-blue-500 text-white px-4 py-2 rounded mt-4"
             >
               Close
             </button>
           </div>
         )}
       </Modal>
+      
       <style jsx>{`
         .calendar-container {
-          height: 100%; /* Adjust height to fit in the "New Events" section */
+          height: 100%;
           width: 100%;
           overflow: hidden;
         }
@@ -262,6 +170,7 @@ const MyCalendar = () => {
           padding: 20px;
           border-radius: 8px;
           box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+          z-index: 101;
         }
 
         .overlay {
@@ -271,8 +180,34 @@ const MyCalendar = () => {
           right: 0;
           bottom: 0;
           background-color: rgba(0, 0, 0, 0.75);
+          z-index: 100;
         }
-          
+
+        /* Fix for toolbar buttons spacing */
+        :global(.rbc-toolbar) {
+          flex-wrap: nowrap !important;
+          font-size: 0.9rem;
+        }
+        
+        :global(.rbc-toolbar button) {
+          padding: 5px 8px !important;
+          margin: 0 1px !important;
+        }
+        
+        :global(.rbc-btn-group) {
+          white-space: nowrap;
+          margin: 0 2px !important;
+        }
+        
+        /* Fix for potential z-index issues */
+        :global(.rbc-calendar) {
+          z-index: 1;
+        }
+        
+        /* Improve event display */
+        :global(.rbc-event) {
+          padding: 2px 3px !important;
+        }
       `}</style>
     </div>
   );

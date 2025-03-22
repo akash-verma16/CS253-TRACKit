@@ -57,7 +57,7 @@ app.use('/api/student', require('./routes/student.routes'));
 app.use('/api/faculty', require('./routes/faculty.routes'));
 app.use('/api/result', require('./routes/result.routes'));
 app.use('/api/admin', require('./routes/admin.routes'));
-
+app.use('/api/events', require('./routes/event.routes'));
 // Log all registered routes
 const listRoutes = (app) => {
   console.log('Registered routes:');
