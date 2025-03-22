@@ -1,6 +1,5 @@
 import React from 'react';
 import { CgProfile } from "react-icons/cg";
-import { FiLogOut } from "react-icons/fi"; // Logout icon
 import student from '../../assets/student.png';
 import faculty from '../../assets/faculty.png';
 import addCourse from "../../assets/addCourse.png";
@@ -8,46 +7,72 @@ import cntDev from "../../assets/ContactDeveloper.png";
 import manageUser from "../../assets/manageUsers.png";
 import manageCourse from "../../assets/manageCourse.png";
 import { useAuth } from '../../contexts/AuthContext';
+import LogoutButton from '../../components/LogoutButton';
 import { useNavigate } from 'react-router-dom';
 
 export default function Admin() {
   const navigate = useNavigate();
-  const { logout } = useAuth(); // Assuming logout function is available
+  const { currentUser } = useAuth();
 
+  // Define all admin options in a single array
   const adminOptions = [
-    { id: 1, title: "Add Student", image: student, path: '/admin/add-student' },
-    { id: 2, title: "Add Faculty", image: faculty, path: '/admin/add-faculty' },
-    { id: 3, title: "Create Courses", image: addCourse, path: '/admin/create-course' },
-    { id: 4, title: "Manage Courses", image: manageCourse, path: '/admin/manage-courses' },
-    { id: 5, title: "Manage Users", image: manageUser, path: '/admin/manage-users' },
-    { id: 6, title: "Contact Developers", image: cntDev, path: '/admin/contact-developers' }
+    {
+      id: 1,
+      title: "Add Student",
+      image: student,
+      path: '/admin/add-student'
+    },
+    {
+      id: 2,
+      title: "Add Faculty",
+      image: faculty,
+      path: '/admin/add-faculty' 
+    },
+    {
+      id: 3,
+      title: "Create Courses",
+      image: addCourse,
+      path: '/admin/create-course'
+    },
+    {
+      id: 4,
+      title: "Manage Courses",
+      image: manageCourse,
+      path: '/admin/manage-courses'
+    },
+    {
+      id: 5,
+      title: "Manage Users",
+      image: manageUser,
+      path: '/admin/manage-users'
+    },
+    {
+      id: 6,
+      title: "Contact Developers",
+      image: cntDev,
+      path: '/admin/contact-developers'
+    }
   ];
 
+  // Generic handler for navigation
   const handleNavigation = (path) => {
     navigate(path);
   };
 
   return (
     <div className='bg-[#F5F5F5] h-screen w-full'>
-      {/* Header */}
-      <div className="fixed top-0 left-0 right-0 bg-white px-8 py-5 shadow-lg z-10 flex justify-between items-center">
-        <span 
-          className="text-4xl font-semibold cursor-pointer" 
-          onClick={() => navigate("/admin")}
-        >
-          TRACKit
-        </span>
-        <h1 className="text-2xl font-semibold text-gray-700">Welcome System Admin</h1>
-        <div className="flex items-center gap-6">
-          <FiLogOut 
-            className="text-[35px] text-red-500 cursor-pointer hover:text-red-600 transition-all" 
-            onClick={logout} 
-          />
+      <nav className='flex justify-between p-5 shadow-md'>
+        <p className='text-[33px] font-semibold ml-3'>TRACKit</p>
+        <p className='text-[33px] font-semibold'>
+          Welcome System Admin: {currentUser?.firstName} {currentUser?.lastName}
+        </p>
+        <div className="flex items-center gap-4">
+          <LogoutButton className="mr-4" />
+          <CgProfile className='text-[45px] m-2'></CgProfile>
         </div>
-      </div>
+      </nav>
 
-      {/* Main Content */}
-      <div className='w-full pt-[100px]'>
+      <div className='w-full'>
         <div className='w-10/12 m-auto grid grid-cols-3'>
           {adminOptions.map((option) => (
             <div key={option.id} className='m-auto my-8'>
