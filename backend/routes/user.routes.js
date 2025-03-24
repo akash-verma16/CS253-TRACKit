@@ -21,6 +21,9 @@ router.get('/:id', userController.getUserById);
 // Update user's own profile
 router.put('/:id', userController.updateProfile);
 
+// Change user's password
+router.put('/:id/password', userController.changePassword);
+
 // Get user courses - Protected with authorization check
 router.get('/:id/courses', userController.getUserCourses);
 

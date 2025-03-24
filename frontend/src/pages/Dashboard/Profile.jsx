@@ -2,6 +2,9 @@ import React, { useEffect, useState } from 'react';
 import imgMy from '../../assets/ved.png';
 import texture from '../../assets/textures.jpg';
 import { authFetch } from '../../services/auth';
+import { PiStudentDuotone } from "react-icons/pi";
+import { FaRegUser } from "react-icons/fa";
+
 
 export default function Profile() {
   const [profileData, setProfileData] = useState(null);
@@ -63,8 +66,12 @@ export default function Profile() {
                 backgroundPosition: 'center' 
               }}
             >
+            </div> 
+            <div className='absolute top-[31.5%] left-[44%] mx-auto border rounded-full p-2 bg-white'>
+              {
+              displayData?.userType === 'student' ?(<PiStudentDuotone className='text-[5.4rem]'></PiStudentDuotone >):(<FaRegUser className='text-[4.5rem] m-2'></FaRegUser>)
+              }  
             </div>
-            <img src={imgMy} alt="img" className='flex flex-col items-start w-[130px] aspect-square rounded-full absolute right-[42%] top-[29%]' />
 
             <div>
                 <p className='text-[50px] mt-[60px] text-center'>{displayData?.firstName} {displayData?.lastName}</p>

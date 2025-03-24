@@ -1,6 +1,8 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useCourses } from '../../contexts/CourseContext';
+// Import the Calendar component
+import MyCalendar from '../../components/Calendar_Dashboard';
 
 export default function Course() {
   const { courses, loading, error } = useCourses();
@@ -52,11 +54,10 @@ export default function Course() {
         }
       </div>
 
-      <iframe 
-        src="https://calendar.google.com/calendar/embed?height=550&wkst=1&ctz=Asia%2FKolkata&mode=WEEK&showTz=0&showTitle=0&showPrint=0&src=dmVkdmlzaHdha2FybWEyMjZAZ21haWwuY29t&src=ZW4uaW5kaWFuI2hvbGlkYXlAZ3JvdXAudi5jYWxlbmRhci5nb29nbGUuY29t&color=%23039BE5&color=%230B8043" 
-        className='w-[92%] m-auto h-[520px] border rounded-lg shadow-xl my-5'
-        title="Course Calendar"
-      ></iframe>
+      {/* Replace the iframe with MyCalendar component */}
+      <div className='w-[92%] m-auto h-[520px] border rounded-lg shadow-xl my-5 bg-white p-4'>
+        <MyCalendar />
+      </div>
 
       <div className='flex gap-3 w-[92%] justify-evenly items-center mb-6 flex-wrap'>
         {

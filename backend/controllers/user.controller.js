@@ -160,3 +160,62 @@ exports.updateProfile = async (req, res) => {
     });
   }
 };
+
+// Change user password
+exports.changePassword = async (req, res) => {
+  try {
+    // Users can only change their own password
+    if (req.userId != req.params.id) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied: You can only change your own password'
+      });
+    }
+    
+    const { oldPassword, newPassword } = req.body;
+    
+    // Validate inputs
+    if (!oldPassword || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'Old password and new password are required'
+      });
+    }
+    
+    // Get user with password
+    const user = await User.findByPk(req.userId);
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+    
+    // Verify old password
+    const passwordIsValid = bcrypt.compareSync(oldPassword, user.password);
+    if (!passwordIsValid) {
+      return res.status(401).json({
+        success: false,
+        message: 'Current password is incorrect'
+      });
+    }
+    
+    // Hash new password
+    const hashedPassword = bcrypt.hashSync(newPassword, 8);
+    
+    // Update password
+    await user.update({ password: hashedPassword });
+    
+    res.status(200).json({
+      success: true,
+      message: 'Password changed successfully'
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Some error occurred while changing the password'
+    });
+  }
+};
+

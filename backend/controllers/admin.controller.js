@@ -11,7 +11,11 @@ const Course = db.Course;
 exports.getAllUsers = async (req, res) => {
   try {
     const users = await User.findAll({
-      attributes: { exclude: ['password'] }
+      attributes: { exclude: ['password'] },
+      include: [
+        { model: Student, as: 'student', attributes: ['rollNumber', 'enrollmentYear', 'major'] },
+        { model: Faculty, as: 'faculty', attributes: ['department', 'position'] }
+      ]
     });
     res.status(200).json({
       success: true,
@@ -312,21 +316,70 @@ exports.createUser = async (req, res) => {
 
 // Bulk create students from CSV
 exports.bulkCreateStudents = async (req, res) => {
-  if (!req.files || !req.files.file) {
+  // More flexible file detection logic
+  console.log("Request files structure:", req.files ? Object.keys(req.files) : "No req.files");
+  console.log("Request file structure:", req.file ? "req.file exists" : "No req.file");
+  
+  const uploadedFile = req.files?.file || // express-fileupload style
+                      (req.files && Object.values(req.files)[0]) || // Alternative access
+                      req.file; // multer style
+  
+  if (!uploadedFile) {
     return res.status(400).json({
       success: false,
-      message: 'Please upload a CSV file'
+      message: 'Please upload a CSV file',
+      debug: { 
+        hasFiles: !!req.files,
+        hasFile: !!req.file,
+        filesKeys: req.files ? Object.keys(req.files) : [],
+        contentType: req.headers['content-type'] 
+      }
     });
   }
+
+  // Log file information for debugging
+  console.log("Processing file:", uploadedFile.name || uploadedFile.originalname);
+  console.log("File size:", uploadedFile.size, "bytes");
+  console.log("File type:", uploadedFile.mimetype);
 
   const t = await db.sequelize.transaction();
   
   try {
-    const csvData = req.files.file.data.toString('utf8');
+    // Get file data regardless of upload library
+    let csvData;
+    if (uploadedFile.data) {
+      // For express-fileupload
+      csvData = uploadedFile.data.toString('utf8');
+    } else if (uploadedFile.buffer) {
+      // For multer
+      csvData = uploadedFile.buffer.toString('utf8');
+    } else {
+      // Try to read from the file path (less common)
+      try {
+        const fs = require('fs');
+        csvData = fs.readFileSync(uploadedFile.path, 'utf8');
+      } catch (readError) {
+        throw new Error('Unable to read file content');
+      }
+    }
+    
+    console.log("CSV Data length:", csvData.length, "characters");
+    if (csvData.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'The uploaded CSV file is empty'
+      });
+    }
+
+    // ...existing code to process the CSV...
     const records = parse(csvData, {  
       columns: true,
       skip_empty_lines: true,
-      trim: true
+      trim: true,
+      skipLinesWithEmpty: true,
+      relaxColumnCount: true,
+      relaxQuotes: true,
+      delimiter: ','
     });
 
     const requiredColumns = ['username', 'email', 'password', 'firstName', 'lastName', 
@@ -441,30 +494,81 @@ exports.bulkCreateStudents = async (req, res) => {
     });
   } catch (error) {
     await t.rollback();
+    console.error("CSV Processing Error:", error);
     res.status(400).json({
       success: false,
-      message: error.message || 'Error processing CSV file'
+      message: error.message || 'Error processing CSV file',
+      hint: 'Make sure the CSV file contains the required columns for students'
     });
   }
 };
 
 // Bulk create faculty from CSV
 exports.bulkCreateFaculty = async (req, res) => {
-  if (!req.files || !req.files.file) {
+  // More flexible file detection logic
+  console.log("Request files structure:", req.files ? Object.keys(req.files) : "No req.files");
+  console.log("Request file structure:", req.file ? "req.file exists" : "No req.file");
+  
+  const uploadedFile = req.files?.file || // express-fileupload style
+                      (req.files && Object.values(req.files)[0]) || // Alternative access
+                      req.file; // multer style
+  
+  if (!uploadedFile) {
     return res.status(400).json({
       success: false,
-      message: 'Please upload a CSV file'
+      message: 'Please upload a CSV file',
+      debug: { 
+        hasFiles: !!req.files,
+        hasFile: !!req.file,
+        filesKeys: req.files ? Object.keys(req.files) : [],
+        contentType: req.headers['content-type'] 
+      }
     });
   }
+
+  // Log file information for debugging
+  console.log("Processing file:", uploadedFile.name || uploadedFile.originalname);
+  console.log("File size:", uploadedFile.size, "bytes");
+  console.log("File type:", uploadedFile.mimetype);
 
   const t = await db.sequelize.transaction();
   
   try {
-    const csvData = req.files.file.data.toString('utf8');
+    // Get file data regardless of upload library
+    let csvData;
+    if (uploadedFile.data) {
+      // For express-fileupload
+      csvData = uploadedFile.data.toString('utf8');
+    } else if (uploadedFile.buffer) {
+      // For multer
+      csvData = uploadedFile.buffer.toString('utf8');
+    } else {
+      // Try to read from the file path (less common)
+      try {
+        const fs = require('fs');
+        csvData = fs.readFileSync(uploadedFile.path, 'utf8');
+      } catch (readError) {
+        throw new Error('Unable to read file content');
+      }
+    }
+    
+    console.log("CSV Data length:", csvData.length, "characters");
+    if (csvData.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'The uploaded CSV file is empty'
+      });
+    }
+
+    // ...existing code to process the CSV...
     const records = parse(csvData, {  
       columns: true,
       skip_empty_lines: true,
-      trim: true
+      trim: true,
+      skipLinesWithEmpty: true,
+      relaxColumnCount: true,
+      relaxQuotes: true,
+      delimiter: ','
     });
 
     const requiredColumns = ['username', 'email', 'password', 'firstName', 'lastName', 
@@ -563,9 +667,11 @@ exports.bulkCreateFaculty = async (req, res) => {
     });
   } catch (error) {
     await t.rollback();
+    console.error("CSV Processing Error:", error);
     res.status(400).json({
       success: false,
-      message: error.message || 'Error processing CSV file'
+      message: error.message || 'Error processing CSV file',
+      hint: 'Make sure the CSV file contains the required columns for faculty'
     });
   }
 };
@@ -573,17 +679,8 @@ exports.bulkCreateFaculty = async (req, res) => {
 // Update user
 exports.updateUser = async (req, res) => {
   try {
-    const userId = req.params.userId;
-    const updateData = { ...req.body };
-    
-    if (updateData.password) {
-      updateData.password = bcrypt.hashSync(updateData.password, 8);
-    }
-    
-    delete updateData.userType;
-    
-    const [updated] = await User.update(updateData, {
-      where: { id: userId }
+    const [updated] = await User.update(req.body, {
+      where: { id: req.params.userId }
     });
     
     if (updated === 0) {
@@ -604,6 +701,7 @@ exports.updateUser = async (req, res) => {
     });
   }
 };
+
 
 // Delete user
 exports.deleteUser = async (req, res) => {
@@ -708,18 +806,22 @@ exports.getAllCourses = async (req, res) => {
 
 // Bulk create courses from CSV
 exports.bulkCreateCourses = async (req, res) => {
-  // More detailed request inspection for debugging
-  console.log("Request body:", req.body);
-  console.log("Request files:", req.files);
-  console.log("Request headers:", req.headers);
+  // Check both req.files and req.file to support different upload libraries
+  console.log("Request files structure:", req.files ? Object.keys(req.files) : "No req.files");
+  console.log("Request file structure:", req.file ? "req.file exists" : "No req.file");
   
-  if (!req.files || Object.keys(req.files).length === 0 || !req.files.file) {
-    console.log("No files were uploaded or file field is missing");
+  // More flexible file detection logic
+  const uploadedFile = req.files?.file || // express-fileupload style
+                      (req.files && Object.values(req.files)[0]) || // Alternative access
+                      req.file; // multer style
+  
+  if (!uploadedFile) {
     return res.status(400).json({
       success: false,
       message: 'Please upload a CSV file',
       debug: { 
         hasFiles: !!req.files,
+        hasFile: !!req.file,
         filesKeys: req.files ? Object.keys(req.files) : [],
         contentType: req.headers['content-type'] 
       }
@@ -727,45 +829,40 @@ exports.bulkCreateCourses = async (req, res) => {
   }
 
   // Log file information for debugging
-  console.log("Received file:", req.files.file.name);
-  console.log("File size:", req.files.file.size, "bytes");
-  console.log("File mimetype:", req.files.file.mimetype);
-
-  // Check if file is too large (optional, adjust size as needed)
-  if (req.files.file.size > 10 * 1024 * 1024) { // 10MB
-    return res.status(413).json({
-      success: false,
-      message: 'File too large. Maximum size is 10MB.'
-    });
-  }
+  console.log("Processing file:", uploadedFile.name || uploadedFile.originalname);
+  console.log("File size:", uploadedFile.size, "bytes");
+  console.log("File type:", uploadedFile.mimetype);
 
   const t = await db.sequelize.transaction();
   
   try {
-    // Read file data with error handling
+    // Get file data regardless of upload library
     let csvData;
-    try {
-      csvData = req.files.file.data.toString('utf8');
-      console.log("CSV Data length:", csvData.length, "characters");
-      if (csvData.length > 0) {
-        console.log("CSV Data (first 200 chars):", csvData.substring(0, 200));
-      } else {
-        console.log("Warning: CSV data is empty");
-        return res.status(400).json({
-          success: false,
-          message: 'The uploaded CSV file is empty'
-        });
+    if (uploadedFile.data) {
+      // For express-fileupload
+      csvData = uploadedFile.data.toString('utf8');
+    } else if (uploadedFile.buffer) {
+      // For multer
+      csvData = uploadedFile.buffer.toString('utf8');
+    } else {
+      // Try to read from the file path (less common)
+      try {
+        const fs = require('fs');
+        csvData = fs.readFileSync(uploadedFile.path, 'utf8');
+      } catch (readError) {
+        throw new Error('Unable to read file content');
       }
-    } catch (error) {
-      console.error("Error reading CSV file:", error);
+    }
+    
+    console.log("CSV Data length:", csvData.length, "characters");
+    if (csvData.length === 0) {
       return res.status(400).json({
         success: false,
-        message: 'Error reading CSV file. Please check file format.',
-        error: error.message
+        message: 'The uploaded CSV file is empty'
       });
     }
 
-    // Parse the CSV with more robust settings and detailed error handling
+    // Parse the CSV with more robust settings
     let records;
     try {
       records = parse(csvData, {  
@@ -773,9 +870,9 @@ exports.bulkCreateCourses = async (req, res) => {
         skip_empty_lines: true,
         trim: true,
         skipLinesWithEmpty: true,
-        relaxColumnCount: true, // Be more flexible with column counts
-        relaxQuotes: true, // Handle quotes more flexibly
-        delimiter: ',' // Explicitly set comma as delimiter
+        relaxColumnCount: true,
+        relaxQuotes: true,
+        delimiter: ','
       });
       
       console.log("Successfully parsed CSV with", records.length, "records");
@@ -794,8 +891,6 @@ exports.bulkCreateCourses = async (req, res) => {
         error: parseError.message
       });
     }
-
-    // ...rest of the function stays the same...
     
     // Map expected CSV headers to model fields - handle both formats
     const headerMap = {
@@ -810,25 +905,14 @@ exports.bulkCreateCourses = async (req, res) => {
       'description': 'description'
     };
     
-    const requiredFields = ['code', 'name', 'credits', 'semester', 'description'];
-    
-    if (!records || records.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: 'CSV file is empty or could not be parsed correctly'
-      });
-    }
-    
-    const firstRecord = records[0];
-    console.log("First record:", firstRecord);
-    console.log("First record columns:", Object.keys(firstRecord));
+    const requiredFields = ['code', 'name', 'credits', 'semester'];
     
     // Check if all required columns exist in the CSV (with any valid header format)
     const missingColumns = [];
     const foundMappings = {};
     
     // First, create a mapping from the CSV headers to our field names
-    for (const header of Object.keys(firstRecord)) {
+    for (const header of Object.keys(records[0])) {
       const normalizedHeader = header.toLowerCase().trim().replace(/\s+/g, '');
       if (headerMap[normalizedHeader] || headerMap[header.toLowerCase().trim()]) {
         const fieldName = headerMap[normalizedHeader] || headerMap[header.toLowerCase().trim()];
@@ -849,7 +933,7 @@ exports.bulkCreateCourses = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: `Missing required columns in CSV: ${missingColumns.join(', ')}`,
-        foundColumns: Object.keys(firstRecord),
+        foundColumns: Object.keys(records[0]),
         expectedColumnFormats: Object.keys(headerMap).filter(key => 
           requiredFields.includes(headerMap[key])),
         hint: 'Make sure your CSV contains the required headers: course code, course name, credits, semester'
@@ -857,30 +941,8 @@ exports.bulkCreateCourses = async (req, res) => {
     }
 
     // Extract all course codes from the CSV file to check for duplicates
-    const csvCourseCodes = [];
-    let normalizedRecords = [];
-    
-    // First pass: normalize all records and collect course codes
-    for (const [index, record] of records.entries()) {
-      // Map CSV headers to model fields using the mappings we found
-      const normalizedRecord = {};
-      
-      for (const [fieldName, headerName] of Object.entries(foundMappings)) {
-        normalizedRecord[fieldName] = record[headerName];
-      }
-      
-      // Also check for description which is optional
-      if (foundMappings['description']) {
-        normalizedRecord.description = record[foundMappings['description']] || '';
-      }
-      
-      // Collect all course codes for duplicate checking
-      if (normalizedRecord.code) {
-        csvCourseCodes.push(normalizedRecord.code.trim().toUpperCase());
-      }
-      
-      normalizedRecords.push(normalizedRecord);
-    }
+    const csvCourseCodes = records.map(record => 
+      record[foundMappings.code].trim().toUpperCase());
     
     // Check if any course codes in the CSV already exist in the database
     const existingCourses = await Course.findAll({
@@ -906,25 +968,33 @@ exports.bulkCreateCourses = async (req, res) => {
     const createdCourses = [];
     const errors = [];
 
-    // Second pass: Create the courses after we've confirmed no duplicates
-    for (const [index, normalizedRecord] of normalizedRecords.entries()) {
+    // Process each record from the CSV
+    for (const [index, record] of records.entries()) {
       try {
-        // Basic validation with better error messages
-        if (!normalizedRecord.code) {
+        // Extract values from the record using our mappings
+        const code = record[foundMappings.code]?.trim();
+        const name = record[foundMappings.name]?.trim();
+        const creditsStr = record[foundMappings.credits]?.trim();
+        const semester = record[foundMappings.semester]?.trim();
+        const description = foundMappings.description ? 
+          record[foundMappings.description]?.trim() : '';
+
+        // Basic validation
+        if (!code) {
           throw new Error('Missing course code');
         }
-        if (!normalizedRecord.name) {
+        if (!name) {
           throw new Error('Missing course name');
         }
-        if (!normalizedRecord.credits) {
+        if (!creditsStr) {
           throw new Error('Missing credits');
         }
-        if (!normalizedRecord.semester) {
+        if (!semester) {
           throw new Error('Missing semester');
         }
 
         // Credits validation
-        const credits = parseInt(normalizedRecord.credits);
+        const credits = parseInt(creditsStr);
         if (isNaN(credits)) {
           throw new Error('Credits must be a number');
         }
@@ -932,18 +1002,20 @@ exports.bulkCreateCourses = async (req, res) => {
           throw new Error('Credits must be between 1 and 20');
         }
 
-        // Semester validation
+        // Semester validation - more flexible with case
+        const normalizedSemester = semester.toLowerCase();
         const validSemesters = ['fall', 'spring', 'summer'];
-        if (!validSemesters.includes(normalizedRecord.semester.toLowerCase())) {
+        if (!validSemesters.includes(normalizedSemester)) {
           throw new Error('Invalid semester (must be Fall, Spring, or Summer)');
         }
 
+        // Create the course
         const course = await Course.create({
-          code: normalizedRecord.code,
-          name: normalizedRecord.name,
-          description: normalizedRecord.description || '',
+          code: code,
+          name: name,
+          description: description || '',
           credits: credits,
-          semester: normalizedRecord.semester,
+          semester: semester.charAt(0).toUpperCase() + semester.slice(1).toLowerCase(), // Proper case
         }, { transaction: t });
 
         createdCourses.push({
@@ -951,7 +1023,7 @@ exports.bulkCreateCourses = async (req, res) => {
           code: course.code
         });
       } catch (error) {
-        errors.push(`Row ${index + 1}: ${error.message}`);
+        errors.push(`Row ${index + 2}: ${error.message}`); // +2 because row 1 is header
       }
     }
 

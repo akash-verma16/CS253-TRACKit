@@ -23,4 +23,7 @@ router.delete('/exam/:examId/delete', resultController.deleteExam);
 // Route to modify an exam and associated results
 router.put('/exam/:examId/modify', resultController.modifyExam);
 
+// route to get exams with details for a course.
+router.get('/course/:courseId/exams/details', resultController.getExamsWithDetailsForCourse);
+
 module.exports = router;

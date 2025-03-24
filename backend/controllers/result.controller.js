@@ -237,7 +237,33 @@ exports.getExamDetailsAndResults = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-  
+
+// Get all exams with complete details for a course
+// http://localhost:3001/api/result/course/1/exams/details
+exports.getExamsWithDetailsForCourse = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const course = await Course.findByPk(courseId, {
+      include: [{
+        model: Exam,
+        as: 'exams',
+        attributes: ['id', 'examName', 'totalMarks', 'weightage', 'mean', 'median', 'max', 'deviation']
+      }]
+    });
+
+    if (!course) {
+      return res.status(404).json({ message: 'Course not found' });
+    }
+
+    const exams = course.exams.length > 0 ? course.exams : null;
+
+    res.status(200).json(exams);
+  }
+  catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 //used by faculty to get exam
 // Get exam names and IDs for a course
 //http://localhost:3001/api/result/course/1/exams

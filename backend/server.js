@@ -5,6 +5,7 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const db = require('./models');
 const path = require('path');
+const fileUpload = require('express-fileupload');
 
 const app = express();
 
@@ -17,10 +18,10 @@ app.use(cors({
   credentials: true
 }));
 
-// Rate limiting
+//Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100 // limit each IP to 100 requests per windowMs
+  max: 10000 // limit each IP to 100 requests per windowMs
 });
 app.use(limiter);
 
@@ -38,6 +39,9 @@ app.use((req, res, next) => {
   next();
 });
 
+// Import routes
+
+
 // Routes
 app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/users', require('./routes/user.routes'));
@@ -49,6 +53,8 @@ app.use('/api/student', require('./routes/student.routes'));
 app.use('/api/faculty', require('./routes/faculty.routes'));
 app.use('/api/result', require('./routes/result.routes'));
 app.use('/api/admin', require('./routes/admin.routes'));
+app.use('/api/events', require('./routes/event.routes'));
+app.use('/api/forum', require('./routes/forum.routes'));
 
 // Log all registered routes
 const listRoutes = (app) => {
@@ -89,6 +95,7 @@ db.sequelize.sync({ force: shouldForceSync })
   .catch(err => {
     console.error('Failed to sync database:', err);
   });
+  
 
 // Add this to server.js before app.listen()
 console.log('Registered routes:');

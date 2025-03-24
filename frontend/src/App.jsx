@@ -17,7 +17,8 @@ import ManageCourses from "./pages/Admin/ManageCourses";
 import ContactDevelopers from "./pages/Admin/ContactDevelopers";
 import { NotificationProvider } from './contexts/NotificationContext';
 import NotificationContainer from './components/Notification';
-
+// Check this import statement:
+import { EventProvider } from './contexts/EventContext';
 // Wrapper component to handle course params
 const CourseWrapper = () => {
   const { courseCode } = useParams();
@@ -92,10 +93,12 @@ function App() {
     <Router>
       <AuthProvider>
         <CourseProvider>
+          <EventProvider>
           <NotificationProvider>
             <NotificationContainer />
             <AppRoutes />
           </NotificationProvider>
+          </EventProvider>
         </CourseProvider>
       </AuthProvider>
     </Router>

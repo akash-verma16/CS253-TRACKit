@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CgProfile } from "react-icons/cg";
 import axios from 'axios';
@@ -18,10 +18,13 @@ export default function AddFaculty() {
     userType: 'faculty'
   });
   const [csvFile, setCsvFile] = useState(null);
+  const [csvFileName, setCsvFileName] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [fileError, setFileError] = useState('');
   const navigate = useNavigate();
   const { currentUser } = useAuth();
+  const fileInputRef = useRef(null);
 
   const handleChange = (e) => {
     setFacultyData({
@@ -31,7 +34,40 @@ export default function AddFaculty() {
   };
 
   const handleFileChange = (e) => {
-    setCsvFile(e.target.files[0]);
+    setFileError('');
+    const file = e.target.files[0];
+    
+    if (!file) {
+      setCsvFile(null);
+      setCsvFileName('');
+      return;
+    }
+
+    // More lenient file type checking
+    const validExtensions = ['.csv', '.txt'];
+    const fileExtension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+    
+    if (!validExtensions.includes(fileExtension) && 
+        file.type !== 'text/csv' && 
+        file.type !== 'text/plain' &&
+        file.type !== 'application/vnd.ms-excel') {
+      setFileError(`Please select a valid CSV file. Received file of type: ${file.type}`);
+      setCsvFile(null);
+      setCsvFileName('');
+      return;
+    }
+
+    // Validate file size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      setFileError('File size too large. Maximum size is 5MB.');
+      setCsvFile(null);
+      setCsvFileName('');
+      return;
+    }
+
+    setCsvFile(file);
+    setCsvFileName(file.name);
+    console.log("Selected file:", file.name, "Size:", file.size, "Type:", file.type);
   };
 
   // Create an axios instance that always includes the auth token
@@ -112,6 +148,7 @@ export default function AddFaculty() {
       
       setSuccess(response.data.message);
       setCsvFile(null);
+      setCsvFileName('');
       // Reset the file input
       const fileInput = document.querySelector('input[type="file"]');
       if (fileInput) fileInput.value = '';
@@ -269,24 +306,63 @@ export default function AddFaculty() {
               </button>
             </form>
           ) : (
-            <form onSubmit={handleBulkSubmit}>
+            <form onSubmit={handleBulkSubmit} encType="multipart/form-data">
               <div className="mb-6">
                 <label className="block text-gray-700 text-sm font-bold mb-2">Upload CSV File:</label>
-                <input
-                  type="file"
-                  accept=".csv"
-                  onChange={handleFileChange}
-                  required
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                />
-                <p className="text-sm text-gray-500 mt-2">
-                  CSV file should contain columns: username, firstName, lastName, email, department, position, password
-                </p>
+                <div className="flex items-center">
+                  <input
+                    type="file"
+                    accept=".csv"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    required
+                    className="hidden"
+                    id="csv-file-input"
+                  />
+                  <label 
+                    htmlFor="csv-file-input"
+                    className="cursor-pointer bg-gray-200 hover:bg-gray-300 py-2 px-4 rounded flex-grow text-center"
+                  >
+                    {csvFileName || "Choose a CSV file"}
+                  </label>
+                  {csvFileName && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCsvFile(null);
+                        setCsvFileName('');
+                        if (fileInputRef.current) {
+                          fileInputRef.current.value = '';
+                        }
+                      }}
+                      className="ml-2 text-red-500 hover:text-red-700"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+                {fileError && (
+                  <p className="text-red-500 text-xs mt-1">{fileError}</p>
+                )}
+                <div className="text-sm text-gray-500 mt-2">
+                  <p className="font-bold">CSV file must include these columns:</p>
+                  <ul className="list-disc pl-5 mt-1">
+                    <li><span className="font-medium">username</span>: Unique username (required)</li>
+                    <li><span className="font-medium">firstName</span>: Faculty's first name (required)</li>
+                    <li><span className="font-medium">lastName</span>: Faculty's last name (required)</li>
+                    <li><span className="font-medium">email</span>: Valid email address (required)</li>
+                    <li><span className="font-medium">department</span>: Faculty's department (required)</li>
+                    <li><span className="font-medium">position</span>: Faculty's position (required)</li>
+                    <li><span className="font-medium">password</span>: Initial password (required)</li>
+                  </ul>
+                  <p className="mt-2 text-amber-600 font-medium">Important: Make sure your CSV file uses commas (,) as separators and includes a header row.</p>
+                </div>
               </div>
               <button
                 type="submit"
-                className="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline
-                hover:scale-95 transition-all duration-200"
+                disabled={!csvFile}
+                className={`w-full ${!csvFile ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-700 cursor-pointer'} text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline
+                hover:scale-95 transition-all duration-200`}
               >
                 Upload and Add Faculty
               </button>
