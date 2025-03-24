@@ -31,17 +31,31 @@ exports.getLecturesByCourse = async (req, res) => {
       heading: heading.title,
       subheadings: heading.subheadings.map((subheading) => ({
         subheading: subheading.title,
-        lectures: subheading.lectures.map((lecture) => ({
-          ...lecture.dataValues,
-          pdfUrls: JSON.parse(lecture.pdfPaths || '[]').map((filePath) => // Changed from filePaths to pdfUrls
-            `${req.protocol}://${req.get('host')}/${filePath}`
-          ),
-          filePaths: JSON.parse(lecture.pdfPaths || '[]').map((filePath) => ({
-            url: `${req.protocol}://${req.get('host')}/${filePath}`,
-            name: path.basename(filePath),
-            type: path.extname(filePath).toLowerCase()
-          }))
-        })),
+        lectures: subheading.lectures.map((lecture) => {
+          // Add debug logging
+          console.log(`Processing lecture [${lecture.id}]: ${lecture.lectureTitle}`);
+          console.log(`PDF paths stored: ${lecture.pdfPaths}`);
+          
+          let fileUrls = [];
+          try {
+            const paths = JSON.parse(lecture.pdfPaths || '[]');
+            console.log(`Parsed paths for lecture ${lecture.id}:`, paths);
+            
+            fileUrls = paths.map((filePath) => ({
+              url: `${req.protocol}://${req.get('host')}/${filePath}`,
+              name: path.basename(filePath),
+              type: path.extname(filePath).toLowerCase(), // Generalized for all file types
+            }));
+          } catch (error) {
+            console.error(`Error parsing PDF paths for lecture ${lecture.id}:`, error);
+            fileUrls = [];
+          }
+          
+          return {
+            ...lecture.dataValues,
+            fileUrls,
+          };
+        }),
       })),
     }));
 
@@ -76,14 +90,11 @@ exports.getLecture = async (req, res) => {
 
     const lectureWithFiles = {
       ...lecture.dataValues,
-      pdfUrls: JSON.parse(lecture.pdfPaths || '[]').map(filePath => // Added pdfUrls
-        `${req.protocol}://${req.get('host')}/${filePath}`
-      ),
-      filePaths: JSON.parse(lecture.pdfPaths || '[]').map(filePath => ({
+      fileUrls: JSON.parse(lecture.pdfPaths || '[]').map((filePath) => ({
         url: `${req.protocol}://${req.get('host')}/${filePath}`,
         name: path.basename(filePath),
-        type: path.extname(filePath).toLowerCase()
-      }))
+        type: path.extname(filePath).toLowerCase(), // Generalized for all file types
+      })),
     };
 
     res.status(200).json({
@@ -103,7 +114,7 @@ exports.getLecture = async (req, res) => {
 exports.createLecture = async (req, res) => {
   try {
     const { heading, subheading, lectureTitle, lectureDescription, youtubeLink, courseId } = req.body;
-    const filePaths = req.files ? req.files.map((file) => path.join('uploads', file.filename)) : [];
+    const filePaths = req.files ? req.files.map((file) => path.join('uploads', file.filename)) : []; // Generalized for all file types
 
     // First find the heading by title
     const headingRecord = await Heading.findOne({
@@ -311,7 +322,11 @@ exports.updateLecture = async (req, res) => {
   try {
     const { courseId, id: lectureId } = req.params;
     const { lectureTitle, lectureDescription, youtubeLink, heading, subheading } = req.body;
-    const newFilePaths = req.files ? req.files.map((file) => path.join('uploads', file.filename)) : [];
+    const newFilePaths = req.files ? req.files.map((file) => path.join('uploads', file.filename)) : []; // Generalized for all file types
+
+    console.log('Update lecture request received:');
+    console.log('Files:', req.files ? req.files.length : 0);
+    console.log('New file paths:', newFilePaths);
 
     const lecture = await Lecture.findByPk(lectureId);
 
@@ -321,6 +336,8 @@ exports.updateLecture = async (req, res) => {
         message: 'Lecture not found',
       });
     }
+
+    console.log('Original lecture PDF paths:', lecture.pdfPaths);
 
     // If heading and subheading are provided, update the subheadingId association
     if (heading && subheading && courseId) {
@@ -356,62 +373,52 @@ exports.updateLecture = async (req, res) => {
       await lecture.update({ subheadingId: subheadingRecord.id });
     }
 
+    // Handle file paths properly
+    let updatedFilePaths = [];
+    
     try {
-      // Handle file paths properly
-      let updatedFilePaths;
-      
-      if (lecture.pdfPaths) {
-        const existingFilePaths = JSON.parse(lecture.pdfPaths || '[]');
+      // Only try to parse if lecture.pdfPaths exists and is not null
+      if (lecture.pdfPaths && lecture.pdfPaths !== 'null') {
+        const existingFilePaths = JSON.parse(lecture.pdfPaths);
+        console.log('Existing file paths parsed successfully:', existingFilePaths);
         updatedFilePaths = [...existingFilePaths, ...newFilePaths];
       } else {
+        console.log('No existing file paths or null value found');
         updatedFilePaths = [...newFilePaths];
       }
-      
-      console.log("Updating lecture with:", {
-        lectureTitle: lectureTitle || lecture.lectureTitle,
-        lectureDescription: lectureDescription || lecture.lectureDescription,
-        youtubeLink: youtubeLink || lecture.youtubeLink,
-        filePaths: updatedFilePaths.length
-      });
-
-      await lecture.update({
-        lectureTitle: lectureTitle || lecture.lectureTitle,
-        lectureDescription: lectureDescription || lecture.lectureDescription,
-        youtubeLink: youtubeLink || lecture.youtubeLink,
-        pdfPaths: JSON.stringify(updatedFilePaths), // Save updated file paths
-      });
-
-      const fileUrls = updatedFilePaths.map(filePath => ({
-        url: `${req.protocol}://${req.get('host')}/${filePath}`,
-        name: path.basename(filePath),
-        type: path.extname(filePath).toLowerCase()
-      }));
-
-      res.status(200).json({
-        success: true,
-        message: 'Lecture updated successfully',
-        data: {
-          ...lecture.dataValues,
-          filePaths: fileUrls
-        }
-      });
     } catch (parseError) {
-      console.error("Error parsing file paths:", parseError);
-      
-      // Fallback to just using new paths
-      await lecture.update({
-        lectureTitle: lectureTitle || lecture.lectureTitle,
-        lectureDescription: lectureDescription || lecture.lectureDescription,
-        youtubeLink: youtubeLink || lecture.youtubeLink,
-        pdfPaths: JSON.stringify(newFilePaths),
-      });
-      
-      res.status(200).json({
-        success: true,
-        message: 'Lecture updated successfully (with files reset)',
-        data: lecture,
-      });
+      console.error('Error parsing existing PDF paths:', parseError);
+      console.log('Setting updatedFilePaths to new files only');
+      updatedFilePaths = [...newFilePaths];
     }
+    
+    console.log('Final updated file paths:', updatedFilePaths);
+    
+    // Update the lecture with all the information
+    await lecture.update({
+      lectureTitle: lectureTitle || lecture.lectureTitle,
+      lectureDescription: lectureDescription || lecture.lectureDescription,
+      youtubeLink: youtubeLink || lecture.youtubeLink,
+      pdfPaths: JSON.stringify(updatedFilePaths), // Save updated file paths
+    });
+
+    // Generate file URLs for response
+    const fileUrls = updatedFilePaths.map((filePath) => ({
+      url: `${req.protocol}://${req.get('host')}/${filePath}`,
+      name: path.basename(filePath),
+      type: path.extname(filePath).toLowerCase(), // Generalized for all file types
+    }));
+
+    console.log('Generated file URLs for response:', fileUrls);
+
+    res.status(200).json({
+      success: true,
+      message: 'Lecture updated successfully',
+      data: {
+        ...lecture.dataValues,
+        fileUrls,
+      },
+    });
   } catch (error) {
     console.error('Error updating lecture:', error);
     res.status(500).json({
@@ -439,7 +446,7 @@ exports.deleteLecture = async (req, res) => {
     pdfPaths.forEach((filePath) => {
       const absolutePath = path.resolve(filePath);
       if (fs.existsSync(absolutePath)) {
-        fs.unlinkSync(absolutePath);
+        fs.unlinkSync(absolutePath); // Generalized for all file types
       }
     });
 
@@ -510,7 +517,7 @@ exports.deleteSubheading = async (req, res) => {
           pdfPaths.forEach(filePath => {
             const absolutePath = path.resolve(filePath);
             if (fs.existsSync(absolutePath)) {
-              fs.unlinkSync(absolutePath);
+              fs.unlinkSync(absolutePath); // Generalized for all file types
             }
           });
         } catch (parseError) {

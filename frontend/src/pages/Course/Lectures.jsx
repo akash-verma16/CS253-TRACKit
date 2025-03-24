@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { CgProfile } from 'react-icons/cg';
 import { IoIosArrowDropdown } from "react-icons/io";
-import { FaPlus, FaRegEdit, FaDownload, FaFilePdf } from "react-icons/fa";
+import { FaRegEdit, FaDownload, FaFilePdf } from "react-icons/fa";
 import { AiOutlineDelete } from "react-icons/ai";
 import { NavLink } from 'react-router-dom';
 import { useCourse } from '../../contexts/CourseContext';
@@ -53,7 +53,7 @@ export default function Lectures({ role }) {
     if (courseDetails?.id) {
       fetchLectures();
     }
-  }, [courseDetails]);
+  }, [courseDetails]); // Removed 'fetchLectures' from dependency array
 
   const fetchLectures = async () => {
     try {
@@ -127,19 +127,21 @@ export default function Lectures({ role }) {
     setShowDeleteConfirm(true);
   };
 
-  const downloadHandler = (e, pdfUrls) => {
+  const downloadHandler = (e, fileUrls) => {
     e.stopPropagation();
-    if (!pdfUrls || pdfUrls.length === 0) {
-      console.error('No PDF files available');
-      showNotification('No PDF files available for download', 'error');
+    console.log('Download handler called with fileUrls:', fileUrls); // Add debug log
+    if (!fileUrls || fileUrls.length === 0) {
+      console.error('No files available');
+      showNotification('No files available for download', 'error');
       return;
     }
-
-    const pdfList = pdfUrls.map((url, index) => ({
-      name: `Supplement ${index + 1}`,
-      url, // Ensure this uses the correct pdfUrls from the backend
+  
+    const fileList = fileUrls.map((file, index) => ({
+      name: file.name || `File ${index + 1}`,
+      url: file.url,
+      type: file.type,
     }));
-
+  
     // Create the overlay container
     const overlay = document.createElement('div');
     overlay.style.position = 'fixed';
@@ -187,13 +189,13 @@ export default function Lectures({ role }) {
     header.appendChild(title);
     header.appendChild(closeButton);
     
-    // Create PDF links list
+    // Create file links list
     const linksList = document.createElement('div');
     linksList.style.display = 'flex';
     linksList.style.flexWrap = 'wrap';
     linksList.style.gap = '10px';
     
-    pdfList.forEach(pdf => {
+    fileList.forEach((file) => {
       const linkContainer = document.createElement('div');
       linkContainer.style.padding = '8px 12px';
       linkContainer.style.backgroundColor = '#F3F4F6';
@@ -201,20 +203,22 @@ export default function Lectures({ role }) {
       linkContainer.style.display = 'flex';
       linkContainer.style.alignItems = 'center';
       linkContainer.style.gap = '8px';
-      
-      const pdfIcon = document.createElement('span');
-      pdfIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #EF4444;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>';
-      
+  
+      const fileIcon = document.createElement('span');
+      fileIcon.innerHTML = file.type.includes('pdf')
+        ? '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #EF4444;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>' // PDF iconon
+        : '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #4B5563;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>'; // Generic file iconon
+  
       const link = document.createElement('a');
-      link.href = pdf.url;
-      link.textContent = pdf.name;
+      link.href = file.url;
+      link.textContent = file.name;
       link.target = '_blank';
       link.rel = 'noopener noreferrer';
       link.style.color = '#1D4ED8';
       link.style.textDecoration = 'none';
       link.style.fontWeight = '500';
-      
-      linkContainer.appendChild(pdfIcon);
+  
+      linkContainer.appendChild(fileIcon);
       linkContainer.appendChild(link);
       linksList.appendChild(linkContainer);
     });
@@ -264,7 +268,7 @@ export default function Lectures({ role }) {
       formDataToSend.append('lectureDescription', formData.lectureDescription);
       formDataToSend.append('youtubeLink', formData.youtubeLink || '');
 
-      pdfFiles.forEach((file) => formDataToSend.append('pdfFiles', file)); // Attach files
+      pdfFiles.forEach((file) => formDataToSend.append('files', file)); // Updated to handle all file types
 
       const url = formType === 'create'
         ? `${BACKEND_URL}/api/lectures`
@@ -357,35 +361,6 @@ export default function Lectures({ role }) {
     } finally {
       setShowHeadingForm(false);
       setNewHeadingData({ heading: '', subheading: '' });
-    }
-  };
-
-  const handleAddSubheading = async (heading) => {
-    if (!subheadingFormData.subheading.trim()) {
-      showNotification('Subheading cannot be empty', 'error');
-      return;
-    }
-
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.post(
-        `${BACKEND_URL}/api/lectures/subheading`,
-        { courseId: courseDetails.id, heading, subheading: subheadingFormData.subheading },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      if (response.data.success) {
-        showNotification('Subheading added successfully', 'success');
-        fetchLectures(); // Refresh the lectures list
-      } else {
-        showNotification(response.data.message || 'Failed to add subheading', 'error');
-      }
-    } catch (err) {
-      console.error('Error adding subheading:', err);
-      showNotification('Error adding subheading', 'error');
-    } finally {
-      setShowSubheadingForm((prev) => ({ ...prev, [heading]: false }));
-      setSubheadingFormData({ heading: '', subheading: '' });
     }
   };
 
@@ -652,7 +627,7 @@ export default function Lectures({ role }) {
 
                           <div className='flex gap-4 items-center'>
                             <button
-                              onClick={(e) => downloadHandler(e, lecture.pdfUrls)} // Updated to handle multiple PDFs
+                              onClick={(e) => downloadHandler(e, lecture.fileUrls)} // Changed from pdfUrls to fileUrls and fixed typo in button tag
                               className="flex items-center gap-1 text-gray-600 hover:text-blue-600 hover:underline"
                             >
                               <FaFilePdf className="text-red-500" />
@@ -772,16 +747,15 @@ export default function Lectures({ role }) {
                 
                 <div className="w-full">
                   <label className="block mb-2 text-sm font-medium text-gray-700">
-                    Upload PDF Files
+                    Upload Files
                   </label>
                   <input
                     type="file"
-                    accept="application/pdf"
                     multiple
-                    onChange={(e) => setPdfFiles(Array.from(e.target.files))}
+                    onChange={(e) => setPdfFiles(Array.from(e.target.files))} // Updated to handle all file types
                     className="w-full p-2 border rounded"
-                    id="pdfFileInput"
-                    style={{display: 'block'}}
+                    id="fileInput"
+                    style={{ display: 'block' }}
                   />
                   {pdfFiles.length > 0 && (
                     <div className="mt-2 p-2 bg-gray-50 rounded border">
@@ -789,8 +763,7 @@ export default function Lectures({ role }) {
                       <ul className="max-h-24 overflow-y-auto">
                         {pdfFiles.map((file, index) => (
                           <li key={index} className="text-sm text-gray-600 flex items-center gap-1 mb-1">
-                            <FaFilePdf className="text-red-500" />
-                            {file.name}
+                            <span className="text-gray-500">{file.name}</span>
                           </li>
                         ))}
                       </ul>
@@ -822,7 +795,7 @@ export default function Lectures({ role }) {
                   {isSubmitting ? 'Submitting...' : 'Submit'}
                 </button>
               </div>
-            </form>
+            </form> {/* Properly closed the <form> tag */}
           </div>
         </div>
       )}

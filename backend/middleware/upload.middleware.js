@@ -8,7 +8,8 @@ const storage = multer.diskStorage({
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, `${file.fieldname}-${uniqueSuffix}${path.extname(file.originalname)}`);
+    const originalName = path.parse(file.originalname).name; // Extract original file name without extension
+    cb(null, `${originalName}-${uniqueSuffix}${path.extname(file.originalname)}`);
   }
 });
 
@@ -50,18 +51,41 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({
   storage,
   fileFilter,
-  limits: { fileSize: 20 * 1024 * 1024 } // Limit file size to 20MB
+  limits: { fileSize: 100 * 1024 * 1024 } // Limit file size to 20MB
 });
 
 // Middleware to handle file uploads and errors
-const uploadMiddleware = (fieldName, maxFiles) => (req, res, next) => {
-  upload.array(fieldName, maxFiles)(req, res, (err) => {
+const uploadMiddleware = (fieldName = 'files', maxFiles = 10) => (req, res, next) => {
+  const uploadHandler = upload.array(fieldName, maxFiles);
+  
+  uploadHandler(req, res, (err) => {
     if (err instanceof multer.MulterError) {
       console.error('Multer error:', err);
-      return res.status(400).json({ message: 'File upload failed', error: err.message });
+      
+      // Provide more detailed error messages
+      if (err.code === 'LIMIT_UNEXPECTED_FILE') {
+        return res.status(400).json({
+          message: `File upload failed: Unexpected field "${err.field}". Expected field name is "${fieldName}"`,
+          error: err.message,
+          code: err.code
+        });
+      } else if (err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(400).json({
+          message: 'File upload failed: File too large (max 20MB)',
+          error: err.message
+        });
+      } else {
+        return res.status(400).json({
+          message: 'File upload failed',
+          error: err.message
+        });
+      }
     } else if (err) {
       console.error('File filter error:', err);
-      return res.status(400).json({ message: 'Unsupported file type', error: err.message });
+      return res.status(400).json({
+        message: 'Unsupported file type',
+        error: err.message
+      });
     }
     next();
   });

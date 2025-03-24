@@ -11,7 +11,7 @@ router.get('/course/:courseId', [verifyToken, isUserInCourse], lectureController
 // ✅ Route to Create a New Lecture (faculty only, with multiple PDF uploads)
 router.post(
     '/', 
-    [uploadMiddleware('pdfFiles', 10), verifyToken, isFacultyInCourse], 
+    [uploadMiddleware('files', 10), verifyToken, isFacultyInCourse], 
     lectureController.createLecture
 );
 
@@ -59,7 +59,7 @@ router.delete(
 // ✅ Route to Update a Lecture (faculty only, with multiple PDF uploads)
 router.put(
     '/:courseId/:id', 
-    [verifyToken, isFacultyInCourse, uploadMiddleware('pdfFiles', 10)], 
+    [verifyToken, isFacultyInCourse, uploadMiddleware('files', 10)], 
     lectureController.updateLecture
 );
 
