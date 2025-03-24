@@ -28,7 +28,9 @@ db.Announcement = require('./announcement.model')(sequelize, Sequelize);
 db.CourseDescriptionEntry = require('./courseDescriptionEntry.model')(sequelize, Sequelize);
 db.Exam = require('./exam.model')(sequelize, Sequelize);
 db.Result = require('./result.model')(sequelize, Sequelize);
-db.Lecture = require('./lecture.model.js')(sequelize, Sequelize);
+db.Heading = require('./heading.model')(sequelize, Sequelize);
+db.Subheading = require('./subheading.model')(sequelize, Sequelize);
+db.Lecture = require('./lecture.model')(sequelize, Sequelize);
 
 // Setup relationships
 // User relationships with specialized models
@@ -95,10 +97,19 @@ db.Student.hasMany(db.Result, { foreignKey: 'userId', as: 'results' });
 db.Result.belongsTo(db.Student, { foreignKey: 'userId' });
 
 // Lecture relationships
-db.Course.hasMany(db.Lecture, { foreignKey: 'courseId', as: 'lectures' });
-db.Lecture.belongsTo(db.Course, { foreignKey: 'courseId' });
+// Heading relationships
+db.Course.hasMany(db.Heading, { foreignKey: 'courseId', as: 'headings' });
+db.Heading.belongsTo(db.Course, { foreignKey: 'courseId' });
 
-db.Faculty.hasMany(db.Lecture, { foreignKey: 'facultyId', as: 'lectures' });
-db.Lecture.belongsTo(db.Faculty, { foreignKey: 'facultyId' });
+// Subheading relationships
+db.Heading.hasMany(db.Subheading, { foreignKey: 'headingId', as: 'subheadings' });
+db.Subheading.belongsTo(db.Heading, { foreignKey: 'headingId' });
+
+// Lecture relationships with Subheadings
+db.Subheading.hasMany(db.Lecture, { foreignKey: 'subheadingId', as: 'lectures' });
+db.Lecture.belongsTo(db.Subheading, { foreignKey: 'subheadingId' });
+
+// db.Faculty.hasMany(db.Lecture, { foreignKey: 'facultyId', as: 'lectures' });
+// db.Lecture.belongsTo(db.Faculty, { foreignKey: 'facultyId' });
 
 module.exports = db;

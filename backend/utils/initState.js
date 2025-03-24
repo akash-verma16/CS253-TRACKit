@@ -19,6 +19,11 @@ async function ensureTablesExist() {
     await Course.findOne();
     await Announcement.findOne();
     await CourseDescriptionEntry.findOne();
+
+        // Add these additional checks for tables used in createLectures
+    await db.Heading.findOne();
+    await db.Subheading.findOne();
+    await db.Lecture.findOne();
     console.log('All database tables verified.');
     return true;
   } catch (error) {
@@ -440,12 +445,29 @@ async function createCourseDescriptionEntries(courses, facultyUsers) {
 
 // Create lectures for each course
 async function createLectures(courses) {
+  if (!db.Heading || !db.Subheading || !db.Lecture) {
+    console.error('Required models for lecture creation are not defined.');
+    console.error('Make sure Heading, Subheading, and Lecture models are defined in your models directory.');
+    return;
+  }
   for (const course of courses) {
     for (let week = 1; week <= 12; week++) {
+      // Create a heading for the week
+      const heading = await db.Heading.create({
+        courseId: course.id,
+        title: `Week ${week}`
+      });
+
+      // Create subheadings (titles) under the heading
+      const subheading = await db.Subheading.create({
+        headingId: heading.id,
+        title: `Topic for Week ${week}`
+      });
+
+      // Create a lecture under the subheading
       await db.Lecture.create({
         courseId: course.id,
-        heading: `Week ${week}`, // Replacing week with heading
-        subheading: `Software Processes`, // Replacing topicTitle with subheading
+        subheadingId: subheading.id,
         lectureTitle: `Lecture ${week} for ${course.code}`,
         lectureDescription: `This is the description for Lecture ${week} of the course ${course.code}.`
       });

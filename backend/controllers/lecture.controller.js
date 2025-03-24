@@ -1,31 +1,59 @@
 const db = require('../models');
+const Heading = db.Heading;
+const Subheading = db.Subheading;
 const Lecture = db.Lecture;
 const path = require('path');
 const fs = require('fs');
 
-// Get all lectures for a specific course
+// Get all lectures grouped by headings and subheadings
 exports.getLecturesByCourse = async (req, res) => {
   try {
     const courseId = req.params.courseId;
-    const lectures = await Lecture.findAll({
+
+    const headings = await Heading.findAll({
       where: { courseId },
-      order: [['createdAt', 'ASC']] // Order by oldest first
+      include: [
+        {
+          model: Subheading,
+          as: 'subheadings', // This 'as' keyword must match your association
+          include: [
+            {
+              model: Lecture,
+              as: 'lectures', 
+              order: [['createdAt', 'ASC']],
+            },
+          ],
+        },
+      ],
     });
 
-    const lecturesWithPdfUrls = lectures.map(lecture => ({
-      ...lecture.dataValues,
-      pdfUrls: JSON.parse(lecture.pdfPaths || '[]').map(pdfPath => `${req.protocol}://${req.get('host')}/${pdfPath}`)
+    const result = headings.map((heading) => ({
+      heading: heading.title,
+      subheadings: heading.subheadings.map((subheading) => ({
+        subheading: subheading.title,
+        lectures: subheading.lectures.map((lecture) => ({
+          ...lecture.dataValues,
+          pdfUrls: JSON.parse(lecture.pdfPaths || '[]').map((filePath) => // Changed from filePaths to pdfUrls
+            `${req.protocol}://${req.get('host')}/${filePath}`
+          ),
+          filePaths: JSON.parse(lecture.pdfPaths || '[]').map((filePath) => ({
+            url: `${req.protocol}://${req.get('host')}/${filePath}`,
+            name: path.basename(filePath),
+            type: path.extname(filePath).toLowerCase()
+          }))
+        })),
+      })),
     }));
 
     res.status(200).json({
       success: true,
-      data: lecturesWithPdfUrls
+      data: result,
     });
   } catch (error) {
     console.error('Error fetching lectures:', error);
     res.status(500).json({
       success: false,
-      message: 'Some error occurred while retrieving lectures'
+      message: 'Some error occurred while retrieving lectures',
     });
   }
 };
@@ -46,14 +74,21 @@ exports.getLecture = async (req, res) => {
       });
     }
 
-    const lectureWithPdfUrls = {
+    const lectureWithFiles = {
       ...lecture.dataValues,
-      pdfUrls: JSON.parse(lecture.pdfPaths || '[]').map(pdfPath => `${req.protocol}://${req.get('host')}/${pdfPath}`)
+      pdfUrls: JSON.parse(lecture.pdfPaths || '[]').map(filePath => // Added pdfUrls
+        `${req.protocol}://${req.get('host')}/${filePath}`
+      ),
+      filePaths: JSON.parse(lecture.pdfPaths || '[]').map(filePath => ({
+        url: `${req.protocol}://${req.get('host')}/${filePath}`,
+        name: path.basename(filePath),
+        type: path.extname(filePath).toLowerCase()
+      }))
     };
 
     res.status(200).json({
       success: true,
-      data: lectureWithPdfUrls
+      data: lectureWithFiles
     });
   } catch (error) {
     console.error('Error fetching lecture:', error);
@@ -64,68 +99,111 @@ exports.getLecture = async (req, res) => {
   }
 };
 
-// Create a new lecture with multiple PDF uploads
+// Create a new lecture
 exports.createLecture = async (req, res) => {
   try {
-    const { courseId, heading, subheading, lectureTitle, lectureDescription, youtubeLink } = req.body;
-    const pdfPaths = req.files ? req.files.map(file => path.join('uploads', file.filename)) : [];
+    const { heading, subheading, lectureTitle, lectureDescription, youtubeLink, courseId } = req.body;
+    const filePaths = req.files ? req.files.map((file) => path.join('uploads', file.filename)) : [];
+
+    // First find the heading by title
+    const headingRecord = await Heading.findOne({
+      where: { title: heading, courseId }
+    });
+
+    if (!headingRecord) {
+      return res.status(404).json({
+        success: false,
+        message: 'Heading not found',
+      });
+    }
+
+    // Then find the subheading by title and heading ID
+    const subheadingRecord = await Subheading.findOne({
+      where: { title: subheading, headingId: headingRecord.id }
+    });
+
+    if (!subheadingRecord) {
+      return res.status(404).json({
+        success: false,
+        message: 'Subheading not found',
+      });
+    }
 
     const lecture = await Lecture.create({
-      courseId,
-      heading,
-      subheading,
+      subheadingId: subheadingRecord.id,
       lectureTitle,
       lectureDescription,
       youtubeLink,
-      pdfPaths: JSON.stringify(pdfPaths) // Store as JSON string
+      pdfPaths: JSON.stringify(filePaths), // Save file paths as JSON
     });
 
     res.status(201).json({
       success: true,
       message: 'Lecture created successfully',
-      data: lecture
+      data: lecture,
     });
   } catch (error) {
     console.error('Error creating lecture:', error);
     res.status(500).json({
       success: false,
-      message: 'Some error occurred while creating the lecture'
+      message: 'Some error occurred while creating the lecture',
     });
   }
 };
 
-// Create a new heading with an optional subheading
+// Create a new heading
 exports.createHeading = async (req, res) => {
   try {
     const { courseId, heading, subheading } = req.body;
+    
+    console.log("Create Heading Request:", { courseId, heading, subheading });
 
-    if (!courseId || !heading || !subheading) {
+    if (!courseId || !heading) {
       return res.status(400).json({
         success: false,
-        message: 'Course ID, heading, and subheading are required'
+        message: 'Course ID and heading are required',
       });
     }
 
-    // Create the heading
-    const newHeading = await Lecture.create({
-      courseId,
-      heading,
-      subheading, // Subheading is now required
-      lectureTitle: null,
-      lectureDescription: null,
-      pdfPath: null
+    // Check if heading already exists
+    const existingHeading = await Heading.findOne({
+      where: { courseId, title: heading }
     });
+
+    let headingRecord;
+    
+    if (existingHeading) {
+      headingRecord = existingHeading;
+      console.log("Using existing heading:", existingHeading.id);
+    } else {
+      // Create the heading first
+      headingRecord = await Heading.create({ courseId, title: heading });
+      console.log("Created new heading with ID:", headingRecord.id);
+    }
+
+    // Create the subheading only if provided
+    let newSubheading = null;
+    if (subheading) {
+      newSubheading = await Subheading.create({ 
+        headingId: headingRecord.id, 
+        title: subheading 
+      });
+      console.log("Created new subheading with ID:", newSubheading.id);
+    }
 
     res.status(201).json({
       success: true,
       message: 'Heading created successfully',
-      data: newHeading
+      data: {
+        heading: headingRecord,
+        subheading: newSubheading
+      }
     });
   } catch (error) {
     console.error('Error creating heading:', error);
     res.status(500).json({
       success: false,
-      message: 'Some error occurred while creating the heading'
+      message: 'Some error occurred while creating the heading: ' + error.message,
     });
   }
 };
@@ -138,29 +216,37 @@ exports.createSubheading = async (req, res) => {
     if (!courseId || !heading || !subheading) {
       return res.status(400).json({
         success: false,
-        message: 'Course ID, heading, and subheading are required'
+        message: 'Course ID, heading, and subheading are required',
       });
     }
 
-    const newSubheading = await Lecture.create({
-      courseId,
-      heading,
-      subheading,
-      lectureTitle: null,
-      lectureDescription: null,
-      pdfPath: null
+    // Find the heading by title and courseId
+    const headingRecord = await Heading.findOne({
+      where: { title: heading, courseId }
+    });
+
+    if (!headingRecord) {
+      return res.status(404).json({
+        success: false,
+        message: 'Heading not found',
+      });
+    }
+
+    const newSubheading = await Subheading.create({ 
+      headingId: headingRecord.id,
+      title: subheading 
     });
 
     res.status(201).json({
       success: true,
       message: 'Subheading created successfully',
-      data: newSubheading
+      data: newSubheading,
     });
   } catch (error) {
     console.error('Error creating subheading:', error);
     res.status(500).json({
       success: false,
-      message: 'Some error occurred while creating the subheading'
+      message: 'Some error occurred while creating the subheading',
     });
   }
 };
@@ -179,28 +265,37 @@ exports.editSubheading = async (req, res) => {
       });
     }
 
-    const lectures = await Lecture.findAll({
-      where: { courseId, subheading: currentSubheading, heading }
+    // Find the heading first
+    const headingRecord = await Heading.findOne({
+      where: { courseId, title: heading }
     });
 
-    if (!lectures || lectures.length === 0) {
+    if (!headingRecord) {
       return res.status(404).json({
         success: false,
-        message: 'No lectures found with the specified heading and subheading'
+        message: 'Heading not found'
       });
     }
 
-    // Update all matching lectures
-    const updatePromises = lectures.map(lecture => 
-      lecture.update({ subheading: newSubheading })
-    );
-    
-    await Promise.all(updatePromises);
+    // Find the subheading to update
+    const subheading = await Subheading.findOne({
+      where: { headingId: headingRecord.id, title: currentSubheading }
+    });
+
+    if (!subheading) {
+      return res.status(404).json({
+        success: false,
+        message: 'Subheading not found'
+      });
+    }
+
+    // Update the subheading
+    await subheading.update({ title: newSubheading });
 
     res.status(200).json({
       success: true,
-      message: `Updated subheading for ${lectures.length} lectures`,
-      count: lectures.length
+      message: 'Subheading updated successfully',
+      data: subheading
     });
   } catch (error) {
     console.error('Error updating subheading:', error);
@@ -211,69 +306,137 @@ exports.editSubheading = async (req, res) => {
   }
 };
 
-// Update a lecture with multiple PDF uploads
+// Update a lecture
 exports.updateLecture = async (req, res) => {
   try {
-    const { id: lectureId, courseId } = req.params;
-    const { heading, subheading, lectureTitle, lectureDescription, youtubeLink } = req.body;
-    const newPdfPaths = req.files ? req.files.map(file => path.join('uploads', file.filename)) : [];
+    const { courseId, id: lectureId } = req.params;
+    const { lectureTitle, lectureDescription, youtubeLink, heading, subheading } = req.body;
+    const newFilePaths = req.files ? req.files.map((file) => path.join('uploads', file.filename)) : [];
 
-    const lecture = await Lecture.findOne({
-      where: { id: lectureId, courseId }
-    });
+    const lecture = await Lecture.findByPk(lectureId);
 
     if (!lecture) {
       return res.status(404).json({
         success: false,
-        message: 'Lecture not found'
+        message: 'Lecture not found',
       });
     }
 
-    const existingPdfPaths = JSON.parse(lecture.pdfPaths || '[]');
-    const updatedPdfPaths = [...existingPdfPaths, ...newPdfPaths];
+    // If heading and subheading are provided, update the subheadingId association
+    if (heading && subheading && courseId) {
+      // Find the heading by title and courseId
+      const headingRecord = await Heading.findOne({
+        where: { title: heading, courseId }
+      });
 
-    console.log('YouTube Link:', youtubeLink);
-    await lecture.update({
-      heading: heading || lecture.heading,
-      subheading: subheading || lecture.subheading,
-      lectureTitle: lectureTitle || lecture.lectureTitle,
-      lectureDescription: lectureDescription || lecture.lectureDescription,
-      youtubeLink: youtubeLink === null ? '' : youtubeLink || '',
-      pdfPaths: JSON.stringify(updatedPdfPaths)
-    });
+      if (!headingRecord) {
+        return res.status(404).json({
+          success: false,
+          message: `Heading "${heading}" not found for course ${courseId}`,
+        });
+      }
 
-    res.status(200).json({
-      success: true,
-      message: 'Lecture updated successfully',
-      data: lecture
-    });
+      console.log("Found heading:", headingRecord.id);
+
+      // Find the subheading by title and headingId
+      const subheadingRecord = await Subheading.findOne({
+        where: { title: subheading, headingId: headingRecord.id }
+      });
+
+      if (!subheadingRecord) {
+        return res.status(404).json({
+          success: false,
+          message: `Subheading "${subheading}" not found under heading "${heading}"`,
+        });
+      }
+
+      console.log("Found subheading:", subheadingRecord.id);
+
+      // Update the subheadingId
+      await lecture.update({ subheadingId: subheadingRecord.id });
+    }
+
+    try {
+      // Handle file paths properly
+      let updatedFilePaths;
+      
+      if (lecture.pdfPaths) {
+        const existingFilePaths = JSON.parse(lecture.pdfPaths || '[]');
+        updatedFilePaths = [...existingFilePaths, ...newFilePaths];
+      } else {
+        updatedFilePaths = [...newFilePaths];
+      }
+      
+      console.log("Updating lecture with:", {
+        lectureTitle: lectureTitle || lecture.lectureTitle,
+        lectureDescription: lectureDescription || lecture.lectureDescription,
+        youtubeLink: youtubeLink || lecture.youtubeLink,
+        filePaths: updatedFilePaths.length
+      });
+
+      await lecture.update({
+        lectureTitle: lectureTitle || lecture.lectureTitle,
+        lectureDescription: lectureDescription || lecture.lectureDescription,
+        youtubeLink: youtubeLink || lecture.youtubeLink,
+        pdfPaths: JSON.stringify(updatedFilePaths), // Save updated file paths
+      });
+
+      const fileUrls = updatedFilePaths.map(filePath => ({
+        url: `${req.protocol}://${req.get('host')}/${filePath}`,
+        name: path.basename(filePath),
+        type: path.extname(filePath).toLowerCase()
+      }));
+
+      res.status(200).json({
+        success: true,
+        message: 'Lecture updated successfully',
+        data: {
+          ...lecture.dataValues,
+          filePaths: fileUrls
+        }
+      });
+    } catch (parseError) {
+      console.error("Error parsing file paths:", parseError);
+      
+      // Fallback to just using new paths
+      await lecture.update({
+        lectureTitle: lectureTitle || lecture.lectureTitle,
+        lectureDescription: lectureDescription || lecture.lectureDescription,
+        youtubeLink: youtubeLink || lecture.youtubeLink,
+        pdfPaths: JSON.stringify(newFilePaths),
+      });
+      
+      res.status(200).json({
+        success: true,
+        message: 'Lecture updated successfully (with files reset)',
+        data: lecture,
+      });
+    }
   } catch (error) {
     console.error('Error updating lecture:', error);
     res.status(500).json({
       success: false,
-      message: 'Some error occurred while updating the lecture'
+      message: 'Some error occurred while updating the lecture: ' + error.message,
     });
   }
 };
 
-// Delete a lecture and its associated PDFs
+// Delete a lecture
 exports.deleteLecture = async (req, res) => {
   try {
-    const { id: lectureId, courseId } = req.params;
+    const { id: lectureId } = req.params;
 
-    const lecture = await Lecture.findOne({
-      where: { id: lectureId, courseId }
-    });
+    const lecture = await Lecture.findByPk(lectureId);
 
     if (!lecture) {
       return res.status(404).json({
         success: false,
-        message: 'Lecture not found'
+        message: 'Lecture not found',
       });
     }
 
     const pdfPaths = JSON.parse(lecture.pdfPaths || '[]');
-    pdfPaths.forEach(filePath => {
+    pdfPaths.forEach((filePath) => {
       const absolutePath = path.resolve(filePath);
       if (fs.existsSync(absolutePath)) {
         fs.unlinkSync(absolutePath);
@@ -284,13 +447,90 @@ exports.deleteLecture = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: 'Lecture deleted successfully'
+      message: 'Lecture deleted successfully',
     });
   } catch (error) {
     console.error('Error deleting lecture:', error);
     res.status(500).json({
       success: false,
-      message: 'Some error occurred while deleting the lecture'
+      message: 'Some error occurred while deleting the lecture',
+    });
+  }
+};
+
+// Delete a subheading and all its lectures
+exports.deleteSubheading = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const { heading, subheading } = req.body;
+
+    if (!heading || !subheading) {
+      return res.status(400).json({
+        success: false,
+        message: 'Heading and subheading are required',
+      });
+    }
+
+    // Find the heading first
+    const headingRecord = await Heading.findOne({
+      where: { courseId, title: heading }
+    });
+
+    if (!headingRecord) {
+      return res.status(404).json({
+        success: false,
+        message: 'Heading not found',
+      });
+    }
+
+    // Find the subheading
+    const subheadingRecord = await Subheading.findOne({
+      where: { headingId: headingRecord.id, title: subheading },
+      include: [
+        {
+          model: Lecture,
+          as: 'lectures'
+        }
+      ]
+    });
+
+    if (!subheadingRecord) {
+      return res.status(404).json({
+        success: false,
+        message: 'Subheading not found',
+      });
+    }
+
+    // Delete all associated PDF files
+    const lectures = subheadingRecord.lectures;
+    if (lectures && lectures.length > 0) {
+      lectures.forEach(lecture => {
+        try {
+          const pdfPaths = JSON.parse(lecture.pdfPaths || '[]');
+          pdfPaths.forEach(filePath => {
+            const absolutePath = path.resolve(filePath);
+            if (fs.existsSync(absolutePath)) {
+              fs.unlinkSync(absolutePath);
+            }
+          });
+        } catch (parseError) {
+          console.error('Error parsing PDF paths:', parseError);
+        }
+      });
+    }
+
+    // Delete the subheading (cascade will delete associated lectures)
+    await subheadingRecord.destroy();
+
+    res.status(200).json({
+      success: true,
+      message: 'Subheading and associated lectures deleted successfully',
+    });
+  } catch (error) {
+    console.error('Error deleting subheading:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Some error occurred while deleting the subheading',
     });
   }
 };

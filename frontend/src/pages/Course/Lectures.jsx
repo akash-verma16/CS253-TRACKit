@@ -46,6 +46,8 @@ export default function Lectures({ role }) {
     heading: '',
     subheading: '',
   }); // New state for subsection form data
+  const [showSubheadingDeleteConfirm, setShowSubheadingDeleteConfirm] = useState(false);
+  const [subheadingToDelete, setSubheadingToDelete] = useState(null);
 
   useEffect(() => {
     if (courseDetails?.id) {
@@ -62,17 +64,13 @@ export default function Lectures({ role }) {
       );
 
       if (response.data.success) {
-        const grouped = response.data.data
-          .filter((lecture) => lecture.heading) // Filter out lectures with null heading
-          .reduce((acc, lecture) => {
-            const { heading, subheading } = lecture;
-
-            if (!acc[heading]) acc[heading] = {};
-            if (!acc[heading][subheading]) acc[heading][subheading] = [];
-
-            acc[heading][subheading].push(lecture);
-            return acc;
+        const grouped = response.data.data.reduce((acc, heading) => {
+          acc[heading.heading] = heading.subheadings.reduce((subAcc, subheading) => {
+            subAcc[subheading.subheading] = subheading.lectures;
+            return subAcc;
           }, {});
+          return acc;
+        }, {});
 
         setLectures(grouped);
       } else {
@@ -93,14 +91,31 @@ export default function Lectures({ role }) {
 
   const handleEditClick = (e, lecture) => {
     e.stopPropagation();
+    
+    // We need to find which heading and subheading this lecture belongs to
+    let foundHeading = '';
+    let foundSubheading = '';
+    
+    // Loop through lectures structure to find the heading and subheading
+    Object.entries(lectures).forEach(([heading, topics]) => {
+      Object.entries(topics).forEach(([subheading, lectureList]) => {
+        lectureList.forEach(item => {
+          if (item.id === lecture.id) {
+            foundHeading = heading;
+            foundSubheading = subheading;
+          }
+        });
+      });
+    });
+    
     setFormType('edit');
     setFormData({
-      heading: lecture.heading, // Updated from week
-      subheading: lecture.subheading, // Updated from topicTitle
+      heading: foundHeading, // Use the found heading
+      subheading: foundSubheading, // Use the found subheading
       lectureTitle: lecture.lectureTitle,
       lectureDescription: lecture.lectureDescription,
       pdfUrl: lecture.pdfUrl,
-      youtubeLink: lecture.youtubeLink // Include YouTube link
+      youtubeLink: lecture.youtubeLink
     });
     setCurrentLectureId(lecture.id);
     setShowForm(true);
@@ -122,7 +137,7 @@ export default function Lectures({ role }) {
 
     const pdfList = pdfUrls.map((url, index) => ({
       name: `Supplement ${index + 1}`,
-      url,
+      url, // Ensure this uses the correct pdfUrls from the backend
     }));
 
     // Create the overlay container
@@ -238,70 +253,47 @@ export default function Lectures({ role }) {
     e.preventDefault();
     setIsSubmitting(true);
 
-    if (!formData.heading) { // Prevent creating a lecture with null heading
-      showNotification('Heading cannot be null', 'error');
-      setIsSubmitting(false);
-      return;
-    }
-
     try {
       const token = localStorage.getItem('token');
       const formDataToSend = new FormData();
 
       formDataToSend.append('courseId', courseDetails.id);
-      formDataToSend.append('heading', formData.heading); // Include heading
-      formDataToSend.append('subheading', formData.subheading); // Include subheading
+      formDataToSend.append('heading', formData.heading);
+      formDataToSend.append('subheading', formData.subheading);
       formDataToSend.append('lectureTitle', formData.lectureTitle);
       formDataToSend.append('lectureDescription', formData.lectureDescription);
-      formDataToSend.append('youtubeLink', formData.youtubeLink); // Append null if YouTube link is not provided
-      // formDataToSend.append('youtubeLink', formData.youtubeLink); // Include YouTube link
+      formDataToSend.append('youtubeLink', formData.youtubeLink || '');
 
-      if (pdfFiles.length > 0) {
-        pdfFiles.forEach((file) => formDataToSend.append('pdfFiles', file)); // Append multiple PDF files
-      }
+      pdfFiles.forEach((file) => formDataToSend.append('pdfFiles', file)); // Attach files
 
-      let response;
+      const url = formType === 'create'
+        ? `${BACKEND_URL}/api/lectures`
+        : `${BACKEND_URL}/api/lectures/${courseDetails.id}/${currentLectureId}`;
 
-      if (formType === 'create') {
-        response = await axios.post(`${BACKEND_URL}/api/lectures`, formDataToSend, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data',
-          },
-        });
+      const response = await axios({
+        method: formType === 'create' ? 'post' : 'put',
+        url,
+        data: formDataToSend,
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
+        },
+      });
 
-        if (response.data.success) {
-          showNotification('Lecture created successfully', 'success');
-          fetchLectures(); // Refresh lectures list
-        }
-      } else if (formType === 'edit') {
-        response = await axios.put(
-          `${BACKEND_URL}/api/lectures/${courseDetails.id}/${currentLectureId}`,
-          formDataToSend,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              'Content-Type': 'multipart/form-data',
-            },
-          }
-        );
-
-        if (response.data.success) {
-          showNotification('Lecture updated successfully', 'success');
-          fetchLectures(); // Refresh lectures list
-        }
+      if (response.data.success) {
+        showNotification(`Lecture ${formType === 'create' ? 'created' : 'updated'} successfully`, 'success');
+        fetchLectures();
+      } else {
+        showNotification(response.data.message || 'Failed to submit lecture', 'error');
       }
     } catch (err) {
       console.error('Error submitting form:', err);
-      showNotification(
-        `Error ${formType === 'create' ? 'creating' : 'updating'} lecture`,
-        'error'
-      );
+      showNotification(`Error submitting lecture: ${err.response?.data?.message || err.message}`, 'error');
     } finally {
       setIsSubmitting(false);
       setShowForm(false);
       setFormData({ heading: '', subheading: '', lectureTitle: '', lectureDescription: '', pdfUrl: '', youtubeLink: '' });
-      setPdfFiles([]); // Reset the PDF files
+      setPdfFiles([]);
       setCurrentLectureId(null);
     }
   };
@@ -331,33 +323,37 @@ export default function Lectures({ role }) {
   };
 
   const handleAddHeading = async () => {
-    if (!newHeadingData.heading.trim() || !newHeadingData.subheading.trim()) {
-      showNotification('Both Module name and Section name are required', 'error');
+    if (!newHeadingData.heading.trim()) {
+      showNotification('Module name is required', 'error');
       return;
     }
 
     try {
       const token = localStorage.getItem('token');
-      // Create heading with required subheading
+      console.log('Sending heading data:', {
+        courseId: courseDetails.id,
+        heading: newHeadingData.heading,
+      });
+      
+      // Create heading without requiring subheading
       const response = await axios.post(
         `${BACKEND_URL}/api/lectures/heading`,
         { 
           courseId: courseDetails.id, 
           heading: newHeadingData.heading,
-          subheading: newHeadingData.subheading 
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
       if (response.data.success) {
-        showNotification('Module and Section added successfully', 'success');
+        showNotification('Module added successfully', 'success');
         fetchLectures(); // Refresh the lectures list
       } else {
         showNotification(response.data.message || 'Failed to add module', 'error');
       }
     } catch (err) {
       console.error('Error adding heading:', err);
-      showNotification('Error adding module', 'error');
+      showNotification(`Error adding module: ${err.response?.data?.message || err.message}`, 'error');
     } finally {
       setShowHeadingForm(false);
       setNewHeadingData({ heading: '', subheading: '' });
@@ -490,6 +486,43 @@ export default function Lectures({ role }) {
     }
   };
 
+  const handleDeleteSubheadingClick = (e, heading, subheading) => {
+    e.stopPropagation();
+    setSubheadingToDelete({ heading, subheading });
+    setShowSubheadingDeleteConfirm(true);
+  };
+
+  const handleDeleteSubheadingConfirm = async () => {
+    if (!subheadingToDelete) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.delete(
+        `${BACKEND_URL}/api/lectures/${courseDetails.id}/subheading`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          data: {
+            heading: subheadingToDelete.heading,
+            subheading: subheadingToDelete.subheading
+          }
+        }
+      );
+
+      if (response.data.success) {
+        showNotification('Section deleted successfully', 'success');
+        fetchLectures(); // Refresh the lectures list
+      } else {
+        showNotification(response.data.message || 'Failed to delete section', 'error');
+      }
+    } catch (err) {
+      console.error('Error deleting section:', err);
+      showNotification('Error deleting section', 'error');
+    } finally {
+      setShowSubheadingDeleteConfirm(false);
+      setSubheadingToDelete(null);
+    }
+  };
+
   return (
     <div className='w-full h-screen overflow-y-auto'>
       {/* Header */}
@@ -561,15 +594,24 @@ export default function Lectures({ role }) {
                         <div className="flex items-center gap-2">
                           <h3 className="font-medium text-lg mb-2">{subheading}</h3>
                           {role !== "student" && (
-                            <button
-                              className='bg-gray-200 p-1 rounded-full hover:bg-gray-300 transition-all duration-200'
-                              onClick={(e) => {
-                                e.stopPropagation(); // Prevent parent click
-                                handleEditSubheadingClick(heading, subheading); // Use the function we defined instead of inline logic
-                              }}
-                            >
-                              <FaRegEdit className='text-[14px]' />
-                            </button>
+                            <div className="flex items-center gap-1"> {/* Wrap buttons in a div */}
+                              <button
+                                className='bg-gray-200 p-1 rounded-full hover:bg-gray-300 transition-all duration-200'
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEditSubheadingClick(heading, subheading);
+                                }}
+                              >
+                                <FaRegEdit className='text-[14px]' />
+                              </button>
+                              {/* Add delete button for subheading */}
+                              <button
+                                className='bg-gray-200 p-1 rounded-full hover:bg-gray-300 transition-all duration-200'
+                                onClick={(e) => handleDeleteSubheadingClick(e, heading, subheading)}
+                              >
+                                <AiOutlineDelete className='text-[14px] text-red-600' />
+                              </button>
+                            </div>
                           )}
                         </div>
                         {role !== "student" && (
@@ -658,17 +700,7 @@ export default function Lectures({ role }) {
                   required
                 />
               </div>
-              <div>
-                <label className="block mb-1 text-sm font-medium">Section Name <span className="text-red-500">*</span></label>
-                <input
-                  type="text"
-                  placeholder="Section Name"
-                  value={newHeadingData.subheading}
-                  onChange={(e) => setNewHeadingData({...newHeadingData, subheading: e.target.value})}
-                  className="w-full p-2 border rounded"
-                  required
-                />
-              </div>
+              {/* Removed subheading input field */}
             </div>
             <div className="mt-6 flex justify-end gap-4">
               <button
@@ -699,6 +731,28 @@ export default function Lectures({ role }) {
             </h2>
             <form onSubmit={handleFormSubmit}>
               <div className="space-y-4">
+                {formType === 'edit' && (
+                  <>
+                    <div>
+                      <label className="block mb-1 text-sm font-medium">Module</label>
+                      <input
+                        type="text"
+                        value={formData.heading}
+                        readOnly
+                        className="w-full p-2 border rounded bg-gray-100"
+                      />
+                    </div>
+                    <div>
+                      <label className="block mb-1 text-sm font-medium">Section</label>
+                      <input
+                        type="text"
+                        value={formData.subheading}
+                        readOnly
+                        className="w-full p-2 border rounded bg-gray-100"
+                      />
+                    </div>
+                  </>
+                )}
                 <input
                   type="text"
                   placeholder="Lecture Title"
@@ -835,7 +889,7 @@ export default function Lectures({ role }) {
                   type="submit"
                   className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600"
                 >
-                  Save Subsection
+                  Save Section
                 </button>
               </div>
             </form>
@@ -895,6 +949,35 @@ export default function Lectures({ role }) {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Add Subheading Delete Confirmation Modal */}
+      {showSubheadingDeleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-white p-6 rounded-lg w-[90%] max-w-md">
+            <h2 className="text-xl font-bold mb-4">Confirm Section Deletion</h2>
+            <p>Are you sure you want to delete the section "{subheadingToDelete?.subheading}"?</p>
+            <p className="text-red-600 mt-2">
+              Warning: This will delete all lectures in this section.
+            </p>
+            <div className="mt-6 flex justify-end gap-4">
+              <button
+                type="button"
+                onClick={() => setShowSubheadingDeleteConfirm(false)}
+                className="bg-gray-500 text-white py-2 px-4 rounded hover:bg-gray-600"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteSubheadingConfirm}
+                className="bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600"
+              >
+                Delete
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -12,20 +12,59 @@ const storage = multer.diskStorage({
   }
 });
 
-// File filter to allow only PDFs
+// File filter to allow various file types
 const fileFilter = (req, file, cb) => {
-  if (file.mimetype === 'application/pdf') {
+  const allowedFileTypes = [
+    // Documents
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // docx
+    'application/vnd.ms-powerpoint',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation', // pptx
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // xlsx
+    'text/plain',
+    
+    // Images
+    'image/jpeg',
+    'image/png',
+    'image/gif',
+    
+    // Archives
+    'application/zip',
+    'application/x-rar-compressed',
+    
+    // Others
+    'text/csv',
+    'application/json'
+  ];
+
+  if (allowedFileTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error('Only PDF files are allowed'), false);
+    cb(new Error('Unsupported file type'), false);
   }
 };
 
-// Export the configured multer instance
+// Multer instance with limits
 const upload = multer({
   storage,
   fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 } // Limit file size to 5MB
+  limits: { fileSize: 20 * 1024 * 1024 } // Limit file size to 20MB
 });
 
-module.exports = upload;
+// Middleware to handle file uploads and errors
+const uploadMiddleware = (fieldName, maxFiles) => (req, res, next) => {
+  upload.array(fieldName, maxFiles)(req, res, (err) => {
+    if (err instanceof multer.MulterError) {
+      console.error('Multer error:', err);
+      return res.status(400).json({ message: 'File upload failed', error: err.message });
+    } else if (err) {
+      console.error('File filter error:', err);
+      return res.status(400).json({ message: 'Unsupported file type', error: err.message });
+    }
+    next();
+  });
+};
+
+module.exports = uploadMiddleware;

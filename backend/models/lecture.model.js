@@ -5,20 +5,12 @@ module.exports = (sequelize, Sequelize) => {
       primaryKey: true,
       autoIncrement: true
     },
-    courseId: {
+    subheadingId: {
       type: Sequelize.INTEGER,
       references: {
-        model: 'course',
+        model: 'subheadings',
         key: 'id'
       }
-    },
-    heading: {
-      type: Sequelize.STRING,
-      allowNull: false
-    },
-    subheading: {
-      type: Sequelize.TEXT,
-      allowNull: true
     },
     lectureTitle: {
       type: Sequelize.TEXT,
