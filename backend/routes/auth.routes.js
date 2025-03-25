@@ -5,6 +5,7 @@ const { verifyToken, isAdmin } = require('../middleware/auth.middleware');
 
 // Public routes
 router.post('/login', authController.login);
+router.post('/check-username', authController.checkUsername);
 
 // Protected routes (Admin only)
 router.post('/signup', [verifyToken, isAdmin], authController.signup);

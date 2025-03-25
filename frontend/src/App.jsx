@@ -17,8 +17,9 @@ import ManageCourses from "./pages/Admin/ManageCourses";
 import ContactDevelopers from "./pages/Admin/ContactDevelopers";
 import { NotificationProvider } from './contexts/NotificationContext';
 import NotificationContainer from './components/Notification';
-// Check this import statement:
 import { EventProvider } from './contexts/EventContext';
+import ForgotPassword from './pages/ForgotPassword';
+
 // Wrapper component to handle course params
 const CourseWrapper = () => {
   const { courseCode } = useParams();
@@ -81,6 +82,8 @@ const AppRoutes = () => {
       <Route element={<ProtectedRoute />}>
         <Route path="/:courseCode/*" element={<CourseWrapper />} />
       </Route>
+      
+      <Route path="/forgot-password" element={<ForgotPassword />} />
       
       {/* Catch-all route */}
       <Route path="*" element={<Navigate to="/" replace />} />

@@ -130,3 +130,36 @@ exports.login = async (req, res) => {
     });
   }
 };
+
+exports.checkUsername = async (req, res) => {
+  try {
+    const { username } = req.body;
+
+    // Find user
+    const user = await User.findOne({ 
+      where: { username },
+      attributes: ['id', 'email'] // Only fetch necessary fields
+    });
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'No such user exists'
+      });
+    }
+
+    // User exists, send success response
+    return res.status(200).json({
+      success: true,
+      message: 'User found',
+      userId: user.id,
+      email: user.email
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Error checking username'
+    });
+  }
+};
