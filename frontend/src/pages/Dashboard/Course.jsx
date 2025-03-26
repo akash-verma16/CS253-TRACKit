@@ -59,7 +59,7 @@ export default function Course() {
         <MyCalendar />
       </div>
 
-      <div className='flex gap-3 w-[92%] justify-evenly items-center mb-6 flex-wrap'>
+      {/* <div className='flex gap-3 w-[92%] justify-evenly items-center mb-6 flex-wrap'>
         {
           pastYears.map((year, index) => (
             <div 
@@ -70,7 +70,7 @@ export default function Course() {
             </div>
           ))
         }
-      </div>
+      </div> */}
     </div> 
   );
 }
