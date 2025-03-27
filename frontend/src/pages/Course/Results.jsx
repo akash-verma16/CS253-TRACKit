@@ -9,6 +9,8 @@ export default function Results() {
   )
 }
 */
+import { NavLink } from 'react-router-dom';
+import { CgProfile } from "react-icons/cg";
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import React, { useState, useEffect } from 'react';
@@ -558,8 +560,20 @@ export default function Results() {
   // Faculty View
   if (currentUser.userType === 'faculty') {
     return (
-      <div className="w-full h-screen p-6 overflow-y-auto">
-        <h1 className="text-2xl font-bold mb-4">Exam Results</h1>
+      <div className="w-full min-h-screen bg-gray-50 pb-12">
+        {/* Sticky header with consistent styling */}
+          <div className='flex justify-between shadow-md py-2 px-8 items-center sticky top-0 bg-[#F5F5F5] z-10'>
+            <div>
+              <p className='text-[32px] uppercase font-semibold m-4'>Results</p>
+              <p className='text-gray-600 ml-4 -mt-3'>{courseDetails.code} • {courseDetails.credits} Credits • {courseDetails.semester}</p>
+            </div>
+            <NavLink to="/dashboard/profile">
+              <CgProfile className='text-[40px] cursor-pointer' />
+            </NavLink>
+          </div>
+
+      <div className="p-6 overflow-y-auto">  
+      <h1 className="text-2xl font-bold mb-4">Exam Results</h1>
         
         {showSuccess && (
           <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4 shadow-md animate-fade-in" role="alert">
@@ -658,51 +672,51 @@ export default function Results() {
         )}
 
         {/* Exam Summary Table */}
-{!showAddResultForm && !showModifyForm && !selectedExamId && examSummaries.length > 0 && (
-  <div className="mb-6">
-    <h2 className="text-lg font-semibold mb-3">All results</h2>
-    {loadingExamSummaries ? (
-      <div className="text-center py-4">Loading exam summaries...</div>
-    ) : examSummaries.length > 0 ? (
-      <div className="overflow-x-auto">
-        <table className="min-w-full bg-white border border-gray-300 rounded-lg shadow">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="py-3 px-4 border-b text-left">Exam Name</th>
-              <th className="py-3 px-4 border-b text-center">Total Marks</th>
-              <th className="py-3 px-4 border-b text-center">Weightage</th>
-              <th className="py-3 px-4 border-b text-center">Mean</th>
-              <th className="py-3 px-4 border-b text-center">Median</th>
-              <th className="py-3 px-4 border-b text-center">Max</th>
-              <th className="py-3 px-4 border-b text-center">Std Dev</th>
-            </tr>
-          </thead>
-          <tbody>
-            {examSummaries.map((exam, index) => (
-              <tr 
-                key={exam.id} 
-                className={`${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'} cursor-pointer hover:bg-blue-50`}
-                onClick={() => setSelectedExamId(exam.id)}
-              >
-                <td className="py-2 px-4 border-b font-medium">{exam.examName}</td>
-                <td className="py-2 px-4 border-b text-center">{exam.totalMarks}</td>
-                <td className="py-2 px-4 border-b text-center">{exam.weightage}%</td>
-                <td className="py-2 px-4 border-b text-center">{exam.mean?.toFixed(1) || 'N/A'}</td>
-                <td className="py-2 px-4 border-b text-center">{exam.median || 'N/A'}</td>
-                <td className="py-2 px-4 border-b text-center">{exam.max || 'N/A'}</td>
-                <td className="py-2 px-4 border-b text-center">{exam.deviation?.toFixed(1) || 'N/A'}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    ) : (
-      <div className="text-center py-4 text-gray-500 bg-white p-4 rounded-lg shadow">
-        No result have been added to this course yet. Use the "Add Result" button to create one.
-      </div>
-    )}
-  </div>
-)}
+        {!showAddResultForm && !showModifyForm && !selectedExamId && examSummaries.length > 0 && (
+          <div className="mb-6">
+            <h2 className="text-lg font-semibold mb-3">All results</h2>
+            {loadingExamSummaries ? (
+              <div className="text-center py-4">Loading exam summaries...</div>
+            ) : examSummaries.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="min-w-full bg-white border border-gray-300 rounded-lg shadow">
+                  <thead className="bg-gray-100">
+                    <tr>
+                      <th className="py-3 px-4 border-b text-left">Exam Name</th>
+                      <th className="py-3 px-4 border-b text-center">Total Marks</th>
+                      <th className="py-3 px-4 border-b text-center">Weightage</th>
+                      <th className="py-3 px-4 border-b text-center">Mean</th>
+                      <th className="py-3 px-4 border-b text-center">Median</th>
+                      <th className="py-3 px-4 border-b text-center">Max</th>
+                      <th className="py-3 px-4 border-b text-center">Std Dev</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {examSummaries.map((exam, index) => (
+                      <tr 
+                        key={exam.id} 
+                        className={`${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'} cursor-pointer hover:bg-blue-50`}
+                        onClick={() => setSelectedExamId(exam.id)}
+                      >
+                        <td className="py-2 px-4 border-b font-medium">{exam.examName}</td>
+                        <td className="py-2 px-4 border-b text-center">{exam.totalMarks}</td>
+                        <td className="py-2 px-4 border-b text-center">{exam.weightage}%</td>
+                        <td className="py-2 px-4 border-b text-center">{exam.mean?.toFixed(1) || 'N/A'}</td>
+                        <td className="py-2 px-4 border-b text-center">{exam.median || 'N/A'}</td>
+                        <td className="py-2 px-4 border-b text-center">{exam.max || 'N/A'}</td>
+                        <td className="py-2 px-4 border-b text-center">{exam.deviation?.toFixed(1) || 'N/A'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="text-center py-4 text-gray-500 bg-white p-4 rounded-lg shadow">
+                No result have been added to this course yet. Use the "Add Result" button to create one.
+              </div>
+            )}
+          </div>
+        )}
         {/* Add Result Form */}
         {showAddResultForm && (
           <div className="bg-white p-4 rounded-lg shadow mb-6">
@@ -1150,6 +1164,7 @@ export default function Results() {
           <div className="text-red-500 py-2">{error}</div>
         )}
       </div>
+      </div>
     );
   }
 
@@ -1246,69 +1261,84 @@ export default function Results() {
   };
 
   return (
-    <div className="w-full h-screen p-6">
-      <h1 className="text-2xl font-bold mb-4">Results</h1>
+    <div className="w-full min-h-screen bg-gray-50 pb-12">
+    {/* Sticky header with consistent styling */}
+    <div className='flex justify-between shadow-md py-2 px-8 items-center sticky top-0 bg-[#F5F5F5] z-10'>
+      <div>
+        <p className='text-[32px] uppercase font-semibold m-4'>Results</p>
+        <p className='text-gray-600 ml-4 -mt-3'>{courseDetails.code} • {courseDetails.credits} Credits • {courseDetails.semester}</p>
+      </div>
+      <NavLink to="/dashboard/profile">
+        <CgProfile className='text-[40px] cursor-pointer' />
+      </NavLink>
+    </div>
 
-      {/* Graph Section */}
-      {results.length > 0 && (
-        <div className="w-full h-96 mb-6">
-          <Bar data={chartData} options={chartOptions} />
-        </div>
-      )}
+    {/* Content container */}
+      <div className="p-6">  {/* Added padding container */}
+        <h1 className="text-2xl font-bold mb-4">Results</h1>
 
-      {/* Table Section */}
-      <table className="min-w-full bg-white border border-gray-300">
+        {/* Graph Section */}
+        {results.length > 0 && (
+          <div className="w-full h-96 mb-6">
+            <Bar data={chartData} options={chartOptions} />
+          </div>
+        )}
+
+        {/* Table Section */}
+        <table className="min-w-full bg-white border border-gray-300">
         <thead>
-          <tr>
-            <th className="py-2 px-4 border-b text-center w-32">Exam Name</th>
-            <th className="py-2 px-4 border-b text-center w-24">Weightage</th>
-            <th className="py-2 px-4 border-b text-center w-24">Total Marks</th>
-            <th className="py-2 px-4 border-b text-center w-32">Obtained Marks</th>
-            <th className="py-2 px-4 border-b text-center w-24">Mean</th>
-            <th className="py-2 px-4 border-b text-center w-24">Median</th>
-            <th className="py-2 px-4 border-b text-center w-24">Max</th>
-            <th className="py-2 px-4 border-b text-center w-32">Deviation</th>
-          </tr>
-        </thead>
-        <tbody>
-          {results.length === 0 ? (
-            <tr>
-              <td colSpan="8" className="py-4 px-4 text-center text-gray-500">
-                No results available yet
-              </td>
-            </tr>
-          ) : (
-            results.map((result, index) => (
-              <tr key={index}>
-                <td className="py-2 px-4 border-b text-center w-32 overflow-x-auto">
-                  {result.examName}
-                </td>
-                <td className="py-2 px-4 border-b text-center w-24 overflow-x-auto">
-                  {result.weightage}
-                </td>
-                <td className="py-2 px-4 border-b text-center w-24 overflow-x-auto">
-                  {result.totalMarks}
-                </td>
-                <td className="py-2 px-4 border-b text-center w-32 overflow-x-auto">
-                  {result.obtainedMarks !== null ? result.obtainedMarks : 'N/A'}
-                </td>
-                <td className="py-2 px-4 border-b text-center w-24 overflow-x-auto">
-                  {result.mean}
-                </td>
-                <td className="py-2 px-4 border-b text-center w-24 overflow-x-auto">
-                  {result.median}
-                </td>
-                <td className="py-2 px-4 border-b text-center w-24 overflow-x-auto">
-                  {result.max}
-                </td>
-                <td className="py-2 px-4 border-b text-center w-32 overflow-x-auto">
-                  {result.deviation !== null ? result.deviation.toFixed(1) : 'N/A'}
-                </td>
+              <tr>
+                <th className="py-2 px-4 border-b text-center w-32">Exam Name</th>
+                <th className="py-2 px-4 border-b text-center w-24">Weightage</th>
+                <th className="py-2 px-4 border-b text-center w-24">Total Marks</th>
+                <th className="py-2 px-4 border-b text-center w-32">Obtained Marks</th>
+                <th className="py-2 px-4 border-b text-center w-24">Mean</th>
+                <th className="py-2 px-4 border-b text-center w-24">Median</th>
+                <th className="py-2 px-4 border-b text-center w-24">Max</th>
+                <th className="py-2 px-4 border-b text-center w-32">Deviation</th>
               </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+            </thead>
+            <tbody>
+              {results.length === 0 ? (
+                <tr>
+                  <td colSpan="8" className="py-4 px-4 text-center text-gray-500">
+                    No results available yet
+                  </td>
+                </tr>
+              ) : (
+                results.map((result, index) => (
+                  <tr key={index}>
+                    <td className="py-2 px-4 border-b text-center w-32 overflow-x-auto">
+                      {result.examName}
+                    </td>
+                    <td className="py-2 px-4 border-b text-center w-24 overflow-x-auto">
+                      {result.weightage}
+                    </td>
+                    <td className="py-2 px-4 border-b text-center w-24 overflow-x-auto">
+                      {result.totalMarks}
+                    </td>
+                    <td className="py-2 px-4 border-b text-center w-32 overflow-x-auto">
+                      {result.obtainedMarks !== null ? result.obtainedMarks : 'N/A'}
+                    </td>
+                    <td className="py-2 px-4 border-b text-center w-24 overflow-x-auto">
+                      {result.mean}
+                    </td>
+                    <td className="py-2 px-4 border-b text-center w-24 overflow-x-auto">
+                      {result.median}
+                    </td>
+                    <td className="py-2 px-4 border-b text-center w-24 overflow-x-auto">
+                      {result.max}
+                    </td>
+                    <td className="py-2 px-4 border-b text-center w-32 overflow-x-auto">
+                      {result.deviation !== null ? result.deviation.toFixed(1) : 'N/A'}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+      </div>
+      
     </div>
   );
 }
