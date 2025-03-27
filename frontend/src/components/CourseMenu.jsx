@@ -34,7 +34,7 @@ export default function CourseMenu() {
   };
 
   return (
-    <div className='w-full h-screen border-2 rounded-lg flex flex-col items-center justify-between
+    <div className='w-full h-full border-2 rounded-lg flex flex-col items-center justify-between
                 px-4 py-5 bg-white shadow-lg'>
 
       <div className='flex flex-col items-center justify-start w-full'>

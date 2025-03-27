@@ -28,8 +28,8 @@ export default function Courses({ role, courseCode }) {
   
   return (
     <SingleCourseProvider courseCode={courseCode}>
-      <div className='w-full flex bg-[#F5F5F5]'>
-        <div className=' fixed h-full w-[20%] ml-1 z-10'>
+      <div className='w-full flex bg-[#F5F5F5] h-full'>
+        <div className=' fixed h-[98%] w-[19%] ml-1 z-10 mt-2'>
           <CourseMenu courseCode={courseCode} />
         </div>
         <div className='ml-[20%] w-full z-0'>
