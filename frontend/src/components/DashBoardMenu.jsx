@@ -1,17 +1,18 @@
 import React from 'react'
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FaRegUser } from "react-icons/fa";
 import { PiGraduationCap } from "react-icons/pi";
 import { GrDocumentPerformance } from "react-icons/gr";
 import { RiCustomerService2Line } from "react-icons/ri";
 import { FiLogOut } from "react-icons/fi"; // Import logout icon
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext'; // Import useAuth hook
 
 export default function DashBoardMenu() {
     const [activeTab, setActiveTab] = useState('courses');
     const { logout } = useAuth(); // Get logout function from auth context
     const navigate = useNavigate();
+    const location = useLocation(); // Get current location
     
     const tabs = [
       { id: 'courses', label: 'My Courses', icon: <PiGraduationCap /> , link:"/dashboard/courses"},
@@ -19,6 +20,19 @@ export default function DashBoardMenu() {
       { id: 'profile', label: 'Profile', icon: <FaRegUser />, link:"/dashboard/profile" },
       { id: 'contact', label: 'Contact Us', icon: <RiCustomerService2Line />, link:"/dashboard/contactus" },
     ];
+
+    // Update activeTab based on current URL path when component mounts or location changes
+    useEffect(() => {
+      const currentPath = location.pathname;
+      
+      // Find which tab corresponds to the current path
+      const currentTab = tabs.find(tab => currentPath.includes(tab.id) || 
+                                        (tab.id === 'contact' && currentPath.includes('contactus')));
+      
+      if (currentTab) {
+        setActiveTab(currentTab.id);
+      }
+    }, [location.pathname]);
 
     const handleLogout = () => {
       logout();
@@ -33,9 +47,8 @@ export default function DashBoardMenu() {
           {tabs.map(tab => (
               <NavLink to={tab.link} 
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex gap-2 items-center py-2 px-5 my-1 rounded-lg cursor-pointer hover:scale-[97%] duration-200 transition-all
-                 ${activeTab === tab.id ? 'bg-black text-white' : 'bg-transparent text-black'}`}
+                className={({isActive}) => `flex gap-2 items-center py-2 px-5 my-1 rounded-lg cursor-pointer hover:scale-[97%] duration-200 transition-all
+                 ${isActive ? 'bg-black text-white' : 'bg-transparent text-black'}`}
               >
                 {tab.icon}
                 {tab.label}
