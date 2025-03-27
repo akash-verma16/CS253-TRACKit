@@ -159,14 +159,27 @@ const ManageUser = () => {
     }
   };
 
-  const filteredUsers = users.filter(
-    (user) =>
-      (user.username &&
-        user.username.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (user.name &&
-        user.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (user.id && user.id.toString().includes(searchTerm))
-  );
+  const filteredUsers = users
+    .filter(user => user.userType !== 'admin') // Filter out admin users
+    .filter((user) => {
+      if (!searchTerm.trim()) return true;
+      
+      const term = searchTerm.toLowerCase();
+      
+      // Check various fields that might exist in user object
+      return (
+        (user.username && user.username.toLowerCase().includes(term)) ||
+        (user.firstName && user.firstName.toLowerCase().includes(term)) ||
+        (user.lastName && user.lastName.toLowerCase().includes(term)) ||
+        ((user.firstName && user.lastName) && 
+          `${user.firstName} ${user.lastName}`.toLowerCase().includes(term)) ||
+        (user.email && user.email.toLowerCase().includes(term)) ||
+        (user.id && user.id.toString().includes(term)) ||
+        (user.rollNumber && user.rollNumber.toString().toLowerCase().includes(term)) ||
+        (user.student?.rollNumber && 
+          user.student.rollNumber.toString().toLowerCase().includes(term))
+      );
+    });
 
   const labelMapping = {
     id: "ID",
@@ -196,7 +209,7 @@ const ManageUser = () => {
         <div className="flex justify-center mb-4">
           <input
             type="text"
-            placeholder="Search users by ID or Name..."
+            placeholder="Search users by ID, Name, Email, or Roll Number..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="p-4 w-2/3 border border-gray-300 rounded-lg"
@@ -204,35 +217,47 @@ const ManageUser = () => {
         </div>
 
         <div className="rounded-lg">
-          {filteredUsers.map((user) => (
-            <div
-              key={user.username}
-              className="p-4 rounded-lg mb-4 transition-all duration-300 hover:scale-[101%] hover:shadow-lg bg-gray-100"
-            >
-              <div className="flex justify-between items-center">
-                <div>
-                  <p className="text-xl font-semibold">
-                    {user.firstName} {user.lastName}
-                  </p>
-                  <p className="text-sm text-gray-700">Role: {user.userType}</p>
-                </div>
-                <div className="flex gap-4">
-                  <button
-                    onClick={() => setSelectedUser(user)}
-                    className="bg-blue-500 text-white px-4 py-2 rounded-lg transition-all duration-300 hover:scale-95 hover:shadow-xl"
-                  >
-                    View Details
-                  </button>
-                  <button
-                    onClick={() => handleDeleteUser(user.id)}
-                    className="bg-red-500 text-white px-4 py-2 rounded-lg transition-all duration-300 hover:scale-95 hover:shadow-xl"
-                  >
-                    <FaTrashAlt />
-                  </button>
+          {filteredUsers.length > 0 ? (
+            filteredUsers.map((user) => (
+              <div
+                key={user.id}
+                className="p-4 rounded-lg mb-4 transition-all duration-300 hover:scale-[101%] hover:shadow-lg bg-gray-100"
+              >
+                <div className="flex justify-between items-center">
+                  <div>
+                    <p className="text-xl font-semibold">
+                      {user.firstName} {user.lastName}
+                    </p>
+                    <p className="text-sm text-gray-700">Role: {user.userType}</p>
+                    {user.email && <p className="text-sm text-gray-700">Email: {user.email}</p>}
+                    {(user.rollNumber || user.student?.rollNumber) && (
+                      <p className="text-sm text-gray-700">
+                        Roll No: {user.rollNumber || user.student?.rollNumber}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex gap-4">
+                    <button
+                      onClick={() => setSelectedUser(user)}
+                      className="bg-blue-500 text-white px-4 py-2 rounded-lg transition-all duration-300 hover:scale-95 hover:shadow-xl"
+                    >
+                      View Details
+                    </button>
+                    <button
+                      onClick={() => handleDeleteUser(user.id)}
+                      className="bg-red-500 text-white px-4 py-2 rounded-lg transition-all duration-300 hover:scale-95 hover:shadow-xl"
+                    >
+                      <FaTrashAlt />
+                    </button>
+                  </div>
                 </div>
               </div>
+            ))
+          ) : (
+            <div className="text-center p-4 bg-gray-100 rounded-lg">
+              <p>No users found matching "{searchTerm}"</p>
             </div>
-          ))}
+          )}
         </div>
       </div>
 
