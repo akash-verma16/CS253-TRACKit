@@ -559,13 +559,18 @@ export default function Results() {
 
   // Faculty View
   if (currentUser.userType === 'faculty') {
+    if (courseLoading || !courseDetails) {
+      return <div className="w-full min-h-screen bg-gray-50 p-6 flex items-center justify-center">Loading course details...</div>;
+    }
     return (
       <div className="w-full min-h-screen bg-gray-50 pb-12">
         {/* Sticky header with consistent styling */}
           <div className='flex justify-between shadow-md py-2 px-8 items-center sticky top-0 bg-[#F5F5F5] z-10'>
             <div>
               <p className='text-[32px] uppercase font-semibold m-4'>Results</p>
-              <p className='text-gray-600 ml-4 -mt-3'>{courseDetails.code} • {courseDetails.credits} Credits • {courseDetails.semester}</p>
+              <p className='text-gray-600 ml-4 -mt-3'>
+                {courseDetails?.code || 'Loading...'} • {courseDetails?.credits || ''} Credits • {courseDetails?.semester || ''}
+              </p>
             </div>
             <NavLink to="/dashboard/profile">
               <CgProfile className='text-[40px] cursor-pointer' />
@@ -573,7 +578,6 @@ export default function Results() {
           </div>
 
       <div className="p-6 overflow-y-auto">  
-      <h1 className="text-2xl font-bold mb-4">Exam Results</h1>
         
         {showSuccess && (
           <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4 shadow-md animate-fade-in" role="alert">
@@ -1275,7 +1279,6 @@ export default function Results() {
 
     {/* Content container */}
       <div className="p-6">  {/* Added padding container */}
-        <h1 className="text-2xl font-bold mb-4">Results</h1>
 
         {/* Graph Section */}
         {results.length > 0 && (
