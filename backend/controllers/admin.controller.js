@@ -715,6 +715,13 @@ exports.deleteUser = async (req, res) => {
         message: 'User not found'
       });
     }
+
+    if(user.userType==="admin"){
+      return res.status(400).json({
+        success: false,
+        message: 'Cannot delete an admin'
+      });
+    }
     
     await user.destroy();
     
