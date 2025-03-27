@@ -39,13 +39,23 @@ export default function CourseMenu() {
 
       <div className='flex flex-col items-center justify-start w-full'>
      
-      <NavLink to="/dashboard/courses" onClick={() => setActiveTab("courses")}>
-        {loading ? (
-          <p className='text-[28px] font-semibold'>Loading...</p>
-        ) : (
-          <p className='text-[28px] font-semibold'>{courseCode||courseDetails?.name}</p>
-        )}
-      </NavLink>
+      <div className="flex items-center w-full justify-between px-2">
+        <NavLink 
+          to="/dashboard/courses" 
+          onClick={() => setActiveTab("courses")}
+          className="hover:scale-[97%] duration-200 transition-all p-3 rounded-full hover:bg-gray-100"
+        >
+          <GoHome className="text-2xl" />
+        </NavLink>
+        <div className="flex-1 text-center">
+          {loading ? (
+            <p className='text-[28px] font-semibold'>Loading...</p>
+          ) : (
+            <p className='text-[28px] font-semibold'>{courseCode||courseDetails?.name}</p>
+          )}
+        </div>
+        <div className="w-10"></div> {/* This creates balance in the layout */}
+      </div>
       <div className='border-t w-11/12 mt-4 py-5'>
         {tabs.map(tab => (
           <NavLink
