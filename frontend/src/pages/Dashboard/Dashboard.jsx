@@ -8,7 +8,7 @@ import ContactUs from './ContactUs';
 
 export default function Dashboard(props) {
   return (
-    <div className='h-screen w-full flex items-center bg-[#F5F5F5]'>
+    <div className='h-screen w-full flex items-center bg-[#F5F5F5] overflow-scroll'>
 
         <div className="fixed h-[98%] w-[19%] ml-1 z-10 my-1">
         <DashBoardMenu />

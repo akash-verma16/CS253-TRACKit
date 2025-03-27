@@ -44,7 +44,7 @@ export default function Course() {
 
   return (
     <div className='w-full h-full flex flex-col items-center justify-evenly'>
-      <p className='text-[35px] font-semibold mt-2'>Dashboard</p>
+      {/* <p className='text-[35px] font-semibold mt-2'>Dashboard</p> */}
       <div className='flex gap-3 mt-4 flex-wrap justify-center'>
         {
           courses.map(course => (
@@ -60,7 +60,7 @@ export default function Course() {
       </div>
 
       {/* Replace the iframe with MyCalendar component */}
-      <div className='w-[92%] m-auto h-[520px] border rounded-lg shadow-xl my-5 bg-white p-4'>
+      <div className='w-[97%] m-auto h-[72%] border rounded-lg shadow-xl my-3 bg-white p-4'>
         <MyCalendar />
       </div>
 

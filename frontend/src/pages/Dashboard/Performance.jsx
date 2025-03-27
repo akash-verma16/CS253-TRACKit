@@ -5,6 +5,7 @@ import axios from 'axios';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCourses } from '../../contexts/CourseContext';
 import { Bar } from 'react-chartjs-2';
+import { IoIosArrowDropdown } from "react-icons/io";
 import 'chart.js/auto';
 
 export default function Performance() {
@@ -228,133 +229,141 @@ export default function Performance() {
   }
 
   return (
-    <div className='w-full h-full flex flex-col items-start justify-start px-6'>
-      <div className='flex justify-between w-full shadow-md py-2 items-center sticky top-0 bg-[#F5F5F5] z-10'>
-        <div>
-          <p className='text-[35px] font-bold mt-2 self-start'>Your Performance</p>
-        </div>
+    <div className='w-full  h-full flex flex-col items-start justify-start'>
+      <div className='flex justify-between w-full py-2 px-4 items-center sticky top-0 bg-[#F5F5F5] z-10'>
+        <p className='text-[35px] font-bold mt-2 self-start'>Your Performance</p>
         <NavLink to="/dashboard/profile">
-          <CgProfile className='text-[40px] cursor-pointer' />
+          <CgProfile className='text-[40px] cursor-pointer hover:text-blue-500 transition-colors duration-200 hover:scale-95' />
         </NavLink>
       </div>
 
-      {/* Overall Performance Summary */}
-      <div className="w-full bg-white rounded-lg shadow-md p-4 my-4">
-        <h2 className="text-xl font-bold mb-2">Overall Performance</h2>
-        <div className="flex flex-wrap gap-4">
-          <div className="bg-blue-50 p-3 rounded-lg">
-            <p className="text-sm text-gray-500">Courses Enrolled</p>
-            <p className="text-xl font-semibold">{courses.length}</p>
-          </div>
-          <div className="bg-green-50 p-3 rounded-lg">
-            <p className="text-sm text-gray-500">Average Performance</p>
-            <p className="text-xl font-semibold">
-              {courses.length > 0 ? `${calculateOverallPerformance().toFixed(1)}%` : 'N/A'}
-            </p>
-          </div>
-          <div className="bg-yellow-50 p-3 rounded-lg">
-            <p className="text-sm text-gray-500">Relative to Median</p>
-            <p className="text-xl font-semibold">
-              {courses.length > 0 && Object.keys(courseResults).length > 0 ? (
-                calculateMedianPerformance() > 0 ? 
-                  <span className="text-green-600">{Math.abs(calculateMedianPerformance()).toFixed(1)}% better than median</span> : 
-                  <span className="text-red-600">{Math.abs(calculateMedianPerformance()).toFixed(1)}% below median</span>
-              ) : 'N/A'}
-            </p>
+      <div className='w-full p-3'>
+        {/* Overall Performance Summary */}
+        <div className="w-full bg-white rounded-lg shadow-md p-4 my-4">
+          <h2 className="text-xl font-bold mb-2">Overall Performance</h2>
+          <div className="flex flex-wrap gap-4">
+            <div className="bg-blue-50 p-3 rounded-lg">
+              <p className="text-sm text-gray-500">Courses Enrolled</p>
+              <p className="text-xl font-semibold">{courses.length}</p>
+            </div>
+            <div className="bg-green-50 p-3 rounded-lg">
+              <p className="text-sm text-gray-500">Average Performance</p>
+              <p className="text-xl font-semibold">
+                {courses.length > 0 ? `${calculateOverallPerformance().toFixed(1)}%` : 'N/A'}
+              </p>
+            </div>
+            <div className="bg-yellow-50 p-3 rounded-lg">
+              <p className="text-sm text-gray-500">Relative to Median</p>
+              <p className="text-xl font-semibold">
+                {courses.length > 0 && Object.keys(courseResults).length > 0 ? (
+                  calculateMedianPerformance() > 0 ? 
+                    <span className="text-green-600">{Math.abs(calculateMedianPerformance()).toFixed(1)}% better than median</span> : 
+                    <span className="text-red-600">{Math.abs(calculateMedianPerformance()).toFixed(1)}% below median</span>
+                ) : 'N/A'}
+              </p>
+            </div>
           </div>
         </div>
-      </div>
 
-      {!courses || courses.length === 0 ? (
-        <div className="w-full bg-white rounded-lg shadow-md p-6 my-4 text-center">
-          <p className="text-lg">You are not enrolled in any courses yet.</p>
-        </div>
-      ) : (
-        courses.map((course) => (
-          <div key={course.id} className="w-full bg-white rounded-lg shadow-md p-4 my-4">
-            {/* Course Header - Clickable to expand/collapse */}
-            <div 
-              className="flex justify-between items-center cursor-pointer" 
-              onClick={() => toggleCourseExpand(course.id)}
-            >
-              <h2 className="text-xl font-semibold">
-                {course.code}: {course.name}
-              </h2>
-              <div className="flex items-center">
-                <span className="text-gray-600 mr-2">{course.credits} Credits • {course.semester}</span>
-                <span className="text-blue-500">
-                  {expandedCourses[course.id] ? '▼' : '►'}
-                </span>
+        {!courses || courses.length === 0 ? (
+          <div className="w-full bg-white rounded-lg shadow-md p-6 my-4 text-center">
+            <p className="text-lg">You are not enrolled in any courses yet.</p>
+          </div>
+        ) : (
+          courses.map((course) => (
+            <div key={course.id} className="w-full bg-white rounded-lg shadow-md p-4 px-6 my-3">
+              {/* Course Header - Clickable to expand/collapse */}
+              <div 
+                className="flex justify-between items-center cursor-pointer" 
+                onClick={() => toggleCourseExpand(course.id)}
+              >
+                <h2 className="text-xl font-semibold">
+                  {course.code}: {course.name}
+                </h2>
+                <div className="flex items-center">
+                  <span className="text-gray-600 mr-2">{course.credits} Credits </span>
+                  <span className={`text-blue-500 transform transition-transform duration-500 ease-in-out ${
+                    expandedCourses[course.id] ? 'rotate-180' : 'rotate-0'
+                  }`}>
+                    <IoIosArrowDropdown className='text-[25px]'/>
+                  </span>
+                </div>
+              </div>
+
+              {/* Course Content - With smooth height transition */}
+              <div 
+                className={`overflow-hidden transition-all duration-500 ease-in-out ${
+                  expandedCourses[course.id] 
+                    ? 'max-h-[2000px] opacity-100 mt-4' 
+                    : 'max-h-0 opacity-0 mt-0'
+                }`}
+              >
+                <div className="mb-4">
+                  {/* Results Data */}
+                  {(!courseResults[course.id] || courseResults[course.id].length === 0) ? (
+                    <p className="text-gray-500 p-4 text-center">Results are not yet released.</p>
+                  ) : (
+                    <>
+                      {/* Graph Section */}
+                      <div className="w-full h-80 mb-6">
+                        <Bar data={getChartData(course.id)} options={chartOptions} />
+                      </div>
+                      
+                      {/* Table Section */}
+                      <div className="overflow-x-auto">
+                        <table className="min-w-full bg-white border border-gray-300">
+                          <thead>
+                            <tr>
+                              <th className="py-2 px-4 border-b text-center">Exam Name</th>
+                              <th className="py-2 px-4 border-b text-center">Weightage</th>
+                              <th className="py-2 px-4 border-b text-center">Total Marks</th>
+                              <th className="py-2 px-4 border-b text-center">Obtained Marks</th>
+                              <th className="py-2 px-4 border-b text-center">Mean</th>
+                              <th className="py-2 px-4 border-b text-center">Median</th>
+                              <th className="py-2 px-4 border-b text-center">Max</th>
+                              <th className="py-2 px-4 border-b text-center">Deviation</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {courseResults[course.id].map((result, index) => (
+                              <tr key={index} className={index % 2 === 0 ? "bg-gray-50" : ""}>
+                                <td className="py-2 px-4 border-b text-center">
+                                  {result.examName}
+                                </td>
+                                <td className="py-2 px-4 border-b text-center">
+                                  {result.weightage}
+                                </td>
+                                <td className="py-2 px-4 border-b text-center">
+                                  {result.totalMarks}
+                                </td>
+                                <td className="py-2 px-4 border-b text-center">
+                                  {result.obtainedMarks !== null ? result.obtainedMarks : 'N/A'}
+                                </td>
+                                <td className="py-2 px-4 border-b text-center">
+                                  {result.mean?.toFixed(1) || 'N/A'}
+                                </td>
+                                <td className="py-2 px-4 border-b text-center">
+                                  {result.median || 'N/A'}
+                                </td>
+                                <td className="py-2 px-4 border-b text-center">
+                                  {result.max || 'N/A'}
+                                </td>
+                                <td className="py-2 px-4 border-b text-center">
+                                  {result.deviation !== null ? result.deviation.toFixed(1) : 'N/A'}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
-
-            {/* Course Content - Only show if expanded */}
-            {expandedCourses[course.id] && (
-              <div className="mt-4">
-                {/* Results Data */}
-                {(!courseResults[course.id] || courseResults[course.id].length === 0) ? (
-                  <p className="text-gray-500 p-4 text-center">No results available for this course yet.</p>
-                ) : (
-                  <>
-                    {/* Graph Section */}
-                    <div className="w-full h-80 mb-6">
-                      <Bar data={getChartData(course.id)} options={chartOptions} />
-                    </div>
-                    
-                    {/* Table Section */}
-                    <div className="overflow-x-auto">
-                      <table className="min-w-full bg-white border border-gray-300">
-                        <thead>
-                          <tr>
-                            <th className="py-2 px-4 border-b text-center">Exam Name</th>
-                            <th className="py-2 px-4 border-b text-center">Weightage</th>
-                            <th className="py-2 px-4 border-b text-center">Total Marks</th>
-                            <th className="py-2 px-4 border-b text-center">Obtained Marks</th>
-                            <th className="py-2 px-4 border-b text-center">Mean</th>
-                            <th className="py-2 px-4 border-b text-center">Median</th>
-                            <th className="py-2 px-4 border-b text-center">Max</th>
-                            <th className="py-2 px-4 border-b text-center">Deviation</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {courseResults[course.id].map((result, index) => (
-                            <tr key={index} className={index % 2 === 0 ? "bg-gray-50" : ""}>
-                              <td className="py-2 px-4 border-b text-center">
-                                {result.examName}
-                              </td>
-                              <td className="py-2 px-4 border-b text-center">
-                                {result.weightage}
-                              </td>
-                              <td className="py-2 px-4 border-b text-center">
-                                {result.totalMarks}
-                              </td>
-                              <td className="py-2 px-4 border-b text-center">
-                                {result.obtainedMarks !== null ? result.obtainedMarks : 'N/A'}
-                              </td>
-                              <td className="py-2 px-4 border-b text-center">
-                                {result.mean?.toFixed(1) || 'N/A'}
-                              </td>
-                              <td className="py-2 px-4 border-b text-center">
-                                {result.median || 'N/A'}
-                              </td>
-                              <td className="py-2 px-4 border-b text-center">
-                                {result.max || 'N/A'}
-                              </td>
-                              <td className="py-2 px-4 border-b text-center">
-                                {result.deviation !== null ? result.deviation.toFixed(1) : 'N/A'}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </>
-                )}
-              </div>
-            )}
-          </div>
-        ))
-      )}
+          ))
+        )}
+      </div>
     </div>
   );
 }

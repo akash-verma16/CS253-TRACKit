@@ -320,7 +320,7 @@ export default function CourseHome({ present, total, role }) {
         
         {courseDescriptions.length > 0 ? (
           courseDescriptions.map((item, index) => (
-            <div key={item.id} className='mb-2'>
+            <div key={item.id} className='mb-2' onClick={() => toggleExpand(index)}>
               <div className='w-full py-3 border-2 flex flex-col m-2 px-6 rounded-xl cursor-pointer hover:shadow-md transition-all duration-200'>
                 <div className='flex justify-between w-full font-semibold'>
                   <span className='text-lg'>{item.courseDescriptionEntryHeading}</span>
@@ -338,8 +338,7 @@ export default function CourseHome({ present, total, role }) {
                     )
                   }
                   <IoIosArrowDropdown 
-                    onClick={() => toggleExpand(index)}
-                    className={`text-[25px] transform transition-transform hover:scale-105 hover:shadow-xl duration-500 ${expandedIndices[index] ? 'rotate-180' : ''}`}
+                    className={`text-[25px] transform transition-transform hover:scale-105 duration-500 ${expandedIndices[index] ? 'rotate-180' : ''}`}
                   />
                   </div>
                 </div>
