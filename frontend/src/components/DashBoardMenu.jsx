@@ -21,18 +21,22 @@ export default function DashBoardMenu() {
       { id: 'contact', label: 'Contact Us', icon: <RiCustomerService2Line />, link:"/dashboard/contactus" },
     ];
 
+    const filteredTabs = JSON.parse(localStorage.getItem('user')).userType === 'faculty' 
+      ? tabs.filter(tab => tab.id !== 'performance')
+      : tabs;
+
     // Update activeTab based on current URL path when component mounts or location changes
     useEffect(() => {
       const currentPath = location.pathname;
       
       // Find which tab corresponds to the current path
-      const currentTab = tabs.find(tab => currentPath.includes(tab.id) || 
+      const currentTab = filteredTabs.find(tab => currentPath.includes(tab.id) || 
                                         (tab.id === 'contact' && currentPath.includes('contactus')));
       
       if (currentTab) {
         setActiveTab(currentTab.id);
       }
-    }, [location.pathname]);
+    }, [location.pathname, filteredTabs]);
 
     const handleLogout = () => {
       logout();
@@ -44,7 +48,7 @@ export default function DashBoardMenu() {
                 px-4 py-5 bg-white shadow-lg'>
         <NavLink to="/dashboard/courses" onClick={()=> setActiveTab("courses")}><p className='text-[28px] font-semibold'>TRACKit</p></NavLink>
         <div className='border-t w-11/12 mt-4 py-5'>
-          {tabs.map(tab => (
+          {filteredTabs.map(tab => (
               <NavLink to={tab.link} 
                 key={tab.id}
                 className={({isActive}) => `flex gap-2 items-center py-2 px-5 my-1 rounded-lg cursor-pointer hover:scale-[97%] duration-200 transition-all
