@@ -4,12 +4,13 @@ import texture from '../../assets/textures.jpg';
 import { authFetch } from '../../services/auth';
 import { PiStudentDuotone } from "react-icons/pi";
 import { FaRegUser } from "react-icons/fa";
-
+import { useNavigate } from 'react-router-dom';
 
 export default function Profile() {
   const [profileData, setProfileData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
   
   // Get basic user data from localStorage
   const user = JSON.parse(localStorage.getItem('user'));
@@ -90,9 +91,6 @@ export default function Profile() {
                         <p className='text-center text-[18px] mt-2'>
                             <span className='font-bold'>Department :</span> <span>{displayData.major}</span>
                         </p>
-                        {/* <p className='text-center text-[18px] mt-2'>
-                            <span className='font-bold'>Year :</span> <span>{displayData.enrollmentYear}</span>
-                        </p> */}
                     </div>
                 )}
                 
@@ -107,6 +105,16 @@ export default function Profile() {
                         </p>
                     </>
                 )}
+                
+                {/* Change password button for all users */}
+                <div className='text-center mt-4'>
+                    <button 
+                        onClick={() => navigate('/change-password')}
+                        className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded'
+                    >
+                        Change Password
+                    </button>
+                </div>
                 
                 {/* Generic information for all users */}
                 {/* <p className='text-center text-[18px] mt-2'>

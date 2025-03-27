@@ -3,50 +3,40 @@ const db = require('../models');
 const User = db.User;
 console.log('verifyToken Middleware Hit');
 
-const verifyToken = (req, res, next) => {
-  // Skip token verification for OPTIONS requests (pre-flight)
-  if (req.method === 'OPTIONS') {
-    return next();
-  }
-
-  // Get token from various possible locations
-  let token = req.headers['x-access-token'] || 
-              req.headers['authorization'];
-  
-  // Handle 'Bearer' prefix if present
-  if (token && token.startsWith('Bearer ')) {
-    token = token.slice(7);
-  }
-  
-  if (!token) {
-    return res.status(403).json({
-      success: false,
-      message: 'No token provided!'
-    });
-  }
-
-  // Log detailed debugging information for multipart requests
-  if (req.headers['content-type'] && req.headers['content-type'].includes('multipart/form-data')) {
-    console.log('Processing multipart request with:');
-    console.log('- Headers:', JSON.stringify(req.headers, null, 2));
-    console.log('- Files present:', !!req.files);
-    if (req.files) {
-      console.log('- File keys:', Object.keys(req.files));
+const verifyToken = async (req, res, next) => {
+  try {
+    // Skip token verification for OPTIONS requests
+    if (req.method === 'OPTIONS') {
+      return next();
     }
-  }
 
-  // Verify token
-  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-    if (err) {
-      return res.status(401).json({
+    let token = req.headers['authorization'];
+    
+    if (!token) {
+      return res.status(403).json({
         success: false,
-        message: 'Unauthorized! Token is invalid.',
-        error: err.message
+        message: 'No token provided!'
       });
     }
+
+    // Remove 'Bearer ' prefix if present
+    if (token.startsWith('Bearer ')) {
+      token = token.slice(7);
+    }
+
+    // Verify token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.userId = decoded.id;
+    req.userType = decoded.userType;
+    
     next();
-  });
+  } catch (error) {
+    console.error('Auth middleware error:', error);
+    return res.status(401).json({
+      success: false,
+      message: 'Unauthorized! Invalid token.'
+    });
+  }
 };
 
 const isAdmin = async (req, res, next) => {
