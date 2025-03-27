@@ -32,7 +32,7 @@ export default function Courses({ role, courseCode }) {
         <div className=' fixed h-[98%] w-[19%] ml-1 z-10 mt-2'>
           <CourseMenu courseCode={courseCode} />
         </div>
-        <div className='ml-[20%] w-full z-0'>
+        <div className='ml-[18%] w-full z-0 pl-1'>
           <Routes>
             <Route path="/" element={<CourseHome present={19} total={20} role={role} />} />
             <Route path="coursehome" element={<CourseHome present={19} total={20} role={role} />} />

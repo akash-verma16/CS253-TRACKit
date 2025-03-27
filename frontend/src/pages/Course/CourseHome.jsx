@@ -315,7 +315,7 @@ export default function CourseHome({ present, total, role }) {
       }
       </div>
 
-      <div className='p-4 mb-10'>
+      <div className='p-4 mb-10 px-8'>
         <h2 className="text-xl font-bold ml-2 mb-2">Course Details</h2>
         
         {courseDescriptions.length > 0 ? (
