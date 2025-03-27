@@ -53,15 +53,18 @@ const ManageUser = () => {
         courseId,
         userId,
       });
+
+      // Fetch updated user details
+      const response = await axiosInstance.get(`/api/users/${userId}/courses`);
+      const updatedCourses = response.data.data;
+
       setSelectedUser((prev) => ({
         ...prev,
-        student: {
-          ...prev.student,
-          courses: [...(prev.student?.courses || []), courseId],
-        },
+        courses: updatedCourses, // Update courses with the latest data
       }));
 
       setSelectedCourse("");
+      alert("Student added to course successfully.");
     } catch (error) {
       console.error("Error adding student to course:", error);
       alert("Failed to add student to course.");
@@ -75,15 +78,17 @@ const ManageUser = () => {
         userId,
       });
 
+      // Fetch updated user details
+      const response = await axiosInstance.get(`/api/users/${userId}/courses`);
+      const updatedCourses = response.data.data;
+
       setSelectedUser((prev) => ({
         ...prev,
-        faculty: {
-          ...prev.faculty,
-          courses: [...(prev.faculty?.courses || []), courseId],
-        },
+        courses: updatedCourses, // Update courses with the latest data
       }));
 
       setSelectedCourse("");
+      alert("Faculty added to course successfully.");
     } catch (error) {
       console.error("Error adding faculty to course:", error);
       alert("Failed to add faculty to course.");
@@ -92,23 +97,12 @@ const ManageUser = () => {
 
   const removefacultyfromcourse = async (courseId, userId) => {
     try {
-      await axiosInstance.delete(
-        `/api/courses/remove-faculty/${courseId}/${userId}`
-      );
+      await axiosInstance.delete(`/api/courses/remove-faculty/${courseId}/${userId}`);
 
-      setSelectedUser((prev) => {
-        const updatedCourses = prev?.faculty?.courses
-          ? prev.faculty.courses.filter((id) => id !== courseId)
-          : [];
-
-        return {
-          ...prev,
-          faculty: {
-            ...prev.faculty,
-            courses: updatedCourses,
-          },
-        };
-      });
+      setSelectedUser((prev) => ({
+        ...prev,
+        courses: prev.courses.filter((course) => course.id !== courseId), // Remove the course dynamically
+      }));
 
       setSelectedCourse("");
     } catch (error) {
@@ -119,23 +113,12 @@ const ManageUser = () => {
 
   const removestudentfromcourse = async (courseId, userId) => {
     try {
-      await axiosInstance.delete(
-        `/api/courses/remove-student/${courseId}/${userId}`
-      );
+      await axiosInstance.delete(`/api/courses/remove-student/${courseId}/${userId}`);
 
-      setSelectedUser((prev) => {
-        const updatedCourses = prev?.student?.courses
-          ? prev.student.courses.filter((id) => id !== courseId)
-          : [];
-
-        return {
-          ...prev,
-          student: {
-            ...prev.student,
-            courses: updatedCourses,
-          },
-        };
-      });
+      setSelectedUser((prev) => ({
+        ...prev,
+        courses: prev.courses.filter((course) => course.id !== courseId), // Remove the course dynamically
+      }));
 
       setSelectedCourse("");
     } catch (error) {
@@ -156,6 +139,32 @@ const ManageUser = () => {
     } catch (error) {
       console.error("Error updating user details:", error);
       alert("Failed to update user details.");
+    }
+  };
+
+  const handleViewDetails = async (user) => {
+    try {
+      console.log("Fetching courses for user:", user.id);
+      const response = await axiosInstance.get(`/api/users/${user.id}/courses`);
+      console.log("Courses fetched successfully:", response.data);
+
+      const userCourses = response.data.data;
+
+      setSelectedUser({
+        ...user,
+        courses: userCourses,
+      });
+    } catch (error) {
+      console.error("Error fetching user courses:", error);
+      if (error.response?.status === 401) {
+        alert("Authentication failed. Please log in again.");
+        localStorage.removeItem("token");
+        window.location.href = "/login"; // Redirect to login page
+      } else if (error.response?.status === 403) {
+        alert("You do not have permission to view this user's courses.");
+      } else {
+        alert("Failed to fetch user courses.");
+      }
     }
   };
 
@@ -218,7 +227,7 @@ const ManageUser = () => {
                 </div>
                 <div className="flex gap-4">
                   <button
-                    onClick={() => setSelectedUser(user)}
+                    onClick={() => handleViewDetails(user)}
                     className="bg-blue-500 text-white px-4 py-2 rounded-lg transition-all duration-300 hover:scale-95 hover:shadow-xl"
                   >
                     View Details
@@ -240,13 +249,10 @@ const ManageUser = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-30">
           <div className="bg-white p-8 rounded-lg shadow-xl w-1/3 max-h-[80vh] overflow-y-auto mt-16">
             <h2 className="text-2xl mb-4">Edit User Details</h2>
-
             {Object.keys(selectedUser)
               .filter(
                 (key) =>
-                  !["student", "faculty", "createdAt", "updatedAt"].includes(
-                    key
-                  )
+                  !["student", "faculty", "createdAt", "updatedAt", "courses"].includes(key) // Exclude "courses" field
               )
               .map((key) => (
                 <div key={key} className="mb-4">
@@ -310,6 +316,28 @@ const ManageUser = () => {
                   <label className="block text-gray-700 font-semibold">
                     Teaching Courses
                   </label>
+                  <div className="mb-4">
+                    <ul>
+                      {selectedUser.courses?.map((course) => (
+                        <li
+                          key={course.id}
+                          className="flex justify-between items-center mb-2"
+                        >
+                          <span>
+                            {course.id} - {course.name}
+                          </span>
+                          <button
+                            onClick={() =>
+                                removefacultyfromcourse(course.id,selectedUser.id)
+                            }
+                            className="text-red-500 hover:text-red-700"
+                          >
+                            <FaTrashAlt />
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                   <select
                     value={selectedCourse}
                     onChange={(e) => setSelectedCourse(e.target.value)}
@@ -327,27 +355,21 @@ const ManageUser = () => {
                       onClick={() => {
                         addfacultytocourse(selectedCourse, selectedUser.id);
                       }}
-                      className="bg-green-500 text-white px-4 py-2 rounded-lg"
+                      className={`px-4 py-2 rounded-lg ${
+                        !selectedCourse
+                          ? "bg-black text-white opacity-50 cursor-not-allowed"
+                          : "bg-green-500 text-white hover:scale-95"
+                      }`}
+                      disabled={!selectedCourse} // Disable button if no course is selected
                     >
                       Add to Course
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        removefacultyfromcourse(
-                          selectedCourse,
-                          selectedUser.id
-                        );
-                      }}
-                      className="bg-red-500 text-white px-4 py-2 rounded-lg"
-                    >
-                      Remove from Course
                     </button>
                   </div>
                 </div>
               </>
             )}
 
+            {/* Render student-specific fields */}
             {selectedUser.userType === "student" && (
               <>
                 {["rollNumber", "major", "enrollmentYear"].map((field) => (
@@ -373,6 +395,28 @@ const ManageUser = () => {
                   <label className="block text-gray-700 font-semibold">
                     Enrolled Courses
                   </label>
+                  <div className="mb-4">
+                    <ul>
+                      {selectedUser.courses?.map((course) => (
+                        <li
+                          key={course.id}
+                          className="flex justify-between items-center mb-2"
+                        >
+                          <span>
+                            {course.id} - {course.name}
+                          </span>
+                          <button
+                            onClick={() =>
+                                removestudentfromcourse(course.id,selectedUser.id)
+                            }
+                            className="text-red-500 hover:text-red-700"
+                          >
+                            <FaTrashAlt />
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                   <select
                     value={selectedCourse}
                     onChange={(e) => setSelectedCourse(e.target.value)}
@@ -390,21 +434,14 @@ const ManageUser = () => {
                       onClick={() => {
                         addstudenttocourse(selectedCourse, selectedUser.id);
                       }}
-                      className="bg-green-500 text-white px-4 py-2 rounded-lg"
+                      className={`px-4 py-2 rounded-lg ${
+                        !selectedCourse
+                          ? "bg-black text-white opacity-50 cursor-not-allowed"
+                          : "bg-green-500 text-white hover:scale-95"
+                      }`}
+                      disabled={!selectedCourse} // Disable button if no course is selected
                     >
                       Add to Course
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        removestudentfromcourse(
-                          selectedCourse,
-                          selectedUser.id
-                        );
-                      }}
-                      className="bg-red-500 text-white px-4 py-2 rounded-lg"
-                    >
-                      Remove from Course
                     </button>
                   </div>
                 </div>
