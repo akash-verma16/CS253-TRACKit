@@ -104,7 +104,7 @@ export default function ContactUs({name, email}) {
             <div className='w-[80%] h-[80%] border rounded-xl shadow-lg'>
                 <div className='h-[14%] m-auto flex flex-col justify-center items-center text-white text-[18px] bg-blue-500 rounded-4xl'>
                     <p>Phone Numbers During Office Hours (10:00 Hrs.-18:00 Hrs) : 8xxxxxxxxx</p>
-                    <p>Email : trackit@gmail.com</p>
+                    <p>Email : trackit.CS253@gmail.com</p>
                 </div>
                 <div className='p-8'>
                     <p className='text-[25px] font-semibold'>Contact Us</p>
