@@ -3,11 +3,14 @@ import { NavLink } from 'react-router-dom';
 import { useCourses } from '../../contexts/CourseContext';
 // Import the Calendar component
 import MyCalendar from '../../components/Calendar_Dashboard';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 
 export default function Course() {
   const { courses, loading, error } = useCourses();
-  const pastYears = ["2024-25 SEMII", "2024-25 SEMI", "2024-25 SEMII", "2024-25 SEMI", "2024-25 SEMII", "2024-25 SEMI"];
-
+  // const pastYears = ["2024-25 SEMII", "2024-25 SEMI", "2024-25 SEMII", "2024-25 SEMI", "2024-25 SEMII", "2024-25 SEMI"];
+  const navigate = useNavigate();
+  const {logout} = useAuth();
   if (loading) {
     return (
       <div className='w-full h-full flex items-center justify-center'>
@@ -17,13 +20,15 @@ export default function Course() {
   }
 
   if (error) {
-    return (
-      <div className='w-full h-full flex items-center justify-center'>
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-          <p>Error loading courses: {error}</p>
-        </div>
-      </div>
-    );
+    // return (
+    //   <div className='w-full h-full flex items-center justify-center'>
+    //     <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+    //       <p>Error loading courses: {error}</p>
+    //     </div>
+    //   </div>
+    // );
+    logout();
+    navigate('/login');
   }
 
   if (!courses || courses.length === 0) {
