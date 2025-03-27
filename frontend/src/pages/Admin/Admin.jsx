@@ -29,7 +29,7 @@ export default function Admin() {
   return (
     <div className='bg-[#F5F5F5] h-screen w-full'>
       {/* Header */}
-      <div className="fixed top-0 left-0 right-0 bg-white px-8 py-5 shadow-lg z-10 flex justify-between items-center">
+      <div className=" bg-white p-8 shadow-lg z-10 flex justify-between items-center mb-8">
         <span 
           className="text-4xl font-semibold cursor-pointer" 
           onClick={() => navigate("/admin")}
@@ -46,7 +46,7 @@ export default function Admin() {
       </div>
 
       {/* Main Content */}
-      <div className='w-full pt-[100px]'>
+      <div className='w-full'>
         <div className='w-10/12 m-auto grid grid-cols-3'>
           {adminOptions.map((option) => (
             <div key={option.id} className='m-auto my-8'>

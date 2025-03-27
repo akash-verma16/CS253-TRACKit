@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaTrashAlt, FaTimes } from "react-icons/fa";
 import axiosInstance from "../../utils/axiosInstance";
+import { GoHome } from "react-icons/go";
 
 const ManageUser = () => {
   const navigate = useNavigate();
@@ -195,13 +196,18 @@ const ManageUser = () => {
 
   return (
     <div className="p-12">
-      <div className="fixed top-0 left-0 right-0 bg-white p-8 shadow-lg z-20 flex justify-between items-center">
-        <span
-          className="text-4xl font-semibold cursor-pointer"
-          onClick={() => navigate("/Admin")}
-        >
-          TRACKit
-        </span>
+      <div className="fixed top-0 left-0 right-0 bg-white py-7 px-8 shadow-lg z-10 flex justify-between items-center">
+        <div className='flex gap-6'>
+          <span
+            className="text-4xl font-semibold cursor-pointer"
+            onClick={() => navigate("/Admin")}
+            >
+            TRACKit
+          </span>
+          <div className='cursor-pointer hover:scale-95 duration-200 transition-all rounded-full hover:bg-gray-100 p-2'>
+            <GoHome className='text-[1.9rem]' onClick={()=>{navigate("/Admin")}}></GoHome>
+          </div>
+        </div>
         <h1 className="text-2xl font-semibold text-gray-700">Manage Users</h1>
       </div>
 
