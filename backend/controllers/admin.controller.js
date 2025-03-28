@@ -719,6 +719,7 @@ exports.deleteUser = async (req, res) => {
     if(user.userType==="admin"){
       return res.status(400).json({
         success: false,
+        error: 'Cannot delete an admin',
         message: 'Cannot delete an admin'
       });
     }
