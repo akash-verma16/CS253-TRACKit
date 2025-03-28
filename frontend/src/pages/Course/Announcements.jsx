@@ -195,7 +195,7 @@ export default function Announcements({ role }) {
           </div>
         ) : (
       <>
-        <div className='flex justify-between shadow-md py-2 px-8 items-center sticky top-0 bg-[#F5F5F5]'>
+        <div className='flex justify-between shadow-md py-2 px-8 items-center sticky top-0 bg-[#F5F5F5] z-50'>
           <div>
             <p className='text-[32px] uppercase font-semibold m-4'>Announcements</p>
             <p className='text-gray-600 ml-4 -mt-3'>
