@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaTrashAlt, FaTimes } from "react-icons/fa";
 import axiosInstance from "../../utils/axiosInstance";
+import { GoHome } from "react-icons/go";
 
 const ManageUser = () => {
   const navigate = useNavigate();
@@ -139,7 +140,6 @@ const ManageUser = () => {
       alert("Failed to update user details.");
     }
   };
-
   const handleViewDetails = async (user) => {
     try {
       console.log("Fetching courses for user:", user.id);
@@ -189,13 +189,18 @@ const ManageUser = () => {
 
   return (
     <div className="p-12">
-      <div className="fixed top-0 left-0 right-0 bg-white p-8 shadow-lg z-20 flex justify-between items-center">
-        <span
-          className="text-4xl font-semibold cursor-pointer"
-          onClick={() => navigate("/Admin")}
-        >
-          TRACKit
-        </span>
+      <div className="fixed top-0 left-0 right-0 bg-white py-7 px-8 shadow-lg z-10 flex justify-between items-center">
+        <div className='flex gap-6'>
+          <span
+            className="text-4xl font-semibold cursor-pointer"
+            onClick={() => navigate("/Admin")}
+            >
+            TRACKit
+          </span>
+          <div className='cursor-pointer hover:scale-95 duration-200 transition-all rounded-full hover:bg-gray-100 p-2'>
+            <GoHome className='text-[1.9rem]' onClick={()=>{navigate("/Admin")}}></GoHome>
+          </div>
+        </div>
         <h1 className="text-2xl font-semibold text-gray-700">Manage Users</h1>
       </div>
 
@@ -203,7 +208,7 @@ const ManageUser = () => {
         <div className="flex justify-center mb-4">
           <input
             type="text"
-            placeholder="Search users by ID or Name..."
+            placeholder="Search users by ID, Name, Email, or Roll Number..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="p-4 w-2/3 border border-gray-300 rounded-lg"
@@ -238,8 +243,12 @@ const ManageUser = () => {
                   </button>
                 </div>
               </div>
+            ))
+          ) : (
+            <div className="text-center p-4 bg-gray-100 rounded-lg">
+              <p>No users found matching "{searchTerm}"</p>
             </div>
-          ))}
+          )}
         </div>
       </div>
 

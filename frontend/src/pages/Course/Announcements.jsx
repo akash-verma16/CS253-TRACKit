@@ -188,30 +188,39 @@ export default function Announcements({ role }) {
 
   return (
     <div className='w-full h-screen overflow-y-auto'>
-      <div className='flex justify-between shadow-md py-2 px-8 items-center sticky top-0 bg-[#F5F5F5]'>
-        <div>
-          <p className='text-[32px] uppercase font-semibold m-4'>Announcements</p>
-          <p className='text-gray-600 ml-4 -mt-3'>{courseDetails.code} • {courseDetails.credits} Credits • {courseDetails.semester}</p>
+      {/* Show loading state while course details are loading */}
+        {loading ? (
+          <div className="w-full min-h-screen bg-gray-50 p-6 flex items-center justify-center">
+            Loading course details...
+          </div>
+        ) : (
+      <>
+        <div className='flex justify-between shadow-md py-2 px-8 items-center sticky top-0 bg-[#F5F5F5]'>
+          <div>
+            <p className='text-[32px] uppercase font-semibold m-4'>Announcements</p>
+            <p className='text-gray-600 ml-4 -mt-3'>
+              {courseDetails?.code || 'Loading...'} • {courseDetails?.credits || ''} Credits • {courseDetails?.semester || ''}
+            </p>
+          </div>
+          <div className='flex items-center gap-4'>
+            {role !== "student" && (
+              <button 
+                className='bg-blue-500 shadow-xl text-white py-2 px-4 flex justify-center items-center gap-2 hover:bg-green-600 hover:scale-95 transition-all duration-200 rounded'
+                onClick={() => {
+                  setFormType('create');
+                  setFormData({ announcementHeading: '', announcementBody: '' });
+                  setShowForm(true);
+                }}
+              >
+                <FaPlus className='text-[18px]' />
+                <p>Add Announcement</p>
+              </button>
+            )}
+            <NavLink to="/dashboard/profile">
+              <CgProfile className='text-[40px] cursor-pointer' />
+            </NavLink>
+          </div>
         </div>
-        <div className='flex items-center gap-4'>
-          {role !== "student" && (
-            <button 
-              className='bg-blue-500 shadow-xl text-white py-2 px-4 flex justify-center items-center gap-2 hover:bg-green-600 hover:scale-95 transition-all duration-200 rounded'
-              onClick={() => {
-                setFormType('create');
-                setFormData({ announcementHeading: '', announcementBody: '' });
-                setShowForm(true);
-              }}
-            >
-              <FaPlus className='text-[18px]' />
-              <p>Add Announcement</p>
-            </button>
-          )}
-          <NavLink to="/dashboard/profile">
-            <CgProfile className='text-[40px] cursor-pointer' />
-          </NavLink>
-        </div>
-      </div>
 
       <div className='p-6'> 
         {announcements.length > 0 ? (
@@ -264,6 +273,8 @@ export default function Announcements({ role }) {
           </div>
         )}
       </div>
+      </>
+        )}
 
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
@@ -349,5 +360,6 @@ export default function Announcements({ role }) {
         </div>
       )}
     </div>
+
   );
 }

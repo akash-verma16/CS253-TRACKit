@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import profilePic from "../../assets/icon-7797704.png";
 import { FaLinkedin, FaWhatsapp } from "react-icons/fa";
+import { GoHome } from "react-icons/go";
 
 const developers = [
   {
@@ -106,14 +107,19 @@ export default function ContactDevelopers() {
 
   return (
     <div className="pt-32 min-h-screen grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6 p-6">
-      <div className="fixed top-0 left-0 right-0 bg-white p-8 shadow-lg z-10 flex justify-between items-center animate-fade-in">
-        <span
-          className="text-3xl font-semibold cursor-pointer"
-          onClick={() => navigate("/Admin")}
-        >
-          TRACKit
-        </span>
-        <h1 className="text-xl font-semibold text-gray-700">Contact Developers</h1>
+      <div className="fixed top-0 left-0 right-0 bg-white py-7 px-8 shadow-lg z-10 flex justify-between items-center">
+        <div className='flex gap-6'>
+          <span
+            className="text-4xl font-semibold cursor-pointer"
+            onClick={() => navigate("/Admin")}
+            >
+            TRACKit
+          </span>
+          <div className='cursor-pointer hover:scale-95 duration-200 transition-all rounded-full hover:bg-gray-100 p-2'>
+            <GoHome className='text-[1.9rem]' onClick={()=>{navigate("/Admin")}}></GoHome>
+          </div>
+        </div>
+        <h1 className="text-2xl font-semibold text-gray-700">Add Faculty</h1>
       </div>
 
       {developers.map((dev, index) => (

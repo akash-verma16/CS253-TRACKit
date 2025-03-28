@@ -4,6 +4,7 @@ import { CgProfile } from "react-icons/cg";
 import axios from 'axios';
 import { API_URL } from '../../services/auth';
 import { useAuth } from '../../contexts/AuthContext';
+import { GoHome } from "react-icons/go";
 
 export default function AddFaculty() {
   const [activeTab, setActiveTab] = useState('manual');
@@ -177,18 +178,23 @@ export default function AddFaculty() {
   return (
     <div className="bg-[#F5F5F5] min-h-screen pb-8">
       {/* Fixed Header */}
-      <div className="fixed top-0 left-0 right-0 bg-white p-8 shadow-lg z-10 flex justify-between items-center">
-        <span
-          className="text-4xl font-semibold cursor-pointer"
-          onClick={() => navigate("/Admin")}
-        >
-          TRACKit
-        </span>
+      <div className="fixed top-0 left-0 right-0 bg-white py-7 px-8 shadow-lg z-10 flex justify-between items-center">
+        <div className='flex gap-6'>
+          <span
+            className="text-4xl font-semibold cursor-pointer"
+            onClick={() => navigate("/Admin")}
+            >
+            TRACKit
+          </span>
+          <div className='cursor-pointer hover:scale-95 duration-200 transition-all rounded-full hover:bg-gray-100 p-2'>
+            <GoHome className='text-[1.9rem]' onClick={()=>{navigate("/Admin")}}></GoHome>
+          </div>
+        </div>
         <h1 className="text-2xl font-semibold text-gray-700">Add Faculty</h1>
       </div>
       
       {/* Main Content */}
-      <div className="pt-24 px-4">
+      <div className="pt-32 px-4">
         <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-8">
           {/* Show error/success messages */}
           {error && (

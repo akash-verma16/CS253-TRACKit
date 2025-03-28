@@ -19,6 +19,7 @@ import { NotificationProvider } from './contexts/NotificationContext';
 import NotificationContainer from './components/Notification';
 import { EventProvider } from './contexts/EventContext';
 import ForgotPassword from './pages/ForgotPassword';
+import ChangePassword from './pages/ChangePassword';
 
 // Wrapper component to handle course params
 const CourseWrapper = () => {
@@ -84,6 +85,7 @@ const AppRoutes = () => {
       </Route>
       
       <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/change-password" element={<ChangePassword />} />
       
       {/* Catch-all route */}
       <Route path="*" element={<Navigate to="/" replace />} />

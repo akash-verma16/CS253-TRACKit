@@ -11,7 +11,7 @@ import axios from 'axios';
 const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3001';
 
 export default function Lectures({ role }) {
-  const { courseDetails } = useCourse();
+  const { courseDetails, loading } = useCourse(); // Ensure loading state is used
   const { showNotification } = useNotification();
 
   const [lectures, setLectures] = useState([]);
@@ -498,6 +498,33 @@ export default function Lectures({ role }) {
     }
   };
 
+  // Show loading indicator while fetching course details
+  if (loading) {
+    return (
+      <div className='w-full h-screen flex items-center justify-center'>
+        <div className="animate-pulse text-xl">Loading course details...</div>
+      </div>
+    );
+  }
+
+  // Handle case where courseDetails is null or undefined
+  if (!courseDetails) {
+    return (
+      <div className='w-full p-4'>
+        <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded">
+          <p>Course details not available. Please try again later.</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-2 text-blue-500 underline"
+          >
+            Reload page
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Safely access courseDetails properties
   return (
     <div className='w-full h-screen overflow-y-auto'>
       {/* Header */}

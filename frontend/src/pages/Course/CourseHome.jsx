@@ -283,10 +283,10 @@ export default function CourseHome({ present, total, role }) {
 
       <div className='flex justify-evenly items-center'>
         <div>
-          <p className='font-semibold text-[22px] mb-2 mt-4'>New Events</p>
+          <p className='font-semibold text-[25px] mb-2 mt-4'>New Events</p>
           {/* Replace the iframe with MyCalendar component */}
           <div 
-            style={{width: role === "student" ? '800px' : '850px', height: '400px'}}
+            style={{width: role === "student" ? '1050px' : '1100px', height: '500px'}}
             className='shadow-xl border rounded-lg p-4 bg-white'
           >
             <MyCalendar />
@@ -303,24 +303,26 @@ export default function CourseHome({ present, total, role }) {
           </div>
         </div>
       }
-      {
-        role!=="student" &&
-        <button 
-          onClick={addSectionHandler}
-          className='bg-blue-500 shadow-xl text-white py-2 px-4 mt-4 ml-6 flex justify-center items-center gap-2 hover:bg-green-600 hover:scale-95 transition-all duration-200 rounded'
-        >
-          <FaPlus className='text-[18px]'></FaPlus>
-          <p>Add Section</p>
-        </button>
-      }
       </div>
 
-      <div className='p-4 mb-10'>
-        <h2 className="text-xl font-bold ml-2 mb-2">Course Details</h2>
+      <div className='p-4 mb-10 px-8'>
+        <div className='flex justify-between items-center mb-4 pr-6'>
+        <h2 className="text-[25px] font-bold ml-2">Course Details</h2>
+        {
+          role!=="student" &&
+          <button 
+            onClick={addSectionHandler}
+            className='bg-blue-500 shadow-xl text-white py-2 px-4 mt-4 ml-6 flex justify-center items-center gap-2 hover:bg-green-600 hover:scale-95 transition-all duration-200 rounded'
+          >
+            <FaPlus className='text-[18px]'></FaPlus>
+            <p>Add Section</p>
+          </button>
+        }
+        </div>
         
         {courseDescriptions.length > 0 ? (
           courseDescriptions.map((item, index) => (
-            <div key={item.id} className='mb-2'>
+            <div key={item.id} className='mb-2' onClick={() => toggleExpand(index)}>
               <div className='w-full py-3 border-2 flex flex-col m-2 px-6 rounded-xl cursor-pointer hover:shadow-md transition-all duration-200'>
                 <div className='flex justify-between w-full font-semibold'>
                   <span className='text-lg'>{item.courseDescriptionEntryHeading}</span>
@@ -338,8 +340,7 @@ export default function CourseHome({ present, total, role }) {
                     )
                   }
                   <IoIosArrowDropdown 
-                    onClick={() => toggleExpand(index)}
-                    className={`text-[25px] transform transition-transform hover:scale-105 hover:shadow-xl duration-500 ${expandedIndices[index] ? 'rotate-180' : ''}`}
+                    className={`text-[25px] transform transition-transform hover:scale-105 duration-500 ${expandedIndices[index] ? 'rotate-180' : ''}`}
                   />
                   </div>
                 </div>

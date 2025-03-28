@@ -8,6 +8,8 @@ import {
   getFileUploadConfig 
 } from '../../utils/fileUpload';
 
+import { GoHome } from "react-icons/go";
+
 export default function CreateCourse() {
   const [activeTab, setActiveTab] = useState('manual');
   const [courseData, setCourseData] = useState({
@@ -290,18 +292,23 @@ export default function CreateCourse() {
   return (
     <div className="bg-[#F5F5F5] min-h-screen">
       {/* Fixed Header */}
-      <div className="fixed top-0 left-0 right-0 bg-white p-8 shadow-lg z-10 flex justify-between items-center">
-        <span
-          className="text-4xl font-semibold cursor-pointer"
-          onClick={() => navigate("/Admin")}
-        >
-          TRACKit
-        </span>
+      <div className="fixed top-0 left-0 right-0 bg-white py-7 px-8 shadow-lg z-10 flex justify-between items-center">
+        <div className='flex gap-6'>
+          <span
+            className="text-4xl font-semibold cursor-pointer"
+            onClick={() => navigate("/Admin")}
+            >
+            TRACKit
+          </span>
+          <div className='cursor-pointer hover:scale-95 duration-200 transition-all rounded-full hover:bg-gray-100 p-2'>
+            <GoHome className='text-[1.9rem]' onClick={()=>{navigate("/Admin")}}></GoHome>
+          </div>
+        </div>
         <h1 className="text-2xl font-semibold text-gray-700">Create Course</h1>
       </div>
       
       {/* Main Content */}
-      <div className="pt-24 px-4">
+      <div className="pt-32 px-4">
         <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-8">
           <h2 className="text-2xl font-bold mb-6 text-center">Create Course</h2>
           

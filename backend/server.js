@@ -15,13 +15,15 @@ app.use(helmet());
 // Update CORS configuration
 app.use(cors({
   origin: 'http://localhost:3000', // or whatever port your frontend is running on
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 //Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10000 // limit each IP to 100 requests per windowMs
+  max: 25000 // limit each IP to 100 requests per windowMs
 });
 app.use(limiter);
 
@@ -104,6 +106,27 @@ app._router.stack.forEach(function(r){
     console.log(r.route.stack[0].method.toUpperCase() + ' ' + r.route.path);
   }
 });
+
+// Add proper error handling middleware
+app.use((err, req, res, next) => {
+  console.error('API Error:', err);
+  res.status(err.status || 500).json({
+    success: false,
+    message: err.message || 'Internal server error'
+  });
+});
+
+// Ensure routes are properly mounted
+app.use('/users', require('./routes/user.routes'));
+
+// Handle 404
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: 'API endpoint not found'
+  });
+});
+
 // Start server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

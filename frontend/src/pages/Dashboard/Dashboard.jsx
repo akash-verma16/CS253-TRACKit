@@ -8,15 +8,19 @@ import ContactUs from './ContactUs';
 
 export default function Dashboard(props) {
   return (
-    <div className='h-screen w-full flex items-center bg-[#F5F5F5]'>
+    <div className='h-screen w-full flex items-center bg-[#F5F5F5] overflow-scroll'>
 
+        <div className="fixed h-[98%] w-[19%] ml-1 z-10 my-1">
         <DashBoardMenu />
-        <Routes>
-            <Route path="/courses" element={<Course course={props.course}></Course>}></Route>
-            <Route path="/performance" element={<Performance/>}></Route>
-            <Route path="/profile" element={<Profile/>}></Route>
-            <Route path="/contactus" element={<ContactUs name="Ved Prakash Vishwakarma" email={`vedprakash22@iitk.ac.in`}/>}></Route>
-        </Routes>
+        </div >
+        <div className='ml-[20%] w-full z-0 h-full'>
+          <Routes>
+              <Route path="/courses" element={<Course course={props.course}></Course>}></Route>
+              <Route path="/performance" element={<Performance/>}></Route>
+              <Route path="/profile" element={<Profile/>}></Route>
+              <Route path="/contactus" element={<ContactUs/>}></Route>
+          </Routes>
+        </div>
 
     </div>
   )
