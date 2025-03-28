@@ -14,7 +14,7 @@ app.use(helmet());
 
 // Update CORS configuration
 app.use(cors({
-  origin: 'http://localhost:3000', // or whatever port your frontend is running on
+  origin: 'http://172.27.16.252:3000', // or whatever port your frontend is running on
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
