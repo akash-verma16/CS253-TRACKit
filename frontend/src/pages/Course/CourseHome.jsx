@@ -281,28 +281,29 @@ export default function CourseHome({ present, total, role }) {
         </NavLink>
       </div>
 
-      <div className='flex justify-evenly items-center'>
-        <div>
+      {/* Replace this entire <div className='flex justify-evenly items-center'> section */}
+      <div className='grid grid-cols-1 lg:grid-cols-3 gap-6 p-4 md:p-6'>
+        {/* Calendar section - takes up full width on small screens, 2/3 on large */}
+        <div className='lg:col-span-2 ml-4'>
           <p className='font-semibold text-[25px] mb-2 mt-4'>New Events</p>
-          {/* Replace the iframe with MyCalendar component */}
-          <div 
-            style={{width: role === "student" ? '1050px' : '1100px', height: '500px'}}
-            className='shadow-xl border rounded-lg p-4 bg-white'
-          >
+          <div className='shadow-xl border rounded-lg p-4 bg-white w-full h-[450px] md:h-[500px]'>
             <MyCalendar />
           </div>
         </div>
 
-      {
-        role=="student" &&
-        <div className='border px-6 h-[300px] w-[20%] rounded-lg shadow-lg py-8'>
-          <p className='font-semibold text-[22px]'>Your Attendance</p>
-          <div>
-            <p className='text-[45px]'>{(present/total*100).toFixed(0)}%</p>
-            <p className='text-[20px]'>You have attended: <br /> {present}/{total} classes</p>
+        {/* Attendance section - takes up full width on small screens, 1/3 on large */}
+        {role === "student" && (
+          <div className='border px-6 py-8 rounded-lg shadow-lg flex flex-col justify-center lg:h-[300px] mt-10 lg:mt-20 w-full'>
+            <p className='font-semibold text-[22px] mb-4'>Your Attendance</p>
+            <div className='flex flex-col gap-2'>
+              <p className='text-[45px] text-black-600 font-bold'>{(present/total*100).toFixed(0)}%</p>
+              <p className='text-[18px]'>
+                You have attended: <br /> 
+                <span className='font-semibold'>{present}/{total}</span> classes
+              </p>
+            </div>
           </div>
-        </div>
-      }
+        )}
       </div>
 
       <div className='p-4 mb-10 px-8'>
