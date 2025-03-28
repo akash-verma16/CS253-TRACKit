@@ -54,13 +54,12 @@ const ManageUser = () => {
         userId,
       });
 
-      // Fetch updated user details
       const response = await axiosInstance.get(`/api/users/${userId}/courses`);
       const updatedCourses = response.data.data;
 
       setSelectedUser((prev) => ({
         ...prev,
-        courses: updatedCourses, // Update courses with the latest data
+        courses: updatedCourses,
       }));
 
       setSelectedCourse("");
@@ -78,13 +77,12 @@ const ManageUser = () => {
         userId,
       });
 
-      // Fetch updated user details
       const response = await axiosInstance.get(`/api/users/${userId}/courses`);
       const updatedCourses = response.data.data;
 
       setSelectedUser((prev) => ({
         ...prev,
-        courses: updatedCourses, // Update courses with the latest data
+        courses: updatedCourses,
       }));
 
       setSelectedCourse("");
@@ -101,7 +99,7 @@ const ManageUser = () => {
 
       setSelectedUser((prev) => ({
         ...prev,
-        courses: prev.courses.filter((course) => course.id !== courseId), // Remove the course dynamically
+        courses: prev.courses.filter((course) => course.id !== courseId), 
       }));
 
       setSelectedCourse("");
@@ -117,7 +115,7 @@ const ManageUser = () => {
 
       setSelectedUser((prev) => ({
         ...prev,
-        courses: prev.courses.filter((course) => course.id !== courseId), // Remove the course dynamically
+        courses: prev.courses.filter((course) => course.id !== courseId),
       }));
 
       setSelectedCourse("");
@@ -159,7 +157,7 @@ const ManageUser = () => {
       if (error.response?.status === 401) {
         alert("Authentication failed. Please log in again.");
         localStorage.removeItem("token");
-        window.location.href = "/login"; // Redirect to login page
+        window.location.href = "/login";
       } else if (error.response?.status === 403) {
         alert("You do not have permission to view this user's courses.");
       } else {
@@ -360,7 +358,7 @@ const ManageUser = () => {
                           ? "bg-black text-white opacity-50 cursor-not-allowed"
                           : "bg-green-500 text-white hover:scale-95"
                       }`}
-                      disabled={!selectedCourse} // Disable button if no course is selected
+                      disabled={!selectedCourse} 
                     >
                       Add to Course
                     </button>
@@ -369,7 +367,6 @@ const ManageUser = () => {
               </>
             )}
 
-            {/* Render student-specific fields */}
             {selectedUser.userType === "student" && (
               <>
                 {["rollNumber", "major", "enrollmentYear"].map((field) => (
@@ -439,7 +436,7 @@ const ManageUser = () => {
                           ? "bg-black text-white opacity-50 cursor-not-allowed"
                           : "bg-green-500 text-white hover:scale-95"
                       }`}
-                      disabled={!selectedCourse} // Disable button if no course is selected
+                      disabled={!selectedCourse}
                     >
                       Add to Course
                     </button>
