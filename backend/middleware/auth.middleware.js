@@ -1,40 +1,44 @@
 const jwt = require('jsonwebtoken');
 const db = require('../models');
 const User = db.User;
-console.log('verifyToken Middleware Hit');
 
 const verifyToken = async (req, res, next) => {
-  try {
-    // Skip token verification for OPTIONS requests
-    if (req.method === 'OPTIONS') {
-      return next();
-    }
+  if (req.method === 'OPTIONS') {
+    return next();
+  }
 
-    let token = req.headers['authorization'];
-    
-    if (!token) {
-      return res.status(403).json({
+  let token = req.headers['x-access-token'] || req.headers['authorization'];
+  if (token && token.startsWith('Bearer ')) {
+    token = token.slice(7);
+  }
+
+  if (!token) {
+    return res.status(403).json({
+      success: false,
+      message: 'No token provided!'
+    });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.userId = decoded.id;
+
+    // Fetch the user's role (userType) from the database
+    const user = await User.findByPk(decoded.id, { attributes: ['userType'] });
+    if (!user) {
+      return res.status(404).json({
         success: false,
-        message: 'No token provided!'
+        message: 'User not found!'
       });
     }
 
-    // Remove 'Bearer ' prefix if present
-    if (token.startsWith('Bearer ')) {
-      token = token.slice(7);
-    }
-
-    // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.userId = decoded.id;
-    req.userType = decoded.userType;
-    
+    req.userRole = user.userType; // Add userType to the request object
     next();
-  } catch (error) {
-    console.error('Auth middleware error:', error);
+  } catch (err) {
     return res.status(401).json({
       success: false,
-      message: 'Unauthorized! Invalid token.'
+      message: 'Unauthorized! Token is invalid.',
+      error: err.message
     });
   }
 };
