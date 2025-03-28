@@ -528,7 +528,7 @@ export default function Lectures({ role }) {
   return (
     <div className='w-full h-screen overflow-y-auto'>
       {/* Header */}
-      <div className='flex justify-between py-2 px-8 items-center sticky top-0 bg-[#F5F5F5] shadow-md'>
+      <div className='flex justify-between py-2 px-8 items-center sticky top-0 bg-[#F5F5F5] shadow-md z-50'>
         <div>
           <p className='text-[32px] uppercase font-semibold m-4'>Lectures</p>
           <p className='text-gray-600 ml-4 -mt-3'>
@@ -553,137 +553,136 @@ export default function Lectures({ role }) {
       )}
 
       {/* Lecture Content */}
-      <div className='p-6'>
+      <div className='p-4 md:p-6'>
         {Object.keys(lectures).length > 0 ? (
           Object.entries(lectures).map(([heading, topics]) => (
             <div key={heading} className='mb-3'>
               {/* Heading Header */}
               <div
-                className='w-[98%] py-3 ml-6 border-2 flex flex-col px-8 rounded-xl cursor-pointer hover:shadow-md transition-all duration-200'
+                className='w-full md:w-[98%] py-3 mx-auto md:ml-6 border-2 flex flex-col px-4 md:px-8 rounded-xl cursor-pointer hover:shadow-md transition-all duration-200 relative'
                 onClick={() => toggleWeek(heading)}
               >
-                <div className='flex justify-between w-full font-semibold'>
-                  <span className='text-lg'>{heading}</span>
-                  <div className='flex items-center gap-2'>
-                    {role !== "student" && (
-                      <button
-                        className='bg-black text-white py-1 px-2 rounded-full hover:bg-gray-800 transition-all duration-200'
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleAddSubsectionClick(heading); // Open the modal
-                        }}
-                      >
-                        Add Section
-                      </button>
-                    )}
-                    <IoIosArrowDropdown
-                      className={`text-[25px] transform transition-transform duration-500 ${
-                        expandedWeeks[heading] ? 'rotate-180' : ''
-                      }`}
-                    />
-                  </div>
-                </div>
-
-                {/* Expanded Heading with Subheadings and Lectures */}
-                <div
-                  className={`overflow-hidden transition-all duration-300 ${
-                    expandedWeeks[heading] ? 'max-h-[1000px] opacity-100 py-3' : 'max-h-0 opacity-0'
-                  }`}
+                <div className='flex justify-between w-full font-semibold items-center flex-wrap gap-2'>
+            <span className='text-lg break-words max-w-[70%]'>{heading}</span>
+            <div className='flex items-center gap-2 flex-wrap'>
+              {role !== "student" && (
+                <button
+                  className='bg-black text-white py-1 px-2 rounded-full hover:bg-gray-800 transition-all duration-200 text-sm whitespace-nowrap'
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleAddSubsectionClick(heading);
+                  }}
                 >
-                  {Object.entries(topics).map(([subheading, lectures]) => (
-                    <div key={subheading} className="mb-4">
-                      <div className="flex justify-between items-center">
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-medium text-lg mb-2">{subheading}</h3>
-                          {role !== "student" && (
-                            <div className="flex items-center gap-1"> {/* Wrap buttons in a div */}
-                              <button
-                                className='bg-gray-200 p-1 rounded-full hover:bg-gray-300 transition-all duration-200'
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleEditSubheadingClick(heading, subheading);
-                                }}
-                              >
-                                <FaRegEdit className='text-[14px]' />
-                              </button>
-                              {/* Add delete button for subheading */}
-                              <button
-                                className='bg-gray-200 p-1 rounded-full hover:bg-gray-300 transition-all duration-200'
-                                onClick={(e) => handleDeleteSubheadingClick(e, heading, subheading)}
-                              >
-                                <AiOutlineDelete className='text-[14px] text-red-600' />
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                        {role !== "student" && (
-                          <button
-                            className='bg-black text-white py-1 px-2 rounded-full hover:bg-gray-800 transition-all duration-200'
-                            onClick={(e) => {
-                              e.stopPropagation(); // Prevent parent click
-                              handleAddLecture(heading, subheading);
-                            }}
-                          >
-                            Add Lecture
-                          </button>
-                        )}
-                      </div>
-
-                      {lectures.map((lecture) => (
-                        <div
-                          key={lecture.id}
-                          className="ml-4 mb-2 flex justify-between items-center p-3 border rounded-lg hover:bg-gray-50"
-                        >
-                          <a
-                            href={lecture.youtubeLink || '#'}
-                            target={lecture.youtubeLink ? "_blank" : "_self"}
-                            rel="noopener noreferrer"
-                            className={`text-blue-600 hover:underline ${!lecture.youtubeLink && 'cursor-not-allowed'}`}
-                            onClick={(e) => {
-                              
-                              console.log('YouTube Link:', lecture.youtubeLink, typeof lecture.youtubeLink);
-
-                                if (!lecture.youtubeLink || lecture.youtubeLink === "null") {
-                                  e.preventDefault();
-                                  showNotification('No video lecture uploaded', 'error');
-                                }
-                            }}
-                          >
-                            {lecture.lectureTitle}
-                          </a>
-
-                          <div className='flex gap-4 items-center'>
-                            <button
-                              onClick={(e) => downloadHandler(e, lecture.fileUrls)} // Changed from pdfUrls to fileUrls and fixed typo in button tag
-                              className="flex items-center gap-1 text-gray-600 hover:text-blue-600 hover:underline"
-                            >
-                              <FaFilePdf className="text-red-500" />
-                              <FaDownload className="text-[14px]" />
-                            </button>
-
-                            {role !== "student" && (
-                              <div className='flex gap-2 items-center'>
-                                <button onClick={(e) => handleEditClick(e, lecture)}>
-                                  <FaRegEdit className='text-[18px]' />
-                                </button>
-                                <button onClick={(e) => handleDeleteClick(e, lecture)}>
-                                  <AiOutlineDelete className='text-[18px] text-red-600' />
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ))}
-                </div>
-              </div>
+                  Add Section
+                </button>
+              )}
+              <IoIosArrowDropdown
+                className={`text-[25px] transform transition-transform duration-500 ${
+                  expandedWeeks[heading] ? 'rotate-180' : ''
+                }`}
+              />
             </div>
-          ))
-        ) : (
-          <div className='text-center text-gray-600'>No lectures available.</div>
-        )}
+          </div>
+
+                {/* Expanded content - better responsive layout */}
+          <div
+            className={`overflow-hidden transition-all duration-300 ${
+              expandedWeeks[heading] ? 'max-h-[1000px] opacity-100 py-3' : 'max-h-0 opacity-0'
+            }`}
+          >
+            {Object.entries(topics).map(([subheading, lectures]) => (
+              <div key={subheading} className="mb-4">
+                <div className="flex justify-between items-center flex-wrap gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="font-medium text-lg mb-2 break-words">{subheading}</h3>
+                    {role !== "student" && (
+                      <div className="flex items-center gap-1">
+                        <button
+                          className='bg-gray-200 p-1 rounded-full hover:bg-gray-300 transition-all duration-200'
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditSubheadingClick(heading, subheading);
+                          }}
+                        >
+                          <FaRegEdit className='text-[14px]' />
+                        </button>
+                        <button
+                          className='bg-gray-200 p-1 rounded-full hover:bg-gray-300 transition-all duration-200'
+                          onClick={(e) => handleDeleteSubheadingClick(e, heading, subheading)}
+                        >
+                          <AiOutlineDelete className='text-[14px] text-red-600' />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  {role !== "student" && (
+                    <button
+                      className='bg-black text-white py-1 px-2 rounded-full hover:bg-gray-800 transition-all duration-200 text-sm whitespace-nowrap'
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleAddLecture(heading, subheading);
+                      }}
+                    >
+                      Add Lecture
+                    </button>
+                  )}
+                </div>
+
+                {/* Individual lectures with better responsiveness */}
+                {lectures.map((lecture) => (
+                  <div
+                    key={lecture.id}
+                    className="ml-2 md:ml-4 mb-2 flex flex-col md:flex-row justify-between items-start md:items-center p-3 border rounded-lg hover:bg-gray-50 gap-2"
+                  >
+                    <a
+                      href={lecture.youtubeLink || '#'}
+                      target={lecture.youtubeLink ? "_blank" : "_self"}
+                      rel="noopener noreferrer"
+                      className={`text-blue-600 hover:underline break-words ${!lecture.youtubeLink && 'cursor-not-allowed'}`}
+                      onClick={(e) => {
+                        if (!lecture.youtubeLink || lecture.youtubeLink === "null") {
+                          e.preventDefault();
+                          showNotification('No video lecture uploaded', 'error');
+                        }
+                      }}
+                    >
+                      {lecture.lectureTitle}
+                    </a>
+
+                    <div className='flex gap-4 items-center'>
+                      <button
+                        onClick={(e) => downloadHandler(e, lecture.fileUrls)}
+                        className="flex items-center gap-1 text-gray-600 hover:text-blue-600 hover:underline"
+                      >
+                        <FaFilePdf className="text-red-500" />
+                        <FaDownload className="text-[14px]" />
+                      </button>
+
+                      {role !== "student" && (
+                        <div className='flex gap-2 items-center'>
+                          <button onClick={(e) => handleEditClick(e, lecture)}>
+                            <FaRegEdit className='text-[18px]' />
+                          </button>
+                          <button onClick={(e) => handleDeleteClick(e, lecture)}>
+                            <AiOutlineDelete className='text-[18px] text-red-600' />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
+    ))
+  ) : (
+    <div className='text-center text-gray-600 p-10 bg-gray-50 rounded-lg shadow-sm'>
+      No lectures available. {role !== "student" && "Use the Add Module button to get started."}
+    </div>
+  )}
+</div>
 
       {/* Heading Form Modal */}
       {showHeadingForm && (
