@@ -36,8 +36,8 @@ export function AuthProvider({ children }) {
       if (response.data && response.data.success && response.data.token) {
         const { token, user } = response.data;
         
-        console.log("Received token:", token);
-        console.log("Storing user data:", user);
+        // console.log("Received token:", token);
+        // console.log("Storing user data:", user);
         
         // Store token and user in localStorage
         localStorage.setItem('token', token);
