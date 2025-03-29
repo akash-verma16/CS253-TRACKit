@@ -4,6 +4,7 @@ import { FaTrashAlt, FaEdit } from "react-icons/fa";
 import axiosInstance from "../../utils/axiosInstance";
 import { GoHome } from "react-icons/go";
 
+
 const ManageCourses = () => {
   const navigate = useNavigate();
   const [courses, setCourses] = useState([]);
@@ -25,6 +26,8 @@ const ManageCourses = () => {
     Faculty: [],
   });
   const [activeTab, setActiveTab] = useState("edit");
+  const [testRollNumber, setTestRollNumber] = useState("");
+  const [selectedFile, setSelectedFile] = useState(null);
 
   useEffect(() => {
     const fetchCourses = async () => {
@@ -55,22 +58,23 @@ const ManageCourses = () => {
     }
   };
 
-  // Save course handler (PUT request)
-  const handleSaveCourse = async () => {
+  const handlegetuserIdfromRollnumber = async (rollNumber) => {
     try {
-      await axiosInstance.put(`/api/courses/${editCourseId}`, newCourse);
-      const updatedCourses = courses.map((course) =>
-        course.id === editCourseId ? newCourse : course
-      );
-      setCourses(updatedCourses);
-      handleCancel(); // Close modal and reset form
+      const response = await axiosInstance.get(`/api/student/rollNumber/${rollNumber}`);
+      // console.log("Response:", response.data);
+      if (response.status === 200) {
+        return response.data.userId; // Assuming the response contains the user ID
+      } else {
+        throw new Error("Failed to fetch user ID.");
+      }
     } catch (error) {
-      console.error("Error updating course: ", error);
+      console.error("Error fetching user ID from roll number:", error);
+      alert("Failed to fetch user ID from roll number.");
+      return null; // Return null if there's an error
     }
   };
 
-  // View course details handler
-  const handleViewDetails = async (courseId) => {
+  const fetchCourseDetails = async (courseId) => {
     try {
       const response = await axiosInstance.get(`/api/courses/${courseId}`);
       const students =
@@ -89,6 +93,87 @@ const ManageCourses = () => {
       setActiveTab("details"); // Switch to the "details" tab
     } catch (error) {
       console.error("Error fetching course details:", error);
+    }
+  };
+
+  const handleViewDetails = async (courseId) => {
+    try {
+      // Fetch course details using the existing fetchCourseDetails function
+      await fetchCourseDetails(courseId);
+
+      // Switch to the "details" tab
+      setActiveTab("details");
+    } catch (error) {
+      console.error("Error viewing course details:", error);
+      alert("Failed to load course details.");
+    }
+  };
+
+  const handleBulkAddStudents = async (file, courseId) => {
+    try {
+      const Papa = await import("papaparse"); // Dynamically import PapaParse
+      Papa.parse(file, {
+        header: true, // Treat the first row as headers
+        skipEmptyLines: true, // Skip empty rows
+        complete: async (results) => {
+          const rows = results.data; // Parsed rows from the CSV file
+
+          for (const row of rows) {
+            let userId = row.UserId;
+
+            // If userId is not provided, fetch it using rollNumber
+            if (!userId && row.rollNumber) {
+              userId = await handlegetuserIdfromRollnumber(row.rollNumber);
+            }
+
+            // If userId is available, add the student to the course
+            if (userId) {
+              try {
+                await axiosInstance.post("/api/courses/add-student", {
+                  courseId,
+                  userId,
+                });
+              } catch (error) {
+                console.error(
+                  `Error adding student with userId ${userId} to course ${courseId}:`,
+                  error
+                );
+              }
+            } else {
+              console.error(
+                `Skipping row: Missing userId or rollNumber for row:`,
+                row
+              );
+            }
+          }
+
+          alert("Bulk students added successfully!");
+
+          // Fetch updated course details
+          await fetchCourseDetails(courseId);
+        },
+        error: (error) => {
+          console.error("Error parsing CSV file:", error);
+          alert("Failed to parse the CSV file.");
+        },
+      });
+    } catch (error) {
+      console.error("Error adding bulk students:", error);
+      alert("Failed to add bulk students.");
+    }
+  };
+
+  // Save course handler (PUT request)
+  const handleSaveCourse = async () => {
+    try {
+      await axiosInstance.put(`/api/courses/${editCourseId}`, newCourse);
+      const updatedCourses = courses.map((course) =>
+        course.id === editCourseId ? newCourse : course
+      );
+      setCourses(updatedCourses);
+      handleCancel(); // Close modal and reset form
+    } catch (error) {
+      console.error("Error updating course: ", error);
     }
   };
 
@@ -355,6 +440,33 @@ const ManageCourses = () => {
                     ) : (
                       <p className="text-gray-600 mt-3">No faculty assigned.</p>
                     )}
+                  </div>
+                  {/* Bulk Add Students Section */}
+                  <div className="mt-6 p-4 rounded-lg shadow-md bg-yellow-50">
+                    <h3 className="text-xl font-semibold text-yellow-600 flex items-center gap-2">
+                      📂 Add Students in Bulk
+                    </h3>
+                    <p className="text-gray-600 mt-2">
+                      Upload a CSV file with <strong>userId</strong> or <strong>rollNumber</strong> to add students to this course.
+                    </p>
+                    <input
+                      type="file"
+                      accept=".csv"
+                      onChange={(e) => setSelectedFile(e.target.files[0])} // Save the selected file
+                      className="mt-4 p-3 w-full border border-gray-300 rounded-lg"
+                    />
+                    <button
+                      onClick={() => {
+                        if (selectedFile) {
+                          handleBulkAddStudents(selectedFile, courseDetails.id); // Process the file on button click
+                        } else {
+                          alert("Please select a file first.");
+                        }
+                      }}
+                      className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-lg"
+                    >
+                      Upload
+                    </button>
                   </div>
                 </div>
               )}
