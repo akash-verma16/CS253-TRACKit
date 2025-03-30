@@ -50,11 +50,18 @@ const ManageCourses = () => {
 
   // Delete course handler
   const handleDeleteCourse = async (courseId) => {
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this course? This action cannot be undone."
+    );
+    if (!confirmDelete) return; // Exit if the user cancels
+
     try {
       await axiosInstance.delete(`/api/courses/${courseId}`);
       setCourses(courses.filter((course) => course.id !== courseId));
+      alert("Course deleted successfully.");
     } catch (error) {
       console.error("Error deleting course: ", error);
+      alert("Failed to delete the course.");
     }
   };
 
@@ -178,8 +185,15 @@ const ManageCourses = () => {
   };
 
   const removefacultyfromcourse = async (courseId, userId) => {
+    const confirmRemove = window.confirm(
+      "Are you sure you want to remove this faculty member from the course?"
+    );
+    if (!confirmRemove) return; // Exit if the user cancels
+
     try {
-      const response = await axiosInstance.delete(`/api/courses/remove-faculty/${courseId}/${userId}`);
+      const response = await axiosInstance.delete(
+        `/api/courses/remove-faculty/${courseId}/${userId}`
+      );
       if (response.status === 200) {
         setCourseDetails((prev) => ({
           ...prev,
@@ -196,8 +210,15 @@ const ManageCourses = () => {
   };
 
   const removestudentfromcourse = async (courseId, userId) => {
+    const confirmRemove = window.confirm(
+      "Are you sure you want to remove this student from the course?"
+    );
+    if (!confirmRemove) return; // Exit if the user cancels
+
     try {
-      const response = await axiosInstance.delete(`/api/courses/remove-student/${courseId}/${userId}`);
+      const response = await axiosInstance.delete(
+        `/api/courses/remove-student/${courseId}/${userId}`
+      );
       if (response.status === 200) {
         setCourseDetails((prev) => ({
           ...prev,
@@ -228,11 +249,11 @@ const ManageCourses = () => {
     });
   };
 
-  // Filter courses by name or ID
+  // Filter courses by name or code
   const filteredCourses = courses.filter(
     (course) =>
       course.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      course.id.toString().toLowerCase().includes(searchTerm.toLowerCase())
+      course.code.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
